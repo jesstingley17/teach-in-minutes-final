@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { InstructionalSuite, GradeLevel } from '../types';
+import { SAFETY_AUDIT, buildPrompt } from './promptTemplates';
 
 /**
  * Safety and Pedagogy Audit Service using Claude
@@ -73,7 +74,7 @@ ${s.options ? `Options: ${s.options.join(', ')}` : ''}
 
   try {
     const message = await client.messages.create({
-      model: 'claude-3-5-sonnet-20240620',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 2048,
       messages: [
         {

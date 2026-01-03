@@ -55,7 +55,7 @@ export const condenseCurriculum = async (
 
   try {
     const message = await client.messages.create({
-      model: 'claude-3-5-sonnet-20240620',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 4096,
       messages: [
         {
@@ -99,7 +99,7 @@ Suggested Duration: ${node.suggestedDuration}
 
   try {
     const message = await client.messages.create({
-      model: 'claude-3-5-sonnet-20240620',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 500,
       messages: [
         {
