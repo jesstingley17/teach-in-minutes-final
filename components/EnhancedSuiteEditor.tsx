@@ -13,6 +13,8 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingContent, setEditingContent] = useState<string>('');
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  const [showTeacherKey, setShowTeacherKey] = useState(false);
+  const [colorMode, setColorMode] = useState<'default' | 'colorful' | 'pastel'>('default');
   const editInputRef = useRef<HTMLTextAreaElement>(null);
 
   // Convert sections to pages if not already paginated
@@ -55,6 +57,16 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
   };
 
   const isDyslexiaFriendly = suite.differentiation === Differentiation.ESL || suite.differentiation === Differentiation.ADHD;
+
+  // Color mode classes
+  const getColorModeClasses = () => {
+    if (colorMode === 'colorful') {
+      return 'colorful-mode';
+    } else if (colorMode === 'pastel') {
+      return 'pastel-mode';
+    }
+    return '';
+  };
 
   const startEdit = (section: DocumentSection) => {
     setEditingId(section.id);
@@ -297,45 +309,82 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
 
   return (
     <div className={`preview-container bg-slate-200 p-8 min-h-screen overflow-y-auto ${isDyslexiaFriendly ? 'dyslexia-friendly' : ''}`}>
-      {/* Page Navigation */}
-      {pages.length > 1 && (
-        <div className="no-print mb-4 flex items-center justify-center space-x-4 bg-white p-4 rounded-lg shadow-sm sticky top-0 z-10">
-          <button
-            onClick={() => setCurrentPageIndex(Math.max(0, currentPageIndex - 1))}
-            disabled={currentPageIndex === 0}
-            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-medium"
-          >
-            ← Previous
-          </button>
-          <span className="text-sm font-medium text-slate-600">
-            Page {currentPageIndex + 1} of {pages.length}
-          </span>
-          <button
-            onClick={() => setCurrentPageIndex(Math.min(pages.length - 1, currentPageIndex + 1))}
-            disabled={currentPageIndex === pages.length - 1}
-            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-medium"
-          >
-            Next →
-          </button>
+      {/* Controls Bar */}
+      <div className="no-print mb-4 flex items-center justify-between bg-white p-4 rounded-lg shadow-sm sticky top-0 z-10">
+        <div className="flex items-center space-x-3">
+          {/* Color Mode Selector */}
+          <div className="flex items-center space-x-2">
+            <label className="text-xs font-bold text-slate-600">Color:</label>
+            <select
+              value={colorMode}
+              onChange={(e) => setColorMode(e.target.value as 'default' | 'colorful' | 'pastel')}
+              className="px-3 py-1 text-xs border border-slate-300 rounded-lg bg-white"
+            >
+              <option value="default">Default</option>
+              <option value="colorful">Colorful</option>
+              <option value="pastel">Pastel</option>
+            </select>
+          </div>
+          {/* Teacher Key Toggle */}
+          {(suite.standards || suite.rubric) && (
+            <button
+              onClick={() => setShowTeacherKey(!showTeacherKey)}
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors flex items-center space-x-2 ${
+                showTeacherKey 
+                  ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              <span>Teacher Key</span>
+            </button>
+          )}
         </div>
-      )}
+        {/* Page Navigation */}
+        {pages.length > 1 && (
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setCurrentPageIndex(Math.max(0, currentPageIndex - 1))}
+              disabled={currentPageIndex === 0}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-medium"
+            >
+              ← Previous
+            </button>
+            <span className="text-sm font-medium text-slate-600">
+              Page {currentPageIndex + 1} of {pages.length}
+            </span>
+            <button
+              onClick={() => setCurrentPageIndex(Math.min(pages.length - 1, currentPageIndex + 1))}
+              disabled={currentPageIndex === pages.length - 1}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-medium"
+            >
+              Next →
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Current Page */}
-      <div className={`a4-page ${getFontStyleClass(suite.aesthetic)} ${getDifferentiationClass(suite.differentiation)} shadow-2xl relative`}>
-        {/* Institutional Header */}
-        <div className="border-b-2 border-slate-900 pb-4 mb-8 flex justify-between items-start">
-          <div className="flex-1">
-            <h1 
-              className="text-2xl font-bold uppercase tracking-wider h-8 min-w-[200px] cursor-text hover:bg-blue-50 p-1 rounded"
-              onClick={() => {
-                const val = prompt('Edit institution name:', suite.institutionName);
-                if (val !== null) {
-                  onUpdateSuite({ ...suite, institutionName: val });
-                }
-              }}
-            >
-              {suite.institutionName || "Click to add institution"}
-            </h1>
+      <div className={`a4-page ${getFontStyleClass(suite.aesthetic)} ${getDifferentiationClass(suite.differentiation)} ${getColorModeClasses()} shadow-2xl relative print-page`}>
+        {/* Institutional Header - Only show if institution or instructor name exists */}
+        {(suite.institutionName || suite.instructorName) && (
+          <div className="border-b-2 border-slate-900 pb-4 mb-8 flex justify-between items-start">
+            <div className="flex-1">
+              {suite.institutionName && (
+                <h1 
+                  className="text-2xl font-bold uppercase tracking-wider h-8 min-w-[200px] cursor-text hover:bg-blue-50 p-1 rounded"
+                  onClick={() => {
+                    const val = prompt('Edit institution name:', suite.institutionName);
+                    if (val !== null) {
+                      onUpdateSuite({ ...suite, institutionName: val });
+                    }
+                  }}
+                >
+                  {suite.institutionName}
+                </h1>
+              )}
             <div className="mt-3 text-sm text-slate-700 space-y-2">
               <div className="flex space-x-4">
                 <p className="flex-1">
@@ -347,26 +396,28 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
                   <span className="border-b border-slate-400 inline-block min-w-[120px]">&nbsp;</span>
                 </p>
               </div>
-              <div className="flex space-x-4">
-                <p className="flex-1">
-                  <span className="font-semibold uppercase text-[10px]">Instructor:</span>{' '}
-                  <span 
-                    className="cursor-text hover:bg-blue-50 p-1 rounded"
-                    onClick={() => {
-                      const val = prompt('Edit instructor name:', suite.instructorName);
-                      if (val !== null) {
-                        onUpdateSuite({ ...suite, instructorName: val });
-                      }
-                    }}
-                  >
-                    {suite.instructorName || "Click to add instructor"}
-                  </span>
-                </p>
-                <p className="w-48">
-                  <span className="font-semibold uppercase text-[10px]">Section:</span>{' '}
-                  ____________________
-                </p>
-              </div>
+              {suite.instructorName && (
+                <div className="flex space-x-4">
+                  <p className="flex-1">
+                    <span className="font-semibold uppercase text-[10px]">Instructor:</span>{' '}
+                    <span 
+                      className="cursor-text hover:bg-blue-50 p-1 rounded"
+                      onClick={() => {
+                        const val = prompt('Edit instructor name:', suite.instructorName);
+                        if (val !== null) {
+                          onUpdateSuite({ ...suite, instructorName: val });
+                        }
+                      }}
+                    >
+                      {suite.instructorName}
+                    </span>
+                  </p>
+                  <p className="w-48">
+                    <span className="font-semibold uppercase text-[10px]">Section:</span>{' '}
+                    ____________________
+                  </p>
+                </div>
+              )}
             </div>
           </div>
           <div className="text-right ml-4">
@@ -374,9 +425,9 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
               <p className="text-[10px] font-bold uppercase">Type</p>
               <p className="font-bold text-lg">{suite.outputType}</p>
             </div>
-            <p className="text-[10px] mt-2 font-mono text-slate-400">ID: {suite.id.substring(0, 8).toUpperCase()}</p>
           </div>
         </div>
+        )}
 
         {/* Branding/Doodle Corner */}
         {suite.doodleBase64 && (
@@ -415,8 +466,8 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
         </div>
 
         {/* Teacher Key Section */}
-        {(suite.standards || suite.rubric) && (suite.showStandards || suite.rubric) && (
-          <div className="mt-8 pt-8 border-t-2 border-blue-600 no-print">
+        {showTeacherKey && (suite.standards || suite.rubric) && (
+          <div className="mt-8 pt-8 border-t-2 border-blue-600 teacher-key-section">
             <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
               <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center">
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

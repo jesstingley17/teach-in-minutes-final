@@ -122,27 +122,48 @@ export class PDFService {
 
     switch (section.type) {
       case 'text':
-        const textLines = pdf.splitTextToSize(section.content, width - 20);
+        // Remove markdown formatting for PDF
+        const cleanText = section.content.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1');
+        const textLines = pdf.splitTextToSize(cleanText, width - 20);
         pdf.text(textLines, margin + 15, y);
-        y += textLines.length * 5 + 5;
+        y += textLines.length * 5.5 + 5;
+        if (y > pageHeight - 40) {
+          pdf.addPage();
+          y = margin + 15;
+        }
         break;
 
       case 'question':
-        const questionLines = pdf.splitTextToSize(section.content, width - 20);
+        // Remove markdown formatting
+        const cleanQuestion = section.content.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1');
+        const questionLines = pdf.splitTextToSize(cleanQuestion, width - 20);
         pdf.text(questionLines, margin + 15, y);
-        y += questionLines.length * 5 + 5;
+        y += questionLines.length * 5.5 + 5;
+        if (y > pageHeight - 60) {
+          pdf.addPage();
+          y = margin + 15;
+        }
         
         if (section.options && section.options.length > 0) {
           // Multiple choice options
           section.options.forEach((opt, i) => {
-            const optLines = pdf.splitTextToSize(`${String.fromCharCode(97 + i)}. ${opt}`, width - 25);
+            if (y > pageHeight - 40) {
+              pdf.addPage();
+              y = margin + 15;
+            }
+            const cleanOpt = opt.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1');
+            const optLines = pdf.splitTextToSize(`${String.fromCharCode(97 + i)}. ${cleanOpt}`, width - 25);
             pdf.text(optLines, margin + 25, y);
-            y += optLines.length * 5 + 2;
+            y += optLines.length * 5.5 + 2;
           });
         } else {
           // Answer lines
           const lineCount = suite.differentiation === Differentiation.GIFTED ? 5 : 3;
           for (let i = 0; i < lineCount; i++) {
+            if (y > pageHeight - 40) {
+              pdf.addPage();
+              y = margin + 15;
+            }
             pdf.line(margin + 15, y, margin + width - 5, y);
             y += 6;
           }
@@ -152,9 +173,14 @@ export class PDFService {
 
       case 'instruction':
         pdf.setFont('helvetica', 'italic');
-        const instrLines = pdf.splitTextToSize(section.content, width - 20);
+        const cleanInstr = section.content.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1');
+        const instrLines = pdf.splitTextToSize(cleanInstr, width - 20);
         pdf.text(instrLines, margin + 15, y);
-        y += instrLines.length * 5 + 5;
+        y += instrLines.length * 5.5 + 5;
+        if (y > pageHeight - 40) {
+          pdf.addPage();
+          y = margin + 15;
+        }
         pdf.setFont('helvetica', 'normal');
         break;
 
@@ -178,11 +204,14 @@ export class PDFService {
         const items = section.content.split('\n').filter(l => l.trim());
         items.forEach((item, i) => {
           if (y > pageHeight - 60) {
-            return; // Skip if too close to bottom
+            pdf.addPage();
+            y = margin + 15;
           }
-          pdf.text(item, leftCol, y);
+          const cleanItem = item.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1');
+          const itemLines = pdf.splitTextToSize(cleanItem, width / 2 - 30);
+          pdf.text(itemLines, leftCol, y);
           pdf.rect(rightCol - 30, y - 4, 25, 6);
-          y += 8;
+          y += Math.max(itemLines.length * 5.5, 8);
         });
         y += 5;
         break;

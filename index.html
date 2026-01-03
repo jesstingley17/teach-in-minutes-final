@@ -28,16 +28,24 @@
                 margin: 0 !important;
                 padding: 0 !important;
             }
-            .a4-page {
+            .preview-container {
+                background: white !important;
+                padding: 0 !important;
+            }
+            .print-page {
                 page-break-after: always;
+                page-break-inside: avoid;
                 width: 210mm !important;
                 min-height: 297mm !important;
                 margin: 0 !important;
                 padding: 20mm !important;
                 box-shadow: none !important;
             }
-            .a4-page:last-child {
+            .print-page:last-child {
                 page-break-after: auto;
+            }
+            .teacher-key-section {
+                page-break-before: always;
             }
         }
 
@@ -107,6 +115,43 @@
             background: linear-gradient(to right, #cbd5e1 0%, #cbd5e1 95%, transparent 95%);
             background-size: 20px 1px;
             margin: 24px 0;
+        }
+
+        /* Color Mode Styles */
+        .colorful-mode .a4-page {
+            background: linear-gradient(to bottom, #fef3c7 0%, #ffffff 5%);
+        }
+        .colorful-mode h2, .colorful-mode h3 {
+            color: #1e40af;
+            border-left: 4px solid #3b82f6;
+            padding-left: 12px;
+        }
+        .colorful-mode .border-b-2 {
+            border-color: #3b82f6;
+        }
+        .colorful-mode .bg-slate-50 {
+            background-color: #dbeafe;
+        }
+        .colorful-mode .bg-blue-50 {
+            background-color: #dbeafe;
+        }
+
+        .pastel-mode .a4-page {
+            background: linear-gradient(to bottom, #fdf2f8 0%, #ffffff 5%);
+        }
+        .pastel-mode h2, .pastel-mode h3 {
+            color: #7c3aed;
+            border-left: 4px solid #c084fc;
+            padding-left: 12px;
+        }
+        .pastel-mode .border-b-2 {
+            border-color: #c084fc;
+        }
+        .pastel-mode .bg-slate-50 {
+            background-color: #fce7f3;
+        }
+        .pastel-mode .bg-blue-50 {
+            background-color: #f3e8ff;
         }
 
         /* Diagram placeholder styling */
