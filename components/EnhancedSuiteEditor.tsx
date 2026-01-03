@@ -603,20 +603,10 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
               </h3>
               
               {/* Standards Section */}
-              {suite.standards && suite.standards.length > 0 && suite.showStandards && (
+              {suite.standards && suite.standards.length > 0 && (
                 <div className="mb-6">
                   <h4 className="text-sm font-bold text-blue-800 mb-3">Aligned Standards</h4>
                   <div className="space-y-3">
-                    {suite.gradeLevel && (
-                      <p className="text-sm font-medium text-blue-800">
-                        Grade Level: <span className="font-bold">{suite.gradeLevel}</span>
-                      </p>
-                    )}
-                    {suite.standardsFramework && (
-                      <p className="text-sm font-medium text-blue-800 mb-3">
-                        Framework: <span className="font-bold">{suite.standardsFramework}</span>
-                      </p>
-                    )}
                     <div className="space-y-2">
                       {suite.standards.map((standard, index) => (
                         <div key={index} className="bg-white p-3 rounded border border-blue-200">
