@@ -267,12 +267,11 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
                 </div>
               )}
               
-              {/* Empty box for student work - NO content inside */}
-              <div className="w-full h-80 border-2 border-dashed border-slate-400 bg-white rounded-lg flex flex-col items-center justify-center">
-                <svg className="w-12 h-12 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
-                <p className="text-sm text-slate-500 italic">Your Drawing / Visualization Space</p>
+              {/* Label above the drawing box */}
+              <p className="text-sm text-slate-500 italic mb-2">Your Drawing / Visualization Space</p>
+              
+              {/* Empty box for student work - completely empty */}
+              <div className="w-full h-80 border-2 border-dashed border-slate-400 bg-white rounded-lg">
               </div>
             </div>
           )}
