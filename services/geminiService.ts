@@ -6,7 +6,7 @@ import { BloomLevel, Differentiation, OutputType, AestheticStyle, InstructionalS
 // We create the instance inside the functions to ensure it uses the latest key if refreshed
 
 export const analyzeCurriculum = async (rawText: string): Promise<CurriculumNode[]> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  const ai = new GoogleGenAI({ apiKey: import.meta.env.GEMINI_API_KEY || '' });
   
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
@@ -36,7 +36,7 @@ export const analyzeCurriculum = async (rawText: string): Promise<CurriculumNode
 };
 
 export const analyzeDocument = async (base64Data: string, mimeType: string): Promise<CurriculumNode[]> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  const ai = new GoogleGenAI({ apiKey: import.meta.env.GEMINI_API_KEY || '' });
   
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
@@ -82,7 +82,7 @@ export const generateSuite = async (
     branding: { institution: string, instructor: string }
   }
 ): Promise<InstructionalSuite> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  const ai = new GoogleGenAI({ apiKey: import.meta.env.GEMINI_API_KEY || '' });
 
   const prompt = `Act as a world-class Instructional Designer. Generate a professionally structured ${config.outputType} for the topic: "${node.title}".
   
@@ -149,7 +149,7 @@ export const generateSuite = async (
 };
 
 export const generateDoodle = async (topicPrompt: string): Promise<string> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  const ai = new GoogleGenAI({ apiKey: import.meta.env.GEMINI_API_KEY || '' });
   
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash-image',
