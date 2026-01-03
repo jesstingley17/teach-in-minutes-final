@@ -615,6 +615,48 @@ const App: React.FC = () => {
           )}
         </div>
 
+        {/* Saved Drafts Section */}
+        <div className="px-6 pb-4 border-b-2 border-purple-200/60">
+          <section>
+            <label className="block text-xs font-bold text-purple-700 uppercase mb-3">Saved Drafts</label>
+            {drafts.length > 0 ? (
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                {drafts.map((draft, index) => (
+                  <div
+                    key={draft.id}
+                    onClick={() => {
+                      setActiveSuite(draft);
+                      setBranding({
+                        institution: draft.institutionName || '',
+                        instructor: draft.instructorName || ''
+                      });
+                    }}
+                    className={`stagger-item group relative w-full text-left p-4 rounded-xl border-2 cursor-pointer card-interactive glass border-purple-200 bg-white/90 hover:border-purple-400 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 shadow-sm hover:shadow-lg ${
+                      activeSuite?.id === draft.id ? 'border-purple-500 bg-gradient-to-r from-purple-50 to-pink-50' : ''
+                    }`}
+                  >
+                    <p className="text-xs font-bold line-clamp-1 pr-6 text-slate-800">{draft.title}</p>
+                    <p className="text-[10px] text-slate-600 mt-1">
+                      {draft.outputType} • {draft.sections.length} sections
+                    </p>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteDraft(e, draft.id);
+                      }}
+                      className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-red-500 transition-opacity"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500 italic py-2">No saved drafts yet. Create or generate materials to save drafts.</p>
+            )}
+          </section>
+        </div>
+
         {/* Saved Parsed Curriculums Section */}
         {USE_SUPABASE && user && (
           <div className="px-6 pb-4 border-b-2 border-purple-200/60">

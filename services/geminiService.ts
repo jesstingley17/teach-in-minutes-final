@@ -188,7 +188,46 @@ export const generateSuite = async (
    - Follow the original curriculum structure but enhance it professionally
    - Mix of formats: fill-ins, sentence frames, diagrams, worked examples, practice
    - Clear progression from concept introduction → practice → application`
-    : `For WORKSHEET, create questions, exercises, and activities for students to complete with the same professional quality standards above.`;
+    : `CRITICAL WORKSHEET REQUIREMENTS - Professional Classroom-Ready Level:
+
+1. PEDAGOGICAL STRUCTURE - Use "I Do → We Do → You Do" framework:
+   - I Do: Start with 1-2 worked examples with complete solutions shown step-by-step
+   - We Do: Include guided practice with sentence frames, scaffolding, and partial solutions
+   - You Do: Independent practice with clear instructions
+
+2. WORKED EXAMPLES FIRST:
+   - ALWAYS include 1-2 fully solved examples BEFORE independent practice questions
+   - Show complete step-by-step solutions with explanations
+   - Example format: "Example: Add 1/5 + 2/5. Solution: Since both denominators are 5, we add the numerators: 1 + 2 = 3. The answer is 3/5."
+
+3. REDUCE REPETITION:
+   - Avoid asking the same type of question multiple times (e.g., "identify the denominator" appears 3+ times)
+   - Vary question types: multiple choice, short answer, matching, drawing, sentence completion
+   - Each question should target a different aspect or skill level
+
+4. COMPLETE MATCHING EXERCISES:
+   - MUST include both items to match AND a complete word bank/options array
+   - Never create matching exercises with only items but no options
+   - Example: Items: "Numerator\nDenominator" Options: ["Top number of fraction", "Bottom number of fraction"]
+
+5. COMPLETE DIAGRAM INSTRUCTIONS:
+   - ALL diagram instructions must be complete sentences with proper endings
+   - Be specific: "Draw two separate rectangles of equal size. Divide the first rectangle into 5 equal horizontal strips. Divide the second rectangle into 5 equal horizontal strips. Shade 2 strips in the first rectangle and 3 strips in the second rectangle to show 2/5 + 3/5."
+
+6. DIFFERENTIATION:
+   - Include ONE challenge extension (marked clearly: "Challenge:" or "Extension:")
+   - Include ONE remediation option (marked clearly: "Extra Help:" or "Hint:")
+   - Integrate seamlessly without increasing page length
+
+7. COGNITIVE DEPTH:
+   - Include "why" explanations, not just "what"
+   - Use think-aloud prompts: "Think about: Why can we add 1/5 and 2/5 but not 1/5 and 1/3?"
+   - Include real-world connections and analogies
+
+8. COMPLETE CONTENT:
+   - NO truncated sentences, NO cut-off text, NO incomplete thoughts
+   - Every section must be fully usable by students
+   - All questions must have complete instructions`;
 
   const prompt = `Act as a world-class Instructional Designer and Curriculum Developer. Generate a professionally structured, classroom-ready ${outputType} for the topic: "${node.title}".
   

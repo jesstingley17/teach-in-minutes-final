@@ -345,7 +345,7 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
             </select>
           </div>
           {/* Teacher Key Toggle */}
-          {(suite.standards || suite.rubric) && (
+          {(suite.standards || suite.rubric || suite.sections.some(s => s.correctAnswer !== undefined)) && (
             <button
               onClick={() => setShowTeacherKey(!showTeacherKey)}
               className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors flex items-center space-x-2 ${
@@ -483,7 +483,7 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
         </div>
 
         {/* Teacher Key Section */}
-        {showTeacherKey && (suite.standards || suite.rubric) && (
+        {showTeacherKey && (suite.standards || suite.rubric || suite.sections.some(s => s.correctAnswer !== undefined)) && (
           <div className="mt-8 pt-8 border-t-2 border-blue-600 teacher-key-section">
             <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
               <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center">
@@ -529,12 +529,12 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
                 </div>
               )}
 
-              {/* Answer Key Section */}
-              {currentPage.sections.some(s => s.correctAnswer !== undefined) && (
+              {/* Answer Key Section - Show answers from ALL pages */}
+              {suite.sections.some(s => s.correctAnswer !== undefined) && (
                 <div className="mt-6 pt-6 border-t border-blue-200">
                   <h4 className="text-sm font-bold text-blue-800 mb-3">Answer Key</h4>
                   <div className="space-y-4">
-                    {currentPage.sections
+                    {suite.sections
                       .filter(s => s.correctAnswer !== undefined && (s.type === 'question' || s.type === 'matching'))
                       .map((section) => (
                         <div key={section.id} className="bg-white p-4 rounded border border-blue-200">
