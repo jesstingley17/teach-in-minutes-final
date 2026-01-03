@@ -160,7 +160,7 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
                   onClick={() => startEdit(section)}
                   className="cursor-text hover:bg-blue-50 p-2 rounded min-h-[2rem]"
                 >
-                  {section.content}
+                  {renderMarkdown(section.content)}
                 </div>
               )}
             </div>
