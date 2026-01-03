@@ -183,7 +183,7 @@ const SuitePreview: React.FC<SuitePreviewProps> = ({ suite, onEditSection }) => 
             <p>Verification Code: {suite.id.toUpperCase()}</p>
           </div>
           <div className="text-right space-y-1">
-            <p>Bloom: {suite.bloomLevel} • Mode: {suite.differentiation}</p>
+            <p>Level: {suite.bloomLevel} • Mode: {suite.differentiation}</p>
             <p>Page 01</p>
           </div>
         </div>

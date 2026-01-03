@@ -6,14 +6,18 @@ import {
   BloomLevel, 
   Differentiation, 
   AestheticStyle,
-  BrandingConfig 
+  BrandingConfig,
+  GradeLevel,
+  StandardsFramework
 } from './types';
 import { analyzeCurriculum, analyzeDocument, generateSuite, generateDoodle } from './services/geminiService';
 import { SupabaseService } from './services/supabaseService';
+import { StandardsService } from './services/standardsService';
 import { PDFService } from './services/pdfService';
 import { useAuth } from './contexts/AuthContext';
 import EnhancedSuiteEditor from './components/EnhancedSuiteEditor';
 import AuthModal from './components/AuthModal';
+import GuidedWizard from './components/GuidedWizard';
 
 const STORAGE_KEY = 'blueprint_pro_drafts_v1';
 const USE_SUPABASE = !!(import.meta.env.SUPABASE_URL && import.meta.env.SUPABASE_ANON_KEY);
@@ -21,6 +25,7 @@ const USE_SUPABASE = !!(import.meta.env.SUPABASE_URL && import.meta.env.SUPABASE
 const App: React.FC = () => {
   const { user, signOut } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
   const [apiKeySelected, setApiKeySelected] = useState<boolean | null>(null);
   const [rawCurriculum, setRawCurriculum] = useState('');
   const [nodes, setNodes] = useState<CurriculumNode[]>([]);
@@ -172,6 +177,72 @@ const App: React.FC = () => {
     } catch (error) {
       console.error(error);
       alert('Generation failed. Ensure your API project has Billing enabled for Gemini 3 Pro.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleWizardComplete = async (wizardData: {
+    topic: string;
+    description: string;
+    learningObjectives: string[];
+    outputType: OutputType;
+    bloomLevel: BloomLevel;
+    differentiation: Differentiation;
+    aesthetic: AestheticStyle;
+    pageCount: number;
+    institution: string;
+    instructor: string;
+    gradeLevel: GradeLevel;
+    standardsFramework: StandardsFramework;
+  }) => {
+    setShowWizard(false);
+    setIsGenerating(true);
+    
+    // Create a synthetic CurriculumNode from wizard data
+    const syntheticNode: CurriculumNode = {
+      id: `wizard-${Date.now()}`,
+      title: wizardData.topic,
+      description: wizardData.description,
+      learningObjectives: wizardData.learningObjectives,
+      suggestedDuration: 'Custom'
+    };
+
+    try {
+      // Fetch standards alignment
+      const standards = await StandardsService.fetchStandards(
+        wizardData.topic,
+        wizardData.description,
+        wizardData.learningObjectives,
+        wizardData.gradeLevel,
+        wizardData.standardsFramework
+      );
+
+      const doodleData = await generateDoodle(syntheticNode, wizardData.aesthetic);
+      const suite = await generateSuite(
+        syntheticNode,
+        wizardData.outputType,
+        wizardData.bloomLevel,
+        wizardData.differentiation,
+        wizardData.aesthetic,
+        {
+          institution: wizardData.institution,
+          instructor: wizardData.instructor
+        },
+        doodleData,
+        wizardData.pageCount,
+        wizardData.gradeLevel,
+        standards
+      );
+      setActiveSuite(suite);
+      // Update branding state
+      setBranding({
+        institution: wizardData.institution,
+        instructor: wizardData.instructor
+      });
+    } catch (error) {
+      console.error(error);
+      alert('Generation failed. Please check your API key and try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -388,6 +459,29 @@ const App: React.FC = () => {
           {/* Intake Section */}
           <section className="space-y-4">
             <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-3">Create Materials</label>
+              
+              {/* Create from Scratch Button */}
+              <button
+                onClick={() => setShowWizard(true)}
+                className="w-full mb-4 p-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Create from Scratch</span>
+              </button>
+
+              <div className="relative mb-4">
+                <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                  <div className="w-full border-t border-slate-200"></div>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-slate-300 font-bold">or upload existing</span>
+                </div>
+              </div>
+            </div>
+            <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-3">AI Curriculum Parser</label>
               <div 
                 onClick={() => fileInputRef.current?.click()}
@@ -477,7 +571,7 @@ const App: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Cognitive Depth (Bloom)</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Learning Level</label>
                   <select 
                     value={genConfig.bloomLevel}
                     onChange={(e) => setGenConfig({...genConfig, bloomLevel: e.target.value as BloomLevel})}
@@ -485,6 +579,7 @@ const App: React.FC = () => {
                   >
                     {Object.values(BloomLevel).map(val => <option key={val} value={val}>{val}</option>)}
                   </select>
+                  <p className="text-[9px] text-slate-400 mt-1">How deeply should students engage with the content?</p>
                 </div>
 
                 <div>
@@ -628,7 +723,13 @@ const App: React.FC = () => {
               </div>
               <div className="text-center max-w-sm">
                 <h2 className="text-xl font-bold text-slate-900 mb-2">Get Started</h2>
-                <p className="text-sm">Upload a curriculum (PDF/Image) or paste syllabus text in the sidebar to analyze it into lesson nodes. Then, select a node to generate your multi-page educational materials.</p>
+                <p className="text-sm mb-4">Create materials from scratch using our guided wizard, or upload a curriculum (PDF/Image) or paste syllabus text to analyze it into lesson nodes.</p>
+                <button
+                  onClick={() => setShowWizard(true)}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-all shadow-lg"
+                >
+                  Start Guided Wizard
+                </button>
               </div>
               <div className="grid grid-cols-2 gap-4 mt-8 w-full max-w-md">
                  <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
@@ -648,6 +749,14 @@ const App: React.FC = () => {
 
       {/* Auth Modal */}
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
+
+      {/* Guided Wizard */}
+      {showWizard && (
+        <GuidedWizard
+          onComplete={handleWizardComplete}
+          onCancel={() => setShowWizard(false)}
+        />
+      )}
     </div>
   );
 };

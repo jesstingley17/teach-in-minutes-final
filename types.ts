@@ -28,6 +28,43 @@ export enum OutputType {
   GUIDED_NOTES = 'Guided Notes'
 }
 
+export enum GradeLevel {
+  K = 'Kindergarten',
+  GRADE_1 = '1st Grade',
+  GRADE_2 = '2nd Grade',
+  GRADE_3 = '3rd Grade',
+  GRADE_4 = '4th Grade',
+  GRADE_5 = '5th Grade',
+  GRADE_6 = '6th Grade',
+  GRADE_7 = '7th Grade',
+  GRADE_8 = '8th Grade',
+  GRADE_9 = '9th Grade',
+  GRADE_10 = '10th Grade',
+  GRADE_11 = '11th Grade',
+  GRADE_12 = '12th Grade',
+  UNIVERSITY = 'University'
+}
+
+export enum StandardsFramework {
+  COMMON_CORE_MATH = 'Common Core Math',
+  COMMON_CORE_ELA = 'Common Core ELA',
+  NGSS = 'NGSS (Next Gen Science)',
+  STATE_TEXAS = 'Texas TEKS',
+  STATE_CALIFORNIA = 'California Standards',
+  STATE_FLORIDA = 'Florida Standards',
+  STATE_NEW_YORK = 'New York Standards',
+  INTERNATIONAL_BAC = 'IB (International Baccalaureate)',
+  AP = 'AP (Advanced Placement)',
+  CUSTOM = 'Custom/Other'
+}
+
+export interface EducationalStandard {
+  code: string; // e.g., "CCSS.MATH.CONTENT.3.OA.A.1"
+  description: string; // Full text of the standard
+  framework: StandardsFramework;
+  subject?: string; // Math, ELA, Science, etc.
+}
+
 export interface CurriculumNode {
   id: string;
   title: string;
@@ -73,6 +110,10 @@ export interface InstructionalSuite {
   createdAt?: string;
   updatedAt?: string;
   isInteractive?: boolean; // Interactive mode flag
+  gradeLevel?: GradeLevel;
+  standardsFramework?: StandardsFramework;
+  standards?: EducationalStandard[]; // Aligned educational standards
+  showStandards?: boolean; // Whether to display standards on materials
 }
 
 export interface Folder {

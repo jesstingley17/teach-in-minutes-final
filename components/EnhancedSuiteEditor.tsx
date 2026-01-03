@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { InstructionalSuite, AestheticStyle, Differentiation, DocumentSection, Page } from '../types';
+import { StandardsService } from '../services/standardsService';
 
 interface EnhancedSuiteEditorProps {
   suite: InstructionalSuite;
@@ -392,10 +393,53 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
             <p>ID: {suite.id.substring(0, 8).toUpperCase()}</p>
           </div>
           <div className="text-right space-y-1">
-            <p>Bloom: {suite.bloomLevel} • Mode: {suite.differentiation}</p>
+            <p>Level: {suite.bloomLevel} • Mode: {suite.differentiation}</p>
             <p>Page {currentPage.pageNumber} of {pages.length}</p>
           </div>
         </div>
+
+        {/* Teacher Key / Standards Section */}
+        {suite.standards && suite.standards.length > 0 && suite.showStandards && (
+          <div className="mt-8 pt-8 border-t-2 border-blue-600 no-print">
+            <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
+              <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                Teacher Key - Aligned Standards
+              </h3>
+              <div className="space-y-3">
+                {suite.gradeLevel && (
+                  <p className="text-sm font-medium text-blue-800">
+                    Grade Level: <span className="font-bold">{suite.gradeLevel}</span>
+                  </p>
+                )}
+                {suite.standardsFramework && (
+                  <p className="text-sm font-medium text-blue-800 mb-3">
+                    Framework: <span className="font-bold">{suite.standardsFramework}</span>
+                  </p>
+                )}
+                <div className="space-y-2">
+                  {suite.standards.map((standard, index) => (
+                    <div key={index} className="bg-white p-3 rounded border border-blue-200">
+                      <p className="text-xs font-bold text-blue-600 uppercase tracking-wide mb-1">
+                        {standard.code}
+                      </p>
+                      <p className="text-sm text-slate-700">
+                        {standard.description}
+                      </p>
+                      {standard.subject && (
+                        <p className="text-xs text-slate-500 mt-1">
+                          Subject: {standard.subject}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

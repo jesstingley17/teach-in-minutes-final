@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
-import { BloomLevel, Differentiation, OutputType, AestheticStyle, InstructionalSuite, CurriculumNode } from "../types";
+import { BloomLevel, Differentiation, OutputType, AestheticStyle, InstructionalSuite, CurriculumNode, GradeLevel, EducationalStandard } from "../types";
 
 // Note: API_KEY is handled externally via import.meta.env
 // We create the instance inside the functions to ensure it uses the latest key if refreshed
@@ -105,7 +105,9 @@ export const generateSuite = async (
   aesthetic: AestheticStyle,
   branding: { institution: string, instructor: string },
   doodleBase64?: string,
-  pageCount: number = 1
+  pageCount: number = 1,
+  gradeLevel?: GradeLevel,
+  standards?: EducationalStandard[]
 ): Promise<InstructionalSuite> => {
   const apiKey = import.meta.env.GEMINI_API_KEY;
   
@@ -120,14 +122,21 @@ export const generateSuite = async (
   const sectionsPerPage = pageCount === 1 ? 8 : pageCount <= 3 ? 6 : 5;
   const totalSections = pageCount * sectionsPerPage;
   
+  let standardsText = '';
+  if (standards && standards.length > 0) {
+    standardsText = `\n  - Aligned Standards:\n${standards.map(s => `    * ${s.code}: ${s.description}`).join('\n')}\n  Ensure the content directly addresses and aligns with these standards.`;
+  }
+
+  const gradeText = gradeLevel ? `\n  - Grade Level: ${gradeLevel}` : '';
+
   const prompt = `Act as a world-class Instructional Designer. Generate a professionally structured ${outputType} for the topic: "${node.title}".
   
   Details:
   - Target Bloom's Taxonomy Level: ${bloomLevel}
-  - Differentiation Strategy: ${differentiation}
+  - Differentiation Strategy: ${differentiation}${gradeText}
   - Learning Objectives: ${node.learningObjectives.join(', ')}
   - Topic Description: ${node.description}
-  - Target Pages: ${pageCount} pages (generate approximately ${totalSections} sections total, distributed across ${pageCount} pages)
+  - Target Pages: ${pageCount} pages (generate approximately ${totalSections} sections total, distributed across ${pageCount} pages)${standardsText}
   
   The output should be high-fidelity, pedagogically sound, and ready for classroom use. 
   Generate approximately ${totalSections} sections total to fill ${pageCount} pages with appropriate depth.
@@ -193,6 +202,9 @@ export const generateSuite = async (
       doodleBase64: doodleBase64 || '',
       sections: sections,
       pageCount: pageCount,
+      gradeLevel: gradeLevel,
+      standards: standards,
+      showStandards: true,
     };
   } catch (error: any) {
     console.error('Gemini API Error Details:', {
