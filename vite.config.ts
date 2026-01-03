@@ -5,12 +5,6 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   return {
     plugins: [react()],
-    build: {
-      // Exclude API folder from Vite build - Vercel handles it separately
-      rollupOptions: {
-        external: (id) => id.startsWith('/api/') || id.startsWith('./api/')
-      }
-    },
     define: {
       'import.meta.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY),
       'import.meta.env.SUPABASE_URL': JSON.stringify(env.SUPABASE_URL || env.VITE_SUPABASE_URL),
