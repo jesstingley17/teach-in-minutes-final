@@ -5,7 +5,11 @@ import { BloomLevel, Differentiation, OutputType, AestheticStyle, InstructionalS
 // Note: API_KEY is handled externally via import.meta.env
 // We create the instance inside the functions to ensure it uses the latest key if refreshed
 
-export const analyzeCurriculum = async (rawText: string): Promise<CurriculumNode[]> => {
+export const analyzeCurriculum = async (
+  rawText: string,
+  gradeLevel?: GradeLevel,
+  standardsFramework?: StandardsFramework
+): Promise<CurriculumNode[]> => {
   const apiKey = import.meta.env.GEMINI_API_KEY;
   
   if (!apiKey) {
@@ -16,10 +20,13 @@ export const analyzeCurriculum = async (rawText: string): Promise<CurriculumNode
   
   const ai = new GoogleGenAI({ apiKey });
   
+  const gradeContext = gradeLevel ? `\n\nGrade Level Context: ${gradeLevel}` : '';
+  const standardsContext = standardsFramework ? `\n\nEducational Standards Framework: ${standardsFramework}. Consider relevant standards when decomposing the curriculum.` : '';
+
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
-      contents: `Analyze this curriculum/syllabus and decompose it into a logical sequence of instructional nodes. Each node should represent a discrete lesson or module.
+      contents: `Analyze this curriculum/syllabus and decompose it into a logical sequence of instructional nodes. Each node should represent a discrete lesson or module.${gradeContext}${standardsContext}
     
     Text: ${rawText.substring(0, 15000)}`,
       config: {
@@ -48,7 +55,12 @@ export const analyzeCurriculum = async (rawText: string): Promise<CurriculumNode
   }
 };
 
-export const analyzeDocument = async (base64Data: string, mimeType: string): Promise<CurriculumNode[]> => {
+export const analyzeDocument = async (
+  base64Data: string, 
+  mimeType: string,
+  gradeLevel?: GradeLevel,
+  standardsFramework?: StandardsFramework
+): Promise<CurriculumNode[]> => {
   const apiKey = import.meta.env.GEMINI_API_KEY;
   
   if (!apiKey) {
@@ -68,7 +80,7 @@ export const analyzeDocument = async (base64Data: string, mimeType: string): Pro
           },
         },
         {
-          text: "Analyze this document (syllabus, textbook, or curriculum) and decompose it into a logical sequence of instructional nodes. Each node should represent a discrete lesson or module. Provide the output in the requested JSON format."
+          text: `Analyze this document (syllabus, textbook, or curriculum) and decompose it into a logical sequence of instructional nodes. Each node should represent a discrete lesson or module.${gradeLevel ? `\n\nGrade Level Context: ${gradeLevel}` : ''}${standardsFramework ? `\n\nEducational Standards Framework: ${standardsFramework}. Consider relevant standards when decomposing the curriculum.` : ''}\n\nProvide the output in the requested JSON format.`
         }
       ],
       config: {

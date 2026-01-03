@@ -18,6 +18,7 @@ import { useAuth } from './contexts/AuthContext';
 import EnhancedSuiteEditor from './components/EnhancedSuiteEditor';
 import AuthModal from './components/AuthModal';
 import GuidedWizard from './components/GuidedWizard';
+import SettingsModal from './components/SettingsModal';
 
 const STORAGE_KEY = 'blueprint_pro_drafts_v1';
 const USE_SUPABASE = !!(import.meta.env.SUPABASE_URL && import.meta.env.SUPABASE_ANON_KEY);
@@ -26,6 +27,8 @@ const App: React.FC = () => {
   const { user, signOut } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [userSettings, setUserSettings] = useState<any>(null);
   const [apiKeySelected, setApiKeySelected] = useState<boolean | null>(null);
   const [rawCurriculum, setRawCurriculum] = useState('');
   const [nodes, setNodes] = useState<CurriculumNode[]>([]);
@@ -47,6 +50,11 @@ const App: React.FC = () => {
   const [branding, setBranding] = useState<BrandingConfig>({
     institution: '',
     instructor: ''
+  });
+
+  const [parseConfig, setParseConfig] = useState({
+    gradeLevel: GradeLevel.GRADE_5,
+    standardsFramework: StandardsFramework.COMMON_CORE_MATH
   });
 
   const [genConfig, setGenConfig] = useState({
@@ -168,7 +176,7 @@ const App: React.FC = () => {
         const mimeType = file.type;
         
         try {
-          const parsedNodes = await analyzeDocument(base64Data, mimeType);
+          const parsedNodes = await analyzeDocument(base64Data, mimeType, parseConfig.gradeLevel, parseConfig.standardsFramework);
           setNodes(parsedNodes);
           if (parsedNodes.length > 0) setSelectedNode(parsedNodes[0]);
           
@@ -468,12 +476,24 @@ const App: React.FC = () => {
                       <p className="text-[10px] text-slate-500">Signed In</p>
                     </div>
                   </div>
-                  <button
-                    onClick={signOut}
-                    className="text-xs text-slate-400 hover:text-slate-600 font-medium"
-                  >
-                    Sign Out
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setShowSettings(true)}
+                      className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Settings"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={signOut}
+                      className="text-xs text-slate-400 hover:text-slate-600 font-medium"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <button
@@ -572,6 +592,36 @@ const App: React.FC = () => {
                 </div>
               </div>
             </div>
+            
+            {/* Parsing Context Section */}
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-3">Parsing Context (Optional)</label>
+              <div className="space-y-2 mb-4">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Grade Level</label>
+                  <select 
+                    value={parseConfig.gradeLevel}
+                    onChange={(e) => setParseConfig({...parseConfig, gradeLevel: e.target.value as GradeLevel})}
+                    className="w-full mt-1 p-2 text-sm bg-white border border-slate-200 rounded-lg"
+                  >
+                    {Object.values(GradeLevel).map(grade => <option key={grade} value={grade}>{grade}</option>)}
+                  </select>
+                  <p className="text-[9px] text-slate-400 mt-0.5">Helps AI parse content appropriately for grade level</p>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Standards Framework</label>
+                  <select 
+                    value={parseConfig.standardsFramework}
+                    onChange={(e) => setParseConfig({...parseConfig, standardsFramework: e.target.value as StandardsFramework})}
+                    className="w-full mt-1 p-2 text-sm bg-white border border-slate-200 rounded-lg"
+                  >
+                    {Object.values(StandardsFramework).map(framework => <option key={framework} value={framework}>{framework}</option>)}
+                  </select>
+                  <p className="text-[9px] text-slate-400 mt-0.5">Helps AI align parsed content with standards</p>
+                </div>
+              </div>
+            </div>
+            
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-3">AI Curriculum Parser</label>
               <div 
@@ -670,7 +720,9 @@ const App: React.FC = () => {
                   >
                     {Object.values(BloomLevel).map(val => <option key={val} value={val}>{val}</option>)}
                   </select>
-                  <p className="text-[9px] text-slate-400 mt-1">How deeply should students engage with the content?</p>
+                  <p className="text-[9px] text-slate-500 mt-1 italic">
+                    Select based on how complex you want the questions and tasks to be
+                  </p>
                 </div>
 
                 <div>

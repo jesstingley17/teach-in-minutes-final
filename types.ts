@@ -1,9 +1,9 @@
 
 export enum BloomLevel {
-  RECALL = 'Recall',
-  APPLICATION = 'Application',
-  EVALUATION = 'Evaluation',
-  CREATION = 'Creation'
+  RECALL = 'Basic - Recall facts, define terms, identify concepts',
+  APPLICATION = 'Intermediate - Solve problems, apply knowledge, use concepts',
+  EVALUATION = 'Advanced - Judge quality, compare ideas, critique arguments',
+  CREATION = 'Expert - Design solutions, create projects, build new work'
 }
 
 export enum Differentiation {

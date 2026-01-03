@@ -240,7 +240,9 @@ const GuidedWizard: React.FC<GuidedWizardProps> = ({ onComplete, onCancel }) => 
                   <option key={level} value={level}>{level}</option>
                 ))}
               </select>
-              <p className="text-xs text-slate-500 mt-1">How deeply should students engage with the content?</p>
+              <p className="text-xs text-slate-500 mt-1 italic">
+                Select based on how complex you want the questions and tasks to be
+              </p>
             </div>
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-2">

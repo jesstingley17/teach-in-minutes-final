@@ -235,4 +235,103 @@ export class SupabaseService {
       return { success: false, error: error.message };
     }
   }
+
+  /**
+   * Save user settings
+   */
+  static async saveUserSettings(settings: {
+    institutionName?: string;
+    instructorName?: string;
+    defaultOutputType?: string;
+    defaultGradeLevel?: string;
+    defaultStandardsFramework?: string;
+    defaultBloomLevel?: string;
+    defaultDifferentiation?: string;
+    defaultAesthetic?: string;
+    defaultPageCount?: number;
+  }): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { success: false, error: 'User not authenticated' };
+      }
+
+      // Check if settings exist
+      const { data: existing } = await supabase
+        .from('user_settings')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (existing) {
+        // Update existing
+        const { error } = await supabase
+          .from('user_settings')
+          .update(settings)
+          .eq('user_id', user.id);
+        
+        if (error) throw error;
+      } else {
+        // Insert new
+        const { error } = await supabase
+          .from('user_settings')
+          .insert({
+            user_id: user.id,
+            ...settings
+          });
+        
+        if (error) throw error;
+      }
+
+      return { success: true };
+    } catch (error: any) {
+      console.error('Error saving user settings:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Load user settings
+   */
+  static async loadUserSettings(): Promise<{
+    institutionName: string;
+    instructorName: string;
+    defaultOutputType: string;
+    defaultGradeLevel: string;
+    defaultStandardsFramework: string;
+    defaultBloomLevel: string;
+    defaultDifferentiation: string;
+    defaultAesthetic: string;
+    defaultPageCount: number;
+  } | null> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data, error } = await supabase
+        .from('user_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows returned
+      
+      if (!data) return null;
+
+      return {
+        institutionName: data.institution_name || '',
+        instructorName: data.instructor_name || '',
+        defaultOutputType: data.default_output_type || 'Worksheet',
+        defaultGradeLevel: data.default_grade_level || '5th Grade',
+        defaultStandardsFramework: data.default_standards_framework || 'Common Core Math',
+        defaultBloomLevel: data.default_bloom_level || 'Application',
+        defaultDifferentiation: data.default_differentiation || 'General',
+        defaultAesthetic: data.default_aesthetic || 'Modern Professional',
+        defaultPageCount: data.default_page_count || 1,
+      };
+    } catch (error) {
+      console.error('Error loading user settings:', error);
+      return null;
+    }
+  }
 }
