@@ -31,6 +31,9 @@ OPENAI_API_KEY=your_openai_api_key_here
 
 # Anthropic (Optional - for Claude)
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
+
+# Gamma (Optional - for design enhancement)
+GAMMA_API_KEY=your_gamma_api_key_here
 ```
 
 ### Getting API Keys
@@ -49,6 +52,12 @@ ANTHROPIC_API_KEY=your_anthropic_api_key_here
 1. Visit [Anthropic Console](https://console.anthropic.com/)
 2. Create a new API key
 3. Copy and add to `.env.local`
+
+#### Gamma (Design Enhancement)
+1. Visit [Gamma App](https://gamma.app) and upgrade to Pro/Ultra/Team/Business account
+2. Go to Account Settings > API key tab
+3. Create a new API key
+4. Copy and add to `.env.local`
 
 ## How It Works
 
@@ -74,13 +83,14 @@ ANTHROPIC_API_KEY=your_anthropic_api_key_here
 
 ## Features by Provider
 
-| Feature | Gemini | OpenAI | Claude |
-|---------|--------|--------|--------|
-| Curriculum Analysis | ✅ | ✅ | ✅ |
-| Document Analysis (PDF/Image) | ✅ | ✅ | ✅ |
-| Suite Generation | ✅ | ✅ | ✅ |
-| Image Generation (Doodles) | ✅ | ❌ | ❌ |
-| Fast Chatbot | ✅ | ✅ | ✅ |
+| Feature | Gemini | OpenAI | Claude | Gamma |
+|---------|--------|--------|--------|-------|
+| Curriculum Analysis | ✅ | ✅ | ✅ | ❌ |
+| Document Analysis (PDF/Image) | ✅ | ✅ | ✅ | ❌ |
+| Suite Generation | ✅ | ✅ | ✅ | ❌ |
+| Image Generation (Doodles) | ✅ | ❌ | ❌ | ❌ |
+| Fast Chatbot | ✅ | ✅ | ✅ | ❌ |
+| Design Enhancement (Presentations) | ❌ | ❌ | ❌ | ✅ |
 
 ## Usage
 
