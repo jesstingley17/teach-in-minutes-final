@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { InstructionalSuite, AestheticStyle, Differentiation, DocumentSection, Page } from '../types';
 import { StandardsService } from '../services/standardsService';
+import { renderMarkdown } from '../utils/markdownRenderer';
 
 interface EnhancedSuiteEditorProps {
   suite: InstructionalSuite;
@@ -170,7 +171,7 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
                   className="text-justify leading-relaxed whitespace-pre-wrap cursor-text hover:bg-blue-50 p-2 rounded"
                   onClick={() => startEdit(section)}
                 >
-                  {section.content}
+                  {renderMarkdown(section.content)}
                 </p>
               )}
             </div>
@@ -193,7 +194,7 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
                   className="font-medium leading-relaxed cursor-text hover:bg-blue-50 p-2 rounded"
                   onClick={() => startEdit(section)}
                 >
-                  {section.content}
+                  {renderMarkdown(section.content)}
                 </p>
               )}
               
@@ -229,36 +230,51 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
                   className="text-sm italic text-slate-600 border-l-2 border-slate-200 pl-3 cursor-text hover:bg-blue-50 p-2 rounded"
                   onClick={() => startEdit(section)}
                 >
-                  {section.content}
+                  {renderMarkdown(section.content)}
                 </p>
               )}
-              <div className="w-full h-80 border-2 border-black bg-white rounded-none flex items-center justify-center">
-                {/* Drawing space */}
+              <div className="w-full h-80 border-2 border-dashed border-slate-400 bg-slate-50 rounded-lg flex flex-col items-center justify-center">
+                <svg className="w-12 h-12 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+                <p className="text-sm text-slate-500 italic">Drawing / Visualization Space</p>
+                {suite.doodleBase64 && (
+                  <img src={suite.doodleBase64} alt="Visual aid" className="mt-4 max-w-full max-h-64 object-contain" />
+                )}
               </div>
             </div>
           )}
 
           {section.type === 'matching' && (
-            <div className="grid grid-cols-2 gap-12 my-6">
-              <div className="space-y-4">
-                {section.content.split('\n').filter(l => l.trim()).map((line, i) => (
-                  <div key={i} className="flex justify-between items-center border-b border-slate-100 pb-2">
-                    <span className="text-sm">{line}</span>
-                    <span className="w-10 h-8 border-2 border-slate-900 rounded text-center text-xs flex items-center justify-center font-bold"></span>
-                  </div>
-                ))}
+            <div className="my-6">
+              <div className="grid grid-cols-2 gap-8">
+                {/* Left column - Items to match */}
+                <div className="space-y-3">
+                  <p className="text-xs font-bold text-slate-600 uppercase mb-3">Match the items</p>
+                  {section.content.split('\n').filter(l => l.trim()).map((line, i) => (
+                    <div key={i} className="flex items-center justify-between border-b-2 border-slate-300 pb-2">
+                      <span className="text-sm font-medium flex-1">{renderMarkdown(line.trim())}</span>
+                      <span className="w-12 h-8 border-2 border-slate-900 rounded text-center text-xs flex items-center justify-center font-bold ml-4 bg-white">
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                {/* Right column - Options/Word Bank */}
+                <div className="space-y-3 bg-slate-50 p-4 rounded-lg border-2 border-slate-200">
+                  <p className="text-xs font-bold text-slate-600 uppercase mb-3">Word Bank</p>
+                  {section.options && section.options.length > 0 ? (
+                    section.options.map((opt, i) => (
+                      <div key={i} className="flex items-center space-x-2 text-sm py-1">
+                        <span className="font-bold text-slate-700 w-6">{String.fromCharCode(65 + i)}.</span>
+                        <span className="flex-1">{renderMarkdown(opt)}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-slate-500 italic">No options provided</p>
+                  )}
+                </div>
               </div>
-              <div className="space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-100">
-                <p className="text-[10px] uppercase font-black text-slate-400 mb-2 tracking-tighter">
-                  Word Bank / Options
-                </p>
-                {section.options?.map((opt, i) => (
-                  <div key={i} className="flex items-start space-x-3 text-sm">
-                    <span className="font-black text-slate-900">{String.fromCharCode(65 + i)})</span>
-                    <span>{opt}</span>
-                  </div>
-                ))}
-              </div>
+              <p className="text-xs text-slate-500 mt-4 italic">Instructions: Write the letter of the correct match in each blank box.</p>
             </div>
           )}
         </div>
@@ -398,45 +414,94 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
           </div>
         </div>
 
-        {/* Teacher Key / Standards Section */}
-        {suite.standards && suite.standards.length > 0 && suite.showStandards && (
+        {/* Teacher Key Section */}
+        {(suite.standards || suite.rubric) && (suite.showStandards || suite.rubric) && (
           <div className="mt-8 pt-8 border-t-2 border-blue-600 no-print">
             <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
               <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center">
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
-                Teacher Key - Aligned Standards
+                Teacher Key
               </h3>
-              <div className="space-y-3">
-                {suite.gradeLevel && (
-                  <p className="text-sm font-medium text-blue-800">
-                    Grade Level: <span className="font-bold">{suite.gradeLevel}</span>
-                  </p>
-                )}
-                {suite.standardsFramework && (
-                  <p className="text-sm font-medium text-blue-800 mb-3">
-                    Framework: <span className="font-bold">{suite.standardsFramework}</span>
-                  </p>
-                )}
-                <div className="space-y-2">
-                  {suite.standards.map((standard, index) => (
-                    <div key={index} className="bg-white p-3 rounded border border-blue-200">
-                      <p className="text-xs font-bold text-blue-600 uppercase tracking-wide mb-1">
-                        {standard.code}
+              
+              {/* Standards Section */}
+              {suite.standards && suite.standards.length > 0 && suite.showStandards && (
+                <div className="mb-6">
+                  <h4 className="text-sm font-bold text-blue-800 mb-3">Aligned Standards</h4>
+                  <div className="space-y-3">
+                    {suite.gradeLevel && (
+                      <p className="text-sm font-medium text-blue-800">
+                        Grade Level: <span className="font-bold">{suite.gradeLevel}</span>
                       </p>
-                      <p className="text-sm text-slate-700">
-                        {standard.description}
+                    )}
+                    {suite.standardsFramework && (
+                      <p className="text-sm font-medium text-blue-800 mb-3">
+                        Framework: <span className="font-bold">{suite.standardsFramework}</span>
                       </p>
-                      {standard.subject && (
-                        <p className="text-xs text-slate-500 mt-1">
-                          Subject: {standard.subject}
-                        </p>
-                      )}
+                    )}
+                    <div className="space-y-2">
+                      {suite.standards.map((standard, index) => (
+                        <div key={index} className="bg-white p-3 rounded border border-blue-200">
+                          <p className="text-xs font-bold text-blue-600 uppercase tracking-wide mb-1">
+                            {standard.code}
+                          </p>
+                          <p className="text-sm text-slate-700">
+                            {standard.description}
+                          </p>
+                          {standard.subject && (
+                            <p className="text-xs text-slate-500 mt-1">
+                              Subject: {standard.subject}
+                            </p>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Rubric Section */}
+              {suite.rubric && suite.rubric.criteria && suite.rubric.criteria.length > 0 && (
+                <div className="mt-6 pt-6 border-t border-blue-200">
+                  <h4 className="text-sm font-bold text-blue-800 mb-3">Grading Rubric</h4>
+                  {suite.rubric.totalPoints && (
+                    <p className="text-xs text-blue-700 mb-4">
+                      Total Points: <span className="font-bold">{suite.rubric.totalPoints}</span>
+                    </p>
+                  )}
+                  <div className="space-y-4">
+                    {suite.rubric.criteria.map((criterion, index) => (
+                      <div key={index} className="bg-white p-4 rounded-lg border border-blue-200">
+                        <div className="flex items-center justify-between mb-3">
+                          <h5 className="font-bold text-slate-900 text-sm">{criterion.criterion}</h5>
+                          <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                            {criterion.points || 4} pts
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                          <div className="bg-green-50 p-2 rounded border border-green-200">
+                            <p className="font-bold text-green-800 mb-1">Excellent ({criterion.points || 4} pts)</p>
+                            <p className="text-green-700">{criterion.excellent}</p>
+                          </div>
+                          <div className="bg-blue-50 p-2 rounded border border-blue-200">
+                            <p className="font-bold text-blue-800 mb-1">Good ({Math.floor((criterion.points || 4) * 0.75)} pts)</p>
+                            <p className="text-blue-700">{criterion.good}</p>
+                          </div>
+                          <div className="bg-yellow-50 p-2 rounded border border-yellow-200">
+                            <p className="font-bold text-yellow-800 mb-1">Satisfactory ({Math.floor((criterion.points || 4) * 0.5)} pts)</p>
+                            <p className="text-yellow-700">{criterion.satisfactory}</p>
+                          </div>
+                          <div className="bg-red-50 p-2 rounded border border-red-200">
+                            <p className="font-bold text-red-800 mb-1">Needs Improvement ({Math.floor((criterion.points || 4) * 0.25)} pts)</p>
+                            <p className="text-red-700">{criterion.needsImprovement}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

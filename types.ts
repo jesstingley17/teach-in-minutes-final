@@ -65,6 +65,21 @@ export interface EducationalStandard {
   subject?: string; // Math, ELA, Science, etc.
 }
 
+export interface RubricCriterion {
+  criterion: string; // What is being evaluated (e.g., "Understanding of concepts")
+  excellent: string; // Description for excellent performance
+  good: string; // Description for good performance
+  satisfactory: string; // Description for satisfactory performance
+  needsImprovement: string; // Description for needs improvement
+  points: number; // Maximum points for this criterion
+}
+
+export interface Rubric {
+  criteria: RubricCriterion[];
+  totalPoints: number;
+  scale?: string; // e.g., "4-point scale" or custom
+}
+
 export interface CurriculumNode {
   id: string;
   title: string;
@@ -79,10 +94,12 @@ export interface DocumentSection {
   type: 'text' | 'question' | 'instruction' | 'diagram_placeholder' | 'matching';
   content: string;
   points?: number;
-  options?: string[]; // for MCQ
+  options?: string[]; // for MCQ or matching options
   correctAnswer?: string | number | string[]; // for auto-grading
   pageNumber?: number; // which page this section belongs to
   order?: number; // order within page
+  imageUrl?: string; // URL or base64 data URL for images/diagrams
+  imageBase64?: string; // Base64 encoded image data
 }
 
 export interface Page {
@@ -114,6 +131,7 @@ export interface InstructionalSuite {
   standardsFramework?: StandardsFramework;
   standards?: EducationalStandard[]; // Aligned educational standards
   showStandards?: boolean; // Whether to display standards on materials
+  rubric?: Rubric; // Grading rubric for teacher key
 }
 
 export interface Folder {

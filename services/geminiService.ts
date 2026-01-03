@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
-import { BloomLevel, Differentiation, OutputType, AestheticStyle, InstructionalSuite, CurriculumNode, GradeLevel, EducationalStandard } from "../types";
+import { BloomLevel, Differentiation, OutputType, AestheticStyle, InstructionalSuite, CurriculumNode, GradeLevel, EducationalStandard, Rubric } from "../types";
 
 // Note: API_KEY is handled externally via import.meta.env
 // We create the instance inside the functions to ensure it uses the latest key if refreshed
@@ -201,7 +201,7 @@ export const generateSuite = async (
     // Ensure we have enough sections
     const sections = rawData.sections || [];
     
-    return {
+    const suite = {
       ...rawData,
       id: Math.random().toString(36).substr(2, 9),
       nodeId: node.id,
@@ -218,6 +218,17 @@ export const generateSuite = async (
       standards: standards,
       showStandards: true,
     };
+
+    // Generate rubric based on the completed document
+    try {
+      const rubric = await generateRubric(suite, node, bloomLevel, gradeLevel, standards);
+      suite.rubric = rubric;
+    } catch (error) {
+      console.warn('Failed to generate rubric:', error);
+      // Continue without rubric if generation fails
+    }
+    
+    return suite;
   } catch (error: any) {
     console.error('Gemini API Error Details:', {
       message: error.message,
@@ -241,6 +252,104 @@ export const generateSuite = async (
     }
     
     throw new Error(errorMessage);
+  }
+};
+
+/**
+ * Generate a grading rubric based on the completed instructional suite
+ */
+export const generateRubric = async (
+  suite: InstructionalSuite,
+  node: CurriculumNode,
+  bloomLevel: BloomLevel,
+  gradeLevel?: GradeLevel,
+  standards?: EducationalStandard[]
+): Promise<Rubric> => {
+  const apiKey = import.meta.env.GEMINI_API_KEY;
+  
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY is not configured.');
+  }
+  
+  const ai = new GoogleGenAI({ apiKey });
+
+  // Summarize the suite content for rubric generation
+  const sectionsSummary = suite.sections
+    .slice(0, 10) // Limit to first 10 sections to avoid token limits
+    .map(s => `${s.title}: ${s.type} (${s.points || 0} points)`)
+    .join('\n');
+
+  const standardsText = standards && standards.length > 0
+    ? `\n\nAligned Standards:\n${standards.map(s => `- ${s.code}: ${s.description}`).join('\n')}`
+    : '';
+
+  const prompt = `You are an expert educator creating a grading rubric for student work on this ${suite.outputType}.
+
+Topic: ${node.title}
+Learning Objectives: ${node.learningObjectives.join(', ')}
+Grade Level: ${gradeLevel || 'General'}
+Bloom's Taxonomy Level: ${bloomLevel}${standardsText}
+
+Content Summary:
+${sectionsSummary}
+
+Create a comprehensive grading rubric with 3-5 criteria that align with the learning objectives and content. Each criterion should have 4 performance levels:
+- Excellent (4 points or highest level)
+- Good (3 points or high level)
+- Satisfactory (2 points or acceptable level)
+- Needs Improvement (1 point or basic level)
+
+Make the rubric specific, measurable, and aligned with the ${bloomLevel} cognitive level. Criteria should evaluate:
+1. Understanding/mastery of key concepts
+2. Quality of responses/work
+3. Completeness
+4. Additional relevant criteria based on the material type
+
+Return the rubric in the requested JSON format.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-pro-preview',
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            criteria: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  criterion: { type: Type.STRING },
+                  excellent: { type: Type.STRING },
+                  good: { type: Type.STRING },
+                  satisfactory: { type: Type.STRING },
+                  needsImprovement: { type: Type.STRING },
+                  points: { type: Type.NUMBER }
+                },
+                required: ["criterion", "excellent", "good", "satisfactory", "needsImprovement", "points"]
+              }
+            },
+            totalPoints: { type: Type.NUMBER },
+            scale: { type: Type.STRING }
+          },
+          required: ["criteria", "totalPoints"]
+        }
+      }
+    });
+
+    const rubric = JSON.parse(response.text || '{}');
+    
+    // Ensure points are set if not provided
+    if (!rubric.totalPoints && rubric.criteria) {
+      rubric.totalPoints = rubric.criteria.reduce((sum: number, c: any) => sum + (c.points || 4), 0);
+    }
+    
+    return rubric;
+  } catch (error: any) {
+    console.error('Error generating rubric:', error);
+    throw new Error(`Failed to generate rubric: ${error.message}`);
   }
 };
 
