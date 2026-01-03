@@ -18,6 +18,7 @@ interface UserSettings {
   defaultDifferentiation: Differentiation;
   defaultAesthetic: AestheticStyle;
   defaultPageCount: number;
+  hideBrandingSection?: boolean;
 }
 
 interface SettingsModalProps {
@@ -38,6 +39,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSave, 
     defaultDifferentiation: Differentiation.GENERAL,
     defaultAesthetic: AestheticStyle.MODERN,
     defaultPageCount: 1,
+    hideBrandingSection: false,
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -87,7 +89,18 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSave, 
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Branding Section */}
           <section>
-            <h3 className="text-lg font-bold text-slate-900 mb-4">Branding & Identity</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-slate-900">Branding & Identity</h3>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.hideBrandingSection || false}
+                  onChange={(e) => setSettings({ ...settings, hideBrandingSection: e.target.checked })}
+                  className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm text-slate-600">Hide branding section in sidebar</span>
+              </label>
+            </div>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">

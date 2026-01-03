@@ -101,10 +101,16 @@ const App: React.FC = () => {
         const suites = await SupabaseService.loadSuites();
         setDrafts(suites);
         
-        // Load saved parsed curriculums if user is signed in
+        // Load saved parsed curriculums and user settings if user is signed in
         if (user) {
           const parsed = await SupabaseService.loadParsedCurriculums();
           setSavedParsedCurriculums(parsed);
+          
+          // Load user settings
+          const settings = await SupabaseService.loadUserSettings();
+          if (settings) {
+            setUserSettings(settings);
+          }
         }
         
         // Auto-migrate from localStorage if data exists
@@ -1171,25 +1177,27 @@ const App: React.FC = () => {
           )}
 
           {/* Institutional Branding Portal */}
-          <section className="border-t-2 border-purple-200/60 pt-6 space-y-5">
-            <label className="block text-sm font-bold text-purple-700 uppercase">Institutional Branding</label>
-            <div className="space-y-4">
-              <input 
-                type="text" 
-                placeholder="Institution Name (Optional)"
-                value={branding.institution}
-                onChange={(e) => setBranding({...branding, institution: e.target.value})}
-                className="w-full p-4 text-base border-2 border-purple-100 rounded-xl bg-white/80 hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
-              />
-              <input 
-                type="text" 
-                placeholder="Instructor Name (Optional)"
-                value={branding.instructor}
-                onChange={(e) => setBranding({...branding, instructor: e.target.value})}
-                className="w-full p-4 text-base border-2 border-purple-100 rounded-xl bg-white/80 hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
-              />
-            </div>
-          </section>
+          {!(userSettings?.hideBrandingSection) && (
+            <section className="border-t-2 border-purple-200/60 pt-6 space-y-5">
+              <label className="block text-sm font-bold text-purple-700 uppercase">Institutional Branding</label>
+              <div className="space-y-4">
+                <input 
+                  type="text" 
+                  placeholder="Institution Name (Optional)"
+                  value={branding.institution}
+                  onChange={(e) => setBranding({...branding, institution: e.target.value})}
+                  className="w-full p-4 text-base border-2 border-purple-100 rounded-xl bg-white/80 hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
+                />
+                <input 
+                  type="text" 
+                  placeholder="Instructor Name (Optional)"
+                  value={branding.instructor}
+                  onChange={(e) => setBranding({...branding, instructor: e.target.value})}
+                  className="w-full p-4 text-base border-2 border-purple-100 rounded-xl bg-white/80 hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
+                />
+              </div>
+            </section>
+          )}
 
           {/* AI Chatbot Assistant */}
           <section className="border-t-2 border-purple-200/60 pt-6">

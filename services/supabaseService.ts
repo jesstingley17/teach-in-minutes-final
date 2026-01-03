@@ -251,6 +251,7 @@ export class SupabaseService {
     defaultDifferentiation?: string;
     defaultAesthetic?: string;
     defaultPageCount?: number;
+    hideBrandingSection?: boolean;
   }): Promise<{ success: boolean; error?: string }> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -265,11 +266,24 @@ export class SupabaseService {
         .eq('user_id', user.id)
         .single();
 
+      // Map settings to database column names
+      const dbSettings: any = {};
+      if (settings.institutionName !== undefined) dbSettings.institution_name = settings.institutionName;
+      if (settings.instructorName !== undefined) dbSettings.instructor_name = settings.instructorName;
+      if (settings.defaultOutputType !== undefined) dbSettings.default_output_type = settings.defaultOutputType;
+      if (settings.defaultGradeLevel !== undefined) dbSettings.default_grade_level = settings.defaultGradeLevel;
+      if (settings.defaultStandardsFramework !== undefined) dbSettings.default_standards_framework = settings.defaultStandardsFramework;
+      if (settings.defaultBloomLevel !== undefined) dbSettings.default_bloom_level = settings.defaultBloomLevel;
+      if (settings.defaultDifferentiation !== undefined) dbSettings.default_differentiation = settings.defaultDifferentiation;
+      if (settings.defaultAesthetic !== undefined) dbSettings.default_aesthetic = settings.defaultAesthetic;
+      if (settings.defaultPageCount !== undefined) dbSettings.default_page_count = settings.defaultPageCount;
+      if (settings.hideBrandingSection !== undefined) dbSettings.hide_branding_section = settings.hideBrandingSection;
+
       if (existing) {
         // Update existing
         const { error } = await supabase
           .from('user_settings')
-          .update(settings)
+          .update(dbSettings)
           .eq('user_id', user.id);
         
         if (error) throw error;
@@ -279,7 +293,7 @@ export class SupabaseService {
           .from('user_settings')
           .insert({
             user_id: user.id,
-            ...settings
+            ...dbSettings
           });
         
         if (error) throw error;
@@ -305,6 +319,7 @@ export class SupabaseService {
     defaultDifferentiation: string;
     defaultAesthetic: string;
     defaultPageCount: number;
+    hideBrandingSection?: boolean;
   } | null> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -330,6 +345,7 @@ export class SupabaseService {
         defaultDifferentiation: data.default_differentiation || 'General',
         defaultAesthetic: data.default_aesthetic || 'Modern Professional',
         defaultPageCount: data.default_page_count || 1,
+        hideBrandingSection: data.hide_branding_section || false,
       };
     } catch (error) {
       console.error('Error loading user settings:', error);

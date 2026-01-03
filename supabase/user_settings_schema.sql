@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS user_settings (
     default_differentiation TEXT,
     default_aesthetic TEXT,
     default_page_count INTEGER DEFAULT 1,
+    hide_branding_section BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
