@@ -30,7 +30,13 @@ const getClaudeClient = (): Anthropic => {
     throw new Error('ANTHROPIC_API_KEY is not configured. Safety audit requires Claude.');
   }
   
-  return new Anthropic({ apiKey });
+  // Note: dangerouslyAllowBrowser is required for browser environments
+  // This exposes the API key in the client bundle, which is a security risk
+  // For production, consider using a serverless function proxy instead
+  return new Anthropic({ 
+    apiKey,
+    dangerouslyAllowBrowser: true 
+  });
 };
 
 /**
