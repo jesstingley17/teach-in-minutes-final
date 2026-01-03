@@ -220,8 +220,7 @@ export const generateSuite = async (
                   type: { type: Type.STRING, enum: ['text', 'question', 'instruction', 'diagram_placeholder', 'matching'] },
                   content: { type: Type.STRING },
                   points: { type: Type.NUMBER },
-                  options: { type: Type.ARRAY, items: { type: Type.STRING } },
-                  correctAnswer: { description: "Answer for grading: number (MCQ index), string (short answer), or array (matching indices)" }
+                  options: { type: Type.ARRAY, items: { type: Type.STRING } }
                 },
                 required: ["id", "title", "type", "content"]
               }

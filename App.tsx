@@ -281,13 +281,19 @@ const App: React.FC = () => {
   };
 
   const handleGenerate = async () => {
-    if (!selectedNode) return;
+    if (!selectedNode) {
+      console.error('No selected node');
+      alert('Please select a curriculum node first.');
+      return;
+    }
+    console.log('Starting generation with node:', selectedNode.title);
     setIsGenerating(true);
     try {
       // Analyze inspiration if enabled
       let inspirationAnalysis = null;
       if (inspirationConfig.enabled && inspirationConfig.file) {
         try {
+          console.log('Analyzing inspiration file...');
           const reader = new FileReader();
           const fileData = await new Promise<string>((resolve, reject) => {
             reader.onload = (e) => resolve(e.target?.result as string);
@@ -308,7 +314,11 @@ const App: React.FC = () => {
         }
       }
 
+      console.log('Generating doodle...', genConfig.includeVisuals);
       const doodleData = genConfig.includeVisuals ? await generateDoodle(selectedNode, genConfig.aesthetic) : undefined;
+      console.log('Doodle generated:', !!doodleData);
+      
+      console.log('Generating suite...');
       const suite = await generateSuite(
         selectedNode, 
         genConfig.outputType, 
@@ -319,10 +329,16 @@ const App: React.FC = () => {
         doodleData,
         genConfig.pageCount
       );
+      console.log('Suite generated successfully:', suite.title, suite.sections.length, 'sections');
       setActiveSuite(suite);
-    } catch (error) {
-      console.error(error);
-      alert('Generation failed. Ensure your API project has Billing enabled for Gemini 3 Pro.');
+    } catch (error: any) {
+      console.error('Generation error:', error);
+      console.error('Error details:', {
+        message: error?.message,
+        status: error?.status,
+        stack: error?.stack
+      });
+      alert(`Generation failed: ${error?.message || 'Unknown error'}. Check browser console for details.`);
     } finally {
       setIsGenerating(false);
     }
