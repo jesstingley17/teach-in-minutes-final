@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { EducationalStandard, StandardsFramework, GradeLevel, CurriculumNode } from "../types";
+import { parseJSON } from "../utils/jsonValidator";
 
 export class StandardsService {
   /**
@@ -59,7 +60,17 @@ Return the standards as a JSON array.`;
         }
       });
 
-      const standards: any[] = JSON.parse(response.text || '[]');
+      // Handle case where response.text might already be an object
+      const responseData = response.text || '[]';
+      const parseResult = parseJSON(responseData);
+      
+      if (!parseResult.valid) {
+        console.error('JSON Parse Error for standards:', parseResult.error);
+        // Return empty array on parse error rather than failing completely
+        return [];
+      }
+      
+      const standards: any[] = Array.isArray(parseResult.data) ? parseResult.data : [];
       
       return standards.map(std => ({
         code: std.code,

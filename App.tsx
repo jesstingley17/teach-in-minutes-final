@@ -327,27 +327,37 @@ const App: React.FC = () => {
         }
       }
 
-      console.log('Generating doodle...', genConfig.includeVisuals);
-      const doodleData = genConfig.includeVisuals ? await generateDoodle(selectedNode, genConfig.aesthetic) : undefined;
-      console.log('Doodle generated:', !!doodleData);
+      // Generate doodle and suite in parallel for better performance
+      console.log('Starting generation (suite + doodle in parallel)...');
+      const [doodleData, suite] = await Promise.all([
+        genConfig.includeVisuals 
+          ? generateDoodle(selectedNode, genConfig.aesthetic).catch(err => {
+              console.warn('Doodle generation failed, continuing without it:', err);
+              return undefined;
+            })
+          : Promise.resolve(undefined),
+        generateSuite(
+          selectedNode, 
+          genConfig.outputType, 
+          genConfig.bloomLevel, 
+          genConfig.differentiation,
+          genConfig.aesthetic,
+          {
+            institution: branding.institution || '',
+            instructor: branding.instructor || ''
+          },
+          genConfig.pageCount,
+          parseConfig.gradeLevel,
+          undefined, // standards - could be added later
+          genConfig.provider,
+          undefined // doodle will be added after if generated
+        )
+      ]);
       
-      console.log('Generating suite...');
-      const suite = await generateSuite(
-        selectedNode, 
-        genConfig.outputType, 
-        genConfig.bloomLevel, 
-        genConfig.differentiation,
-        genConfig.aesthetic,
-        {
-          institution: branding.institution || '',
-          instructor: branding.instructor || ''
-        },
-        genConfig.pageCount,
-        parseConfig.gradeLevel,
-        undefined, // standards - could be added later
-        genConfig.provider,
-        doodleData
-      );
+      // Add doodle to suite if it was generated
+      if (doodleData && suite) {
+        suite.doodleBase64 = doodleData;
+      }
       console.log('Suite generated successfully:', suite.title, suite.sections.length, 'sections');
       setActiveSuite(suite);
     } catch (error: any) {

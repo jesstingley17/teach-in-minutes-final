@@ -1,6 +1,7 @@
 
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
 import { BloomLevel, Differentiation, OutputType, AestheticStyle, InstructionalSuite, CurriculumNode, GradeLevel, EducationalStandard, Rubric, StandardsFramework } from "../types";
+import { parseJSON } from "../utils/jsonValidator";
 
 // Note: API_KEY is handled externally via import.meta.env
 // We create the instance inside the functions to ensure it uses the latest key if refreshed
@@ -48,7 +49,16 @@ export const analyzeCurriculum = async (
       }
     });
 
-    return JSON.parse(response.text || '[]');
+    // Handle case where response.text might already be an object
+    const responseData = response.text || '[]';
+    const parseResult = parseJSON(responseData);
+    
+    if (!parseResult.valid) {
+      console.error('JSON Parse Error:', parseResult.error);
+      throw new Error(`Invalid JSON response from API: ${parseResult.error}. Please try again.`);
+    }
+    
+    return parseResult.data;
   } catch (error: any) {
     console.error('Gemini API Error:', error);
     throw new Error(`Gemini API Error: ${error.message || 'Unknown error'}. Check console for details.`);
@@ -102,7 +112,16 @@ export const analyzeDocument = async (
       }
     });
 
-    return JSON.parse(response.text || '[]');
+    // Handle case where response.text might already be an object
+    const responseData = response.text || '[]';
+    const parseResult = parseJSON(responseData);
+    
+    if (!parseResult.valid) {
+      console.error('JSON Parse Error:', parseResult.error);
+      throw new Error(`Invalid JSON response from API: ${parseResult.error}. Please try again.`);
+    }
+    
+    return parseResult.data;
   } catch (error: any) {
     console.error('Gemini API Error:', error);
     throw new Error(`Gemini API Error: ${error.message || 'Unknown error'}. Check console for details.`);
@@ -351,7 +370,7 @@ export const generateSuite = async (
       model: 'gemini-3-pro-preview',
       contents: prompt,
       config: {
-        thinkingConfig: { thinkingBudget: 2000 },
+        thinkingConfig: { thinkingBudget: 500 }, // Reduced from 2000 for faster generation
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -379,7 +398,33 @@ export const generateSuite = async (
       }
     });
 
-    const rawData = JSON.parse(response.text || '{}');
+    // Use JSON validator to handle malformed JSON gracefully
+    // Handle case where response.text might already be an object
+    const responseData = response.text || '{}';
+    const parseResult = parseJSON(responseData);
+    
+    if (!parseResult.valid) {
+      console.error('JSON Parse Error:', parseResult.error);
+      const responseStr = typeof responseData === 'string' ? responseData : JSON.stringify(responseData);
+      console.error('Response data (first 1000 chars):', responseStr.substring(0, 1000));
+      console.error('Response data type:', typeof responseData);
+      console.error('Response data length:', typeof responseData === 'string' ? responseData.length : 'N/A (object)');
+      
+      // Try to find the position of the error in the response
+      if (parseResult.error?.includes('position')) {
+        const match = parseResult.error.match(/position (\d+)/);
+        if (match && typeof responseData === 'string') {
+          const pos = parseInt(match[1]);
+          const start = Math.max(0, pos - 100);
+          const end = Math.min(responseData.length, pos + 100);
+          console.error('Error context:', responseData.substring(start, end));
+        }
+      }
+      
+      throw new Error(`Invalid JSON response from API: ${parseResult.error}. The API may have returned malformed JSON. Please try again.`);
+    }
+    
+    const rawData = parseResult.data;
     
     // Ensure we have enough sections
     const sections = rawData.sections || [];
@@ -410,14 +455,17 @@ export const generateSuite = async (
       showStandards: true,
     };
 
-    // Generate rubric based on the completed document
-    try {
-      const rubric = await generateRubric(suite, node, bloomLevel, gradeLevel, standards);
-      suite.rubric = rubric;
-    } catch (error) {
-      console.warn('Failed to generate rubric:', error);
-      // Continue without rubric if generation fails
-    }
+    // Generate rubric asynchronously (non-blocking) for better performance
+    // Rubric will be added later if needed, but doesn't block suite return
+    generateRubric(suite, node, bloomLevel, gradeLevel, standards)
+      .then(rubric => {
+        suite.rubric = rubric;
+        console.log('Rubric generated and added to suite');
+      })
+      .catch(error => {
+        console.warn('Failed to generate rubric (non-blocking):', error);
+        // Continue without rubric if generation fails
+      });
     
     return suite;
   } catch (error: any) {
@@ -430,7 +478,10 @@ export const generateSuite = async (
     
     let errorMessage = 'Generation failed. ';
     
-    if (error.message?.includes('billing') || error.status === 403) {
+    // Check if it's a JSON parsing error
+    if (error.message?.includes('Invalid JSON') || error.message?.includes('JSON') || error.message?.includes('Expected')) {
+      errorMessage += 'The API returned invalid JSON. This may be due to malformed content in the response. Please try again. If the issue persists, the content may be too complex or contain special characters that break JSON formatting.';
+    } else if (error.message?.includes('billing') || error.status === 403) {
       errorMessage += 'API key may not have billing enabled or may be invalid. Verify your Gemini API key has billing enabled for Gemini 3 Pro.';
     } else if (error.status === 401) {
       errorMessage += 'Invalid API key. Please check your GEMINI_API_KEY in Vercel environment variables.';
@@ -530,7 +581,16 @@ Return the rubric in the requested JSON format.`;
       }
     });
 
-    const rubric = JSON.parse(response.text || '{}');
+    // Handle case where response.text might already be an object
+    const responseData = response.text || '{}';
+    const parseResult = parseJSON(responseData);
+    
+    if (!parseResult.valid) {
+      console.error('JSON Parse Error for rubric:', parseResult.error);
+      throw new Error(`Invalid JSON response for rubric: ${parseResult.error}. Please try again.`);
+    }
+    
+    const rubric = parseResult.data;
     
     // Ensure points are set if not provided
     if (!rubric.totalPoints && rubric.criteria) {

@@ -12,9 +12,19 @@ export interface ValidationResult {
 
 /**
  * Attempt to parse JSON with error handling
+ * Handles both string and already-parsed object inputs
  */
-export function parseJSON(text: string): ValidationResult {
+export function parseJSON(text: string | any): ValidationResult {
   try {
+    // If it's already an object/array, return it directly
+    if (typeof text !== 'string') {
+      if (text && (typeof text === 'object' || Array.isArray(text))) {
+        return { valid: true, data: text };
+      }
+      // If it's not a string and not an object, convert to string
+      text = String(text);
+    }
+    
     // Remove markdown code blocks if present
     let cleaned = text.trim();
     cleaned = cleaned.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
@@ -28,9 +38,32 @@ export function parseJSON(text: string): ValidationResult {
     const parsed = JSON.parse(cleaned);
     return { valid: true, data: parsed };
   } catch (error: any) {
+    // Extract position information from error message if available
+    let errorMessage = error.message || 'Invalid JSON';
+    
+    // Try to extract position from error message (e.g., "at position 64931")
+    const positionMatch = errorMessage.match(/position (\d+)/);
+    if (positionMatch) {
+      const position = parseInt(positionMatch[1]);
+      const start = Math.max(0, position - 200);
+      const end = Math.min(text.length, position + 200);
+      const context = text.substring(start, end);
+      
+      // Try to identify common issues
+      if (context.includes('"') && !context.match(/"[^"]*":/)) {
+        errorMessage += ' (Possible unescaped quote in string value)';
+      } else if (context.includes("'")) {
+        errorMessage += ' (Possible use of single quotes instead of double quotes)';
+      } else if (context.match(/,\s*[,}]/)) {
+        errorMessage += ' (Possible trailing comma)';
+      }
+      
+      errorMessage += `\nContext around error position: ...${context}...`;
+    }
+    
     return {
       valid: false,
-      error: error.message || 'Invalid JSON',
+      error: errorMessage,
       needsRetry: true
     };
   }

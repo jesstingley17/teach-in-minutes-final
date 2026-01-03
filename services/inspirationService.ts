@@ -1,4 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
+import { parseJSON } from '../utils/jsonValidator';
 
 export interface InspirationAnalysis {
   layout: {
@@ -82,7 +83,16 @@ Provide detailed, actionable information that can be used to replicate the ${cop
       }
     });
 
-    return JSON.parse(response.text || '{}');
+    // Handle case where response.text might already be an object
+    const responseData = response.text || '{}';
+    const parseResult = parseJSON(responseData);
+    
+    if (!parseResult.valid) {
+      console.error('JSON Parse Error for inspiration:', parseResult.error);
+      throw new Error(`Invalid JSON response from API: ${parseResult.error}. Please try again.`);
+    }
+    
+    return parseResult.data;
   } catch (error: any) {
     console.error('Inspiration analysis failed:', error);
     throw new Error(`Failed to analyze inspiration: ${error.message}`);
