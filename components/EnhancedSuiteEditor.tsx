@@ -227,38 +227,47 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
 
           {section.type === 'diagram_placeholder' && (
             <div className="space-y-4">
+              {/* Instructions displayed ABOVE the box */}
               {isEditing ? (
-                <textarea
-                  ref={editInputRef}
-                  value={editingContent}
-                  onChange={(e) => setEditingContent(e.target.value)}
-                  onBlur={saveEdit}
-                  onKeyDown={handleKeyDown}
-                  className="w-full p-2 border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm italic"
-                  rows={2}
-                />
+                <div className="mb-4">
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Visualization Instructions</label>
+                  <textarea
+                    ref={editInputRef}
+                    value={editingContent}
+                    onChange={(e) => setEditingContent(e.target.value)}
+                    onBlur={saveEdit}
+                    onKeyDown={handleKeyDown}
+                    className="w-full p-3 border-2 border-blue-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    rows={3}
+                    placeholder="Enter instructions for what the student should draw..."
+                  />
+                </div>
               ) : (
-                <div className="space-y-3">
-                  <p 
-                    className="text-sm italic text-slate-600 border-l-2 border-slate-200 pl-3 cursor-text hover:bg-blue-50 p-2 rounded"
-                    onClick={() => startEdit(section)}
-                  >
-                    {renderMarkdown(section.content)}
-                  </p>
-                  {/* Example/Visual aid shown OUTSIDE the box */}
-                  {(section.imageUrl || section.imageBase64 || suite.doodleBase64) && (
-                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                      <p className="text-xs font-bold text-blue-800 mb-2">Example / Reference:</p>
-                      <img 
-                        src={section.imageUrl || section.imageBase64 || suite.doodleBase64} 
-                        alt="Example visualization" 
-                        className="max-w-full max-h-48 object-contain mx-auto" 
-                      />
-                    </div>
-                  )}
+                section.content && (
+                  <div className="mb-4">
+                    <p 
+                      className="text-sm font-medium text-slate-700 bg-slate-50 border-l-4 border-blue-500 pl-4 py-2 rounded-r cursor-text hover:bg-blue-50 transition-colors"
+                      onClick={() => startEdit(section)}
+                    >
+                      {renderMarkdown(section.content)}
+                    </p>
+                  </div>
+                )
+              )}
+              
+              {/* Example/Visual aid shown OUTSIDE the box (if exists) */}
+              {(section.imageUrl || section.imageBase64 || suite.doodleBase64) && (
+                <div className="mb-4 bg-blue-50 p-3 rounded-lg border-2 border-blue-200">
+                  <p className="text-xs font-bold text-blue-800 mb-2">Example / Reference:</p>
+                  <img 
+                    src={section.imageUrl || section.imageBase64 || suite.doodleBase64} 
+                    alt="Example visualization" 
+                    className="max-w-full max-h-48 object-contain mx-auto" 
+                  />
                 </div>
               )}
-              {/* Empty box for student work */}
+              
+              {/* Empty box for student work - NO content inside */}
               <div className="w-full h-80 border-2 border-dashed border-slate-400 bg-white rounded-lg flex flex-col items-center justify-center">
                 <svg className="w-12 h-12 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -379,23 +388,22 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
 
       {/* Current Page */}
       <div className={`a4-page ${getFontStyleClass(suite.aesthetic)} ${getDifferentiationClass(suite.differentiation)} ${getColorModeClasses()} shadow-2xl relative print-page`}>
-        {/* Institutional Header - Only show if institution or instructor name exists */}
-        {(suite.institutionName || suite.instructorName) && (
-          <div className="border-b-2 border-slate-900 pb-4 mb-8 flex justify-between items-start">
-            <div className="flex-1">
-              {suite.institutionName && (
-                <h1 
-                  className="text-2xl font-bold uppercase tracking-wider h-8 min-w-[200px] cursor-text hover:bg-blue-50 p-1 rounded"
-                  onClick={() => {
-                    const val = prompt('Edit institution name:', suite.institutionName);
-                    if (val !== null) {
-                      onUpdateSuite({ ...suite, institutionName: val });
-                    }
-                  }}
-                >
-                  {suite.institutionName}
-                </h1>
-              )}
+        {/* Institutional Header - Always show Name and Date fields */}
+        <div className="border-b-2 border-slate-900 pb-4 mb-8 flex justify-between items-start">
+          <div className="flex-1">
+            {suite.institutionName && (
+              <h1 
+                className="text-2xl font-bold uppercase tracking-wider h-8 min-w-[200px] cursor-text hover:bg-blue-50 p-1 rounded"
+                onClick={() => {
+                  const val = prompt('Edit institution name:', suite.institutionName);
+                  if (val !== null) {
+                    onUpdateSuite({ ...suite, institutionName: val });
+                  }
+                }}
+              >
+                {suite.institutionName}
+              </h1>
+            )}
             <div className="mt-3 text-sm text-slate-700 space-y-2">
               <div className="flex space-x-4">
                 <p className="flex-1">
@@ -438,7 +446,6 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
             </div>
           </div>
         </div>
-        )}
 
         {/* Branding/Doodle Corner */}
         {suite.doodleBase64 && (
@@ -534,17 +541,19 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
                         <div key={section.id} className="bg-white p-4 rounded border border-blue-200">
                           <p className="font-bold text-sm text-blue-900 mb-2">{section.title}</p>
                           {section.type === 'question' && section.options && (
-                            <p className="text-sm text-blue-700">
-                              <strong>Answer:</strong> {
-                                typeof section.correctAnswer === 'number' 
+                            <p className="text-sm">
+                              <strong>Answer:</strong>{' '}
+                              <span className="text-red-600 font-bold">
+                                {typeof section.correctAnswer === 'number' 
                                   ? `${String.fromCharCode(65 + section.correctAnswer)}. ${section.options[section.correctAnswer] || 'N/A'}`
-                                  : section.correctAnswer
-                              }
+                                  : section.correctAnswer}
+                              </span>
                             </p>
                           )}
                           {section.type === 'question' && !section.options && (
-                            <p className="text-sm text-blue-700">
-                              <strong>Answer:</strong> {section.correctAnswer}
+                            <p className="text-sm">
+                              <strong>Answer:</strong>{' '}
+                              <span className="text-red-600 font-bold">{section.correctAnswer}</span>
                             </p>
                           )}
                           {section.type === 'matching' && (
@@ -567,7 +576,7 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
                                   return (
                                     <tr key={i} className="bg-white">
                                       <td className="border border-blue-300 px-2 py-1 text-xs">{line.trim()}</td>
-                                      <td className="border border-blue-300 px-2 py-1 font-bold text-blue-700 text-xs">
+                                      <td className="border border-blue-300 px-2 py-1 font-bold text-red-600 text-xs">
                                         {matchLetter}{matchText && ` - ${matchText}`}
                                       </td>
                                     </tr>
