@@ -54,7 +54,7 @@ const App: React.FC = () => {
         const hasKey = await (window as any).aistudio.hasSelectedApiKey();
         setApiKeySelected(hasKey);
       } else {
-        setApiKeySelected(!!process.env.API_KEY);
+        setApiKeySelected(!!import.meta.env.GEMINI_API_KEY);
       }
     };
     checkKey();
