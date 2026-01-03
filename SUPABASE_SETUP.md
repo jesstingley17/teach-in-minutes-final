@@ -2,18 +2,36 @@
 
 ## 1. Database Setup
 
-Run the SQL schema in your Supabase SQL Editor:
+Run the SQL schemas in your Supabase SQL Editor. You need to run THREE separate schema files:
 
 1. Go to your Supabase project dashboard
 2. Navigate to **SQL Editor**
-3. Copy and paste the contents of `supabase/schema.sql`
-4. Run the SQL query
+3. Run each schema file in order:
 
-This will create:
-- `instructional_suites` table
+### Step 1: Main Schema (instructional_suites table)
+Copy and paste the contents of `supabase/schema.sql` and run it.
+
+This creates:
+- `instructional_suites` table (for saving drafts)
 - Indexes for performance
 - Row Level Security (RLS) policies
-- Automatic timestamp updates
+- Automatic timestamp updates function
+
+### Step 2: Parsed Curriculums Schema
+Copy and paste the contents of `supabase/parsed_curriculums_schema.sql` and run it.
+
+This creates:
+- `parsed_curriculums` table (for saving parsed curriculum documents)
+- Indexes and RLS policies
+
+### Step 3: User Settings Schema
+Copy and paste the contents of `supabase/user_settings_schema.sql` and run it.
+
+This creates:
+- `user_settings` table (for user preferences)
+- Indexes and RLS policies
+
+**Important:** Run all three schema files to enable full functionality!
 
 ## 2. Authentication Setup
 

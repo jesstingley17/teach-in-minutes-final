@@ -169,11 +169,16 @@ const App: React.FC = () => {
             alert(`Warning: Failed to save parsed curriculum. ${saveResult.error || 'Unknown error'}`);
           } else {
             console.log('Successfully saved parsed curriculum:', saveResult.id);
+            // Optimize: Add new item to state instead of reloading everything
+            const newItem = {
+              id: saveResult.id!,
+              name: `Parsed: ${parsedNodes[0]?.title || 'Curriculum'} (${new Date().toLocaleDateString()})`,
+              nodes: parsedNodes,
+              sourceType: 'text',
+              createdAt: new Date().toISOString()
+            };
+            setSavedParsedCurriculums(prev => [newItem, ...prev]);
           }
-          // Reload saved curriculums
-          const parsed = await SupabaseService.loadParsedCurriculums();
-          console.log('Loaded parsed curriculums:', parsed.length);
-          setSavedParsedCurriculums(parsed);
         } catch (error) {
           console.error('Error in save parsed curriculum flow:', error);
         }
@@ -223,11 +228,17 @@ const App: React.FC = () => {
                 alert(`Warning: Failed to save parsed curriculum. ${saveResult.error || 'Unknown error'}`);
               } else {
                 console.log('Successfully saved parsed curriculum:', saveResult.id);
+                // Optimize: Add new item to state instead of reloading everything
+                const newItem = {
+                  id: saveResult.id!,
+                  name: `Parsed: ${file.name} (${new Date().toLocaleDateString()})`,
+                  nodes: parsedNodes,
+                  sourceType: 'file',
+                  fileName: file.name,
+                  createdAt: new Date().toISOString()
+                };
+                setSavedParsedCurriculums(prev => [newItem, ...prev]);
               }
-              // Reload saved curriculums
-              const parsed = await SupabaseService.loadParsedCurriculums();
-              console.log('Loaded parsed curriculums:', parsed.length);
-              setSavedParsedCurriculums(parsed);
             } catch (error) {
               console.error('Error in save parsed curriculum flow:', error);
             }

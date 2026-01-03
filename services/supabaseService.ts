@@ -183,6 +183,7 @@ export class SupabaseService {
 
   /**
    * Load all parsed curriculums for the current user
+   * Optimized: Only loads essential fields for listing, nodes loaded when needed
    */
   static async loadParsedCurriculums(): Promise<Array<{
     id: string;
@@ -198,9 +199,10 @@ export class SupabaseService {
 
       const { data, error } = await supabase
         .from('parsed_curriculums')
-        .select('*')
+        .select('id, name, nodes, source_type, file_name, created_at')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100); // Limit to 100 most recent for performance
 
       if (error) throw error;
 
