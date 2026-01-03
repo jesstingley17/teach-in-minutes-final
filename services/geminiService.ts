@@ -168,7 +168,35 @@ export const generateSuite = async (
   
   Generate substantial content that justifies ${pageCount} page${pageCount > 1 ? 's' : ''} of material.
   
-  IMPORTANT: For all questions, matching exercises, and activities, you MUST include correct answers in the 'correctAnswer' field. For multiple choice, use the option index (0, 1, 2, etc.). For matching, provide an array of indices mapping items to options. For short answer questions, provide the expected answer text.
+  CRITICAL REQUIREMENTS - READ CAREFULLY:
+  
+  1. COMPLETE CONTENT: ALL text must be complete. NO truncated sentences, NO incomplete thoughts, NO cut-off words. Every sentence must have a proper ending. Every section must have complete, usable content.
+  
+  2. MATCHING EXERCISES: For matching type sections, you MUST provide:
+     - 'content': One item per line (e.g., "4/8\n6/12\n8/16") - these are the items students will match
+     - 'options': An array of strings (e.g., ["1/2", "1/3", "1/4"]) - these are the answer choices in the word bank
+     - 'correctAnswer': An array of indices mapping each content item to its matching option (e.g., [0, 0, 0] means all three items match option 0)
+     - NEVER create a matching exercise with only instructions but no items or options
+  
+  3. DIAGRAM/Visualization Instructions: For 'diagram_placeholder' type sections:
+     - 'content' must contain COMPLETE, clear instructions for what students should draw
+     - Instructions must be full sentences with proper endings
+     - Example: "Draw a circle divided into 8 equal slices. Shade 4 of them to represent 4/8." (NOT: "Draw a circle divided into 8 equal slices. Shade 4")
+  
+  4. TEXT FORMATTING: Use plain text only. NO HTML entities (no &gt;, &lt;, &amp;, etc.). Use proper characters instead (use → not &gt;, use < not &lt;, etc.)
+  
+  5. ANSWERS: For all questions, matching exercises, and activities, you MUST include correct answers in the 'correctAnswer' field:
+     - Multiple choice: use the option index (0, 1, 2, etc.)
+     - Matching: provide an array of indices mapping items to options
+     - Short answer: provide the expected answer text
+     - Diagram: provide a brief description of what should be drawn
+  
+  6. COMPLETENESS CHECK: Before finalizing each section, verify:
+     - All sentences are complete
+     - Matching exercises have both items (content) and options
+     - Diagram instructions are complete thoughts
+     - No HTML entities are used
+     - All required fields are filled
   `;
 
   try {
@@ -192,7 +220,8 @@ export const generateSuite = async (
                   type: { type: Type.STRING, enum: ['text', 'question', 'instruction', 'diagram_placeholder', 'matching'] },
                   content: { type: Type.STRING },
                   points: { type: Type.NUMBER },
-                  options: { type: Type.ARRAY, items: { type: Type.STRING } }
+                  options: { type: Type.ARRAY, items: { type: Type.STRING } },
+                  correctAnswer: { description: "Answer for grading: number (MCQ index), string (short answer), or array (matching indices)" }
                 },
                 required: ["id", "title", "type", "content"]
               }

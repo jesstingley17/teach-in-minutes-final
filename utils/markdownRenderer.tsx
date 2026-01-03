@@ -4,8 +4,27 @@ import React from 'react';
  * Simple markdown renderer for basic formatting (bold, italic)
  * Converts markdown syntax to React elements
  */
+/**
+ * Decode HTML entities to plain characters
+ */
+const decodeHtmlEntities = (text: string): string => {
+  const entities: { [key: string]: string } = {
+    '&gt;': '→',
+    '&lt;': '<',
+    '&amp;': '&',
+    '&quot;': '"',
+    '&apos;': "'",
+    '&nbsp;': ' ',
+  };
+  
+  return text.replace(/&[a-z]+;/gi, (match) => entities[match.toLowerCase()] || match);
+};
+
 export const renderMarkdown = (text: string): React.ReactNode => {
   if (!text) return text;
+
+  // Decode HTML entities first
+  text = decodeHtmlEntities(text);
 
   // Simple approach: process markdown sequentially
   const parts: React.ReactNode[] = [];
