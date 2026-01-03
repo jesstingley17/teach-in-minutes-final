@@ -89,7 +89,7 @@ That's it! You can start using Blueprint Pro with just these two services.
 
 | Provider | Best For | Cost | Strengths | Limitations |
 |----------|----------|------|-----------|-------------|
-| **Gemini** | Primary generation | Free tier generous | • Multimodal (text + images)<br>• Image generation<br>• Fast response<br>• Cost-effective | • Newer, less established |
+| **Gemini** | Primary generation | Free tier generous | • Multimodal (text + images)<br>• Image generation<br>• Fast response<br>• Cost-effective | • Different rate limits from other providers |
 | **OpenAI** | Reliable fallback | ~$0.01-0.03/1K tokens | • Highly reliable<br>• Excellent text quality<br>• Well-documented | • No native image generation<br>• Higher cost |
 | **Claude** | Quality & safety | ~$0.015/1K tokens | • Long context (200K tokens)<br>• Safety auditing<br>• Nuanced content | • No image generation<br>• Higher cost for input |
 
@@ -270,7 +270,7 @@ The free tier is generous, so we recommend adding it.
 ### Q: How do I monitor my API usage?
 
 **A:** Check your provider dashboards:
-- **Gemini**: https://aistudio.google.com/
+- **Gemini**: https://makersuite.google.com/app/apikey
 - **OpenAI**: https://platform.openai.com/usage
 - **Anthropic**: https://console.anthropic.com/
 - **Gamma**: https://gamma.app/account
