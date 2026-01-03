@@ -10,7 +10,7 @@
 export interface GammaDesignOptions {
   tone?: 'professional' | 'playful' | 'educational' | 'engaging';
   audience?: 'general' | 'students' | 'teachers' | 'parents';
-  amount?: 'brief' | 'standard' | 'detailed';
+  amount?: 'brief' | 'medium' | 'detailed' | 'extensive'; // Updated to match Gamma API valid values
   language?: string;
   themeId?: string;
   numCards?: number;

@@ -49,7 +49,7 @@ export default async function handler(
     const {
       tone = 'educational',
       audience = 'students',
-      amount = 'standard',
+      amount = 'medium', // Valid values: brief, medium, detailed, extensive
       language = 'en',
       themeId,
       numCards = 10,
@@ -57,6 +57,11 @@ export default async function handler(
       additionalInstructions,
       imageSource = 'aiGenerated'
     } = options;
+
+    // Map amount to valid Gamma API values
+    const validAmount = ['brief', 'medium', 'detailed', 'extensive'].includes(amount) 
+      ? amount 
+      : 'medium';
 
     const apiUrl = 'https://public-api.gamma.app/v1.0/generations';
 
@@ -68,7 +73,7 @@ export default async function handler(
       },
       body: JSON.stringify({
         inputText: content,
-        textMode: 'useExisting',
+        textMode: 'preserve', // Valid values: generate, condense, preserve (use preserve since we're providing existing content)
         format: format,
         title: title,
         themeId: themeId,
@@ -76,7 +81,7 @@ export default async function handler(
         cardSplit: cardSplit,
         additionalInstructions: additionalInstructions || `Create an engaging ${format} for educational use. Make it visually appealing and student-friendly.`,
         textOptions: {
-          amount: amount,
+          amount: validAmount, // brief, medium, detailed, or extensive
           tone: tone,
           audience: audience,
           language: language

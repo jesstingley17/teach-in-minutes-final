@@ -399,7 +399,7 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
                     {
                       tone: 'educational',
                       audience: 'students',
-                      amount: 'standard',
+                      amount: 'medium', // Valid values: brief, medium, detailed, extensive
                       imageSource: 'aiGenerated'
                     }
                   );
