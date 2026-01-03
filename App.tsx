@@ -447,18 +447,31 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-slate-50">
+    <div className="min-h-screen flex flex-col md:flex-row" style={{ background: 'linear-gradient(to bottom, #fef3c7 0%, #ffffff 100%)' }}>
       
       {/* Sidebar: Curriculum Intake & Control */}
       <aside className="w-full md:w-80 lg:w-96 bg-white border-r border-slate-200 flex flex-col h-screen no-print overflow-y-auto shrink-0 custom-scrollbar">
         <div className="p-6 border-b border-slate-100">
           <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black">T</div>
-              <h1 className="text-xl font-black tracking-tight text-slate-900">TEACH IN MINUTES</h1>
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-xl rainbow-gradient flex items-center justify-center text-white font-black text-lg shadow-lg" style={{
+                background: 'linear-gradient(135deg, #ff6b9d 0%, #a855f7 25%, #3b82f6 50%, #06b6d4 75%, #10b981 100%)'
+              }}>
+                ⏰
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 bg-clip-text text-transparent" style={{
+                  fontFamily: "'Dancing Script', cursive",
+                  backgroundImage: 'linear-gradient(90deg, #ff6b9d 0%, #a855f7 50%, #3b82f6 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}>
+                  Hidden Minutes
+                </h1>
+                <p className="text-[10px] text-slate-500 font-medium">Educational Materials Generator</p>
+              </div>
             </div>
           </div>
-          <p className="text-xs text-slate-400 font-medium uppercase tracking-widest">Educational Materials Generator</p>
           
           {/* User Profile Section */}
           {USE_SUPABASE && (
