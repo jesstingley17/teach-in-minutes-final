@@ -151,27 +151,72 @@ Each section should have: id, title, type (text|question|instruction|diagram_pla
 
 Return JSON object with all required fields.`;
 
+  // Enhanced system prompt following AI_BLUEPRINT.md
+  const systemPrompt = `You are an expert K-5 teacher and strict JSON generator. Return ONLY valid JSON in the schema below. Do not return any other text, markdown, or commentary. If you cannot answer or need clarification, return a JSON object {error: 'clarify', message: '...'} rather than free text.
+
+REQUIREMENTS:
+- Return ONLY valid JSON - no markdown code blocks, no explanations
+- Keep explanations concise (<40 words each)
+- Use US grade labels (K, 1, 2, 3...)
+- All text must be complete - NO truncated sentences
+- NO HTML entities (use proper characters: & not &amp;, > not &gt;)
+- Every question MUST include correctAnswer field
+- Matching exercises MUST include both content (items) and options array`;
+
+  // Enhanced user prompt with strict JSON requirement
+  const enhancedPrompt = `${prompt}
+
+CRITICAL: Return ONLY valid JSON. Do NOT include markdown code blocks, explanations, or any text outside the JSON object. The JSON must exactly match the required schema with all fields.`;
+
   try {
     const response = await client.chat.completions.create({
       model: 'gpt-4o',
       messages: [
         {
           role: 'system',
-          content: 'You are an expert instructional designer. Generate high-quality educational materials. Always respond with valid JSON matching the required schema.'
+          content: systemPrompt
         },
         {
           role: 'user',
-          content: prompt
+          content: enhancedPrompt
         }
       ],
       response_format: { type: 'json_object' },
-      temperature: 0.7
+      temperature: 0.2, // Lower temperature for more structured output (per blueprint)
+      max_tokens: 4000
     });
 
     const content = response.choices[0]?.message?.content;
     if (!content) throw new Error('No response from OpenAI');
     
-    const suite = JSON.parse(content);
+    // Parse with validation
+    let suite: any;
+    try {
+      suite = JSON.parse(content);
+    } catch (parseError) {
+      // Retry once with strict instruction
+      console.warn('JSON parse failed, attempting retry...');
+      const retryResponse = await client.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt
+          },
+          {
+            role: 'user',
+            content: `The previous response was invalid JSON. Please try again and return ONLY valid JSON.\n\n${enhancedPrompt}`
+          }
+        ],
+        response_format: { type: 'json_object' },
+        temperature: 0.2,
+        max_tokens: 4000
+      });
+      
+      const retryContent = retryResponse.choices[0]?.message?.content;
+      if (!retryContent) throw new Error('No response from OpenAI retry');
+      suite = JSON.parse(retryContent);
+    }
     
     // Generate ID if not provided
     if (!suite.id) {
@@ -181,6 +226,13 @@ Return JSON object with all required fields.`;
     // Set branding
     suite.institutionName = branding.institution || '';
     suite.instructorName = branding.instructor || '';
+    
+    // Add metadata (per blueprint)
+    suite.metadata = {
+      modelUsed: 'gpt-4o',
+      generationTimeSec: Date.now() / 1000,
+      provider: 'OpenAI'
+    };
     
     return suite as InstructionalSuite;
   } catch (error: any) {
