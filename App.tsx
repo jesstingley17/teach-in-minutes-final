@@ -14,6 +14,7 @@ import { analyzeCurriculum, analyzeDocument, generateSuite, generateDoodle } fro
 import { SupabaseService } from './services/supabaseService';
 import { StandardsService } from './services/standardsService';
 import { PDFService } from './services/pdfService';
+import { analyzeInspiration } from './services/inspirationService';
 import { useAuth } from './contexts/AuthContext';
 import EnhancedSuiteEditor from './components/EnhancedSuiteEditor';
 import AuthModal from './components/AuthModal';
