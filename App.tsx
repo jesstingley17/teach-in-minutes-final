@@ -62,8 +62,18 @@ const App: React.FC = () => {
     bloomLevel: BloomLevel.APPLICATION,
     differentiation: Differentiation.GENERAL,
     aesthetic: AestheticStyle.MODERN,
-    pageCount: 1
+    pageCount: 1,
+    includeVisuals: true,
+    visualType: 'doodles' as 'doodles' | 'diagrams' | 'both'
   });
+
+  const [inspirationConfig, setInspirationConfig] = useState({
+    enabled: false,
+    copyLayout: true,
+    copyDesign: true,
+    file: null as File | null
+  });
+  const inspirationFileRef = useRef<HTMLInputElement>(null);
 
   // Load drafts, parsed curriculums, and check API Key on mount
   useEffect(() => {
@@ -234,7 +244,31 @@ const App: React.FC = () => {
     if (!selectedNode) return;
     setIsGenerating(true);
     try {
-      const doodleData = await generateDoodle(selectedNode, genConfig.aesthetic);
+      // Analyze inspiration if enabled
+      let inspirationAnalysis = null;
+      if (inspirationConfig.enabled && inspirationConfig.file) {
+        try {
+          const reader = new FileReader();
+          const fileData = await new Promise<string>((resolve, reject) => {
+            reader.onload = (e) => resolve(e.target?.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(inspirationConfig.file!);
+          });
+          const base64Data = fileData.split(',')[1];
+          const mimeType = inspirationConfig.file.type;
+          inspirationAnalysis = await analyzeInspiration(
+            base64Data,
+            mimeType,
+            inspirationConfig.copyLayout,
+            inspirationConfig.copyDesign
+          );
+          console.log('Inspiration analysis:', inspirationAnalysis);
+        } catch (error) {
+          console.warn('Failed to analyze inspiration, continuing without it:', error);
+        }
+      }
+
+      const doodleData = genConfig.includeVisuals ? await generateDoodle(selectedNode, genConfig.aesthetic) : undefined;
       const suite = await generateSuite(
         selectedNode, 
         genConfig.outputType, 
@@ -450,8 +484,8 @@ const App: React.FC = () => {
     <div className="min-h-screen flex flex-col md:flex-row" style={{ background: 'linear-gradient(to bottom, #fef3c7 0%, #ffffff 100%)' }}>
       
       {/* Sidebar: Curriculum Intake & Control */}
-      <aside className="w-full md:w-80 lg:w-96 bg-white border-r border-slate-200 flex flex-col h-screen no-print overflow-y-auto shrink-0 custom-scrollbar">
-        <div className="p-6 border-b border-slate-100">
+      <aside className="w-full md:w-80 lg:w-96 bg-gradient-to-b from-pink-50 via-purple-50 to-blue-50 border-r-2 border-purple-300 flex flex-col h-screen no-print overflow-y-auto shrink-0 custom-scrollbar shadow-2xl" style={{ borderColor: '#c084fc' }}>
+        <div className="p-6 border-b-2 border-purple-200/60">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 rounded-xl rainbow-gradient flex items-center justify-center text-white font-black text-lg shadow-lg" style={{
@@ -771,6 +805,100 @@ const App: React.FC = () => {
                     onChange={(e) => setGenConfig({...genConfig, pageCount: Math.max(1, Math.min(10, parseInt(e.target.value) || 1))})}
                     className="w-full mt-1 p-2 text-sm bg-white border border-slate-200 rounded-lg"
                   />
+                </div>
+
+                <div className="pt-2 border-t border-purple-200">
+                  <label className="text-[10px] font-bold text-purple-600 uppercase mb-2 flex items-center space-x-1">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>Visual Elements</span>
+                  </label>
+                  <div className="space-y-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={genConfig.includeVisuals}
+                        onChange={(e) => setGenConfig({...genConfig, includeVisuals: e.target.checked})}
+                        className="w-4 h-4 text-purple-600 border-purple-300 rounded focus:ring-purple-500"
+                      />
+                      <span className="text-xs text-slate-700">Include visuals in materials</span>
+                    </label>
+                    {genConfig.includeVisuals && (
+                      <select
+                        value={genConfig.visualType}
+                        onChange={(e) => setGenConfig({...genConfig, visualType: e.target.value as 'doodles' | 'diagrams' | 'both'})}
+                        className="w-full p-2 text-xs bg-white border border-purple-200 rounded-lg text-slate-700"
+                      >
+                        <option value="doodles">Fun Doodles (playful, light)</option>
+                        <option value="diagrams">Educational Diagrams (informative)</option>
+                        <option value="both">Both (doodles + diagrams)</option>
+                      </select>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-pink-200">
+                  <label className="text-[10px] font-bold text-pink-600 uppercase mb-2 flex items-center space-x-1">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>Inspiration (Optional)</span>
+                  </label>
+                  <div className="space-y-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={inspirationConfig.enabled}
+                        onChange={(e) => setInspirationConfig({...inspirationConfig, enabled: e.target.checked})}
+                        className="w-4 h-4 text-pink-600 border-pink-300 rounded focus:ring-pink-500"
+                      />
+                      <span className="text-xs text-slate-700">Copy layout/design from inspiration</span>
+                    </label>
+                    {inspirationConfig.enabled && (
+                      <>
+                        <div
+                          onClick={() => inspirationFileRef.current?.click()}
+                          className="border-2 border-dashed border-pink-300 rounded-lg p-3 text-center cursor-pointer hover:border-pink-500 hover:bg-pink-50/50 transition-all"
+                        >
+                          <p className="text-xs font-bold text-pink-700">
+                            {inspirationConfig.file ? inspirationConfig.file.name : 'Upload PDF/Photo'}
+                          </p>
+                          <p className="text-[10px] text-pink-500 mt-1">Click to upload inspiration</p>
+                        </div>
+                        <input
+                          type="file"
+                          ref={inspirationFileRef}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) setInspirationConfig({...inspirationConfig, file});
+                          }}
+                          accept="application/pdf,image/*"
+                          className="hidden"
+                        />
+                        <div className="space-y-1.5 pt-1">
+                          <label className="flex items-center space-x-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={inspirationConfig.copyLayout}
+                              onChange={(e) => setInspirationConfig({...inspirationConfig, copyLayout: e.target.checked})}
+                              className="w-3.5 h-3.5 text-pink-600 border-pink-300 rounded focus:ring-pink-500"
+                            />
+                            <span className="text-[10px] text-slate-600">Copy Layout</span>
+                          </label>
+                          <label className="flex items-center space-x-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={inspirationConfig.copyDesign}
+                              onChange={(e) => setInspirationConfig({...inspirationConfig, copyDesign: e.target.checked})}
+                              className="w-3.5 h-3.5 text-pink-600 border-pink-300 rounded focus:ring-pink-500"
+                            />
+                            <span className="text-[10px] text-slate-600">Copy Design</span>
+                          </label>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
 
