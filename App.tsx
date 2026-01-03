@@ -907,6 +907,23 @@ const App: React.FC = () => {
       {/* Auth Modal */}
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
 
+      {/* Settings Modal */}
+      {showSettings && (
+        <SettingsModal
+          isOpen={showSettings}
+          onClose={() => setShowSettings(false)}
+          currentSettings={userSettings}
+          onSave={async (settings) => {
+            if (USE_SUPABASE && user) {
+              await SupabaseService.saveUserSettings(settings);
+              const updated = await SupabaseService.loadUserSettings();
+              setUserSettings(updated);
+            }
+            setShowSettings(false);
+          }}
+        />
+      )}
+
       {/* Guided Wizard */}
       {showWizard && (
         <GuidedWizard
