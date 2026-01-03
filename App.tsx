@@ -76,6 +76,15 @@ const App: React.FC = () => {
     file: null as File | null
   });
   const inspirationFileRef = useRef<HTMLInputElement>(null);
+  
+  // Collapsible section states
+  const [sectionsExpanded, setSectionsExpanded] = useState({
+    drafts: true,
+    parsedDocuments: true,
+    createMaterials: true,
+    nodes: true,
+    generationSettings: true
+  });
 
   // Load drafts, parsed curriculums, and check API Key on mount
   useEffect(() => {
@@ -571,8 +580,8 @@ const App: React.FC = () => {
                   }}
                 >
                   ⏰
-                </div>
-              </div>
+            </div>
+          </div>
               <div>
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 bg-clip-text text-transparent" style={{
                   fontFamily: "'Dancing Script', cursive",
@@ -615,12 +624,12 @@ const App: React.FC = () => {
                       </svg>
                       <span>Settings</span>
                     </button>
-                    <button
-                      onClick={signOut}
-                      className="text-xs text-slate-400 hover:text-slate-600 font-medium"
-                    >
-                      Sign Out
-                    </button>
+                  <button
+                    onClick={signOut}
+                    className="text-xs text-slate-400 hover:text-slate-600 font-medium"
+                  >
+                    Sign Out
+                  </button>
                   </div>
                 </div>
               ) : (
@@ -638,13 +647,25 @@ const App: React.FC = () => {
           )}
         </div>
 
-        {/* Saved Drafts Section */}
-        <div className="px-6 pb-4 border-b-2 border-purple-200/60">
-          <section>
-            <label className="block text-xs font-bold text-purple-700 uppercase mb-3">Saved Drafts</label>
-            {drafts.length > 0 ? (
+          {/* Saved Drafts Section */}
+        <div className="px-6 pb-6 border-b-2 border-purple-200/60">
+            <section>
+            <button
+              onClick={() => setSectionsExpanded({...sectionsExpanded, drafts: !sectionsExpanded.drafts})}
+              className="sticky-section-header w-full flex items-center justify-between text-xs font-bold text-purple-700 uppercase mb-3 hover:text-purple-800 transition-colors group"
+            >
+              <span className="flex items-center space-x-2">
+                <svg className="w-4 h-4 transition-transform" style={{ transform: sectionsExpanded.drafts ? 'rotate(90deg)' : 'rotate(0deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                </svg>
+                <span>Saved Drafts ({drafts.length})</span>
+              </span>
+            </button>
+            {sectionsExpanded.drafts && (
+              <>
+                {drafts.length > 0 ? (
               <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                {drafts.map((draft, index) => (
+                    {drafts.map((draft, index) => (
                   <div
                     key={draft.id}
                     onClick={() => {
@@ -674,20 +695,34 @@ const App: React.FC = () => {
                   </div>
                 ))}
               </div>
-            ) : (
-              <p className="text-xs text-slate-500 italic py-2">No saved drafts yet. Create or generate materials to save drafts.</p>
+                ) : (
+                  <p className="text-xs text-slate-500 italic py-2">No saved drafts yet. Create or generate materials to save drafts.</p>
+                )}
+              </>
             )}
-          </section>
+            </section>
         </div>
 
         {/* Saved Parsed Curriculums Section */}
         {USE_SUPABASE && user && (
-          <div className="px-6 pb-4 border-b-2 border-purple-200/60">
+          <div className="px-6 pb-6 border-b-2 border-purple-200/60">
             <section>
-              <label className="block text-xs font-bold text-purple-700 uppercase mb-3">Saved Parsed Documents</label>
-              {savedParsedCurriculums.length > 0 ? (
-                <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                  {savedParsedCurriculums.map((saved, index) => (
+              <button
+                onClick={() => setSectionsExpanded({...sectionsExpanded, parsedDocuments: !sectionsExpanded.parsedDocuments})}
+                className="sticky-section-header w-full flex items-center justify-between text-xs font-bold text-purple-700 uppercase mb-3 hover:text-purple-800 transition-colors group"
+              >
+                <span className="flex items-center space-x-2">
+                  <svg className="w-4 h-4 transition-transform" style={{ transform: sectionsExpanded.parsedDocuments ? 'rotate(90deg)' : 'rotate(0deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                  <span>Saved Parsed Documents ({savedParsedCurriculums.length})</span>
+                </span>
+              </button>
+              {sectionsExpanded.parsedDocuments && (
+                <>
+                  {savedParsedCurriculums.length > 0 ? (
+                    <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                      {savedParsedCurriculums.map((saved, index) => (
                     <div
                       key={saved.id}
                       onClick={() => handleLoadSavedCurriculum(saved)}
@@ -706,21 +741,35 @@ const App: React.FC = () => {
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                       </button>
+                      </div>
+                    ))}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-slate-500 italic py-2">No saved documents yet. Upload or paste content to get started.</p>
+                  ) : (
+                    <p className="text-xs text-slate-500 italic py-2">No saved documents yet. Upload or paste content to get started.</p>
+                  )}
+                </>
               )}
             </section>
           </div>
         )}
 
-        <div className="flex-1 p-6 space-y-8">
+        <div className="flex-1 p-6 space-y-8 overflow-y-auto custom-scrollbar">
           {/* Intake Section */}
-          <section className="space-y-4">
+          <section className="space-y-5">
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-3">Create Materials</label>
+              <button
+                onClick={() => setSectionsExpanded({...sectionsExpanded, createMaterials: !sectionsExpanded.createMaterials})}
+                className="w-full flex items-center justify-between text-xs font-bold text-slate-500 uppercase mb-4 hover:text-slate-600 transition-colors group"
+              >
+                <span className="flex items-center space-x-2">
+                  <svg className="w-4 h-4 transition-transform" style={{ transform: sectionsExpanded.createMaterials ? 'rotate(90deg)' : 'rotate(0deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                  <span>Create Materials</span>
+                </span>
+              </button>
+              {sectionsExpanded.createMaterials && (
+              <div className="space-y-4">
               
               {/* Create from Scratch Button */}
               <button
@@ -741,7 +790,6 @@ const App: React.FC = () => {
                   <span className="bg-white px-2 text-slate-300 font-bold">or upload existing</span>
                 </div>
               </div>
-            </div>
             
             {/* Parsing Context Section */}
             <div>
@@ -827,14 +875,28 @@ const App: React.FC = () => {
                 ) : 'Parse Text'}
               </button>
             </div>
+            </div>
+              )}
+            </div>
           </section>
 
           {/* Nodes Tree */}
           {nodes.length > 0 && (
-            <section>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-3">Instructional Nodes ({nodes.length})</label>
+            <section className="space-y-4">
+              <button
+                onClick={() => setSectionsExpanded({...sectionsExpanded, nodes: !sectionsExpanded.nodes})}
+                className="w-full flex items-center justify-between text-xs font-bold text-slate-500 uppercase mb-3 hover:text-slate-600 transition-colors group"
+              >
+                <span className="flex items-center space-x-2">
+                  <svg className="w-4 h-4 transition-transform" style={{ transform: sectionsExpanded.nodes ? 'rotate(90deg)' : 'rotate(0deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                  <span>Instructional Nodes ({nodes.length})</span>
+                </span>
+              </button>
+              {sectionsExpanded.nodes && (
               <div className="space-y-2 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
-                {nodes.map((node, index) => (
+                  {nodes.map((node, index) => (
                   <button
                     key={node.id}
                     onClick={() => setSelectedNode(node)}
@@ -849,13 +911,26 @@ const App: React.FC = () => {
                   </button>
                 ))}
               </div>
+              )}
             </section>
           )}
 
           {/* Configuration Section */}
           {selectedNode && (
             <section className="space-y-5 animate-in fade-in slide-in-from-bottom-4">
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Generation Settings</label>
+              <button
+                onClick={() => setSectionsExpanded({...sectionsExpanded, generationSettings: !sectionsExpanded.generationSettings})}
+                className="w-full flex items-center justify-between text-xs font-bold text-slate-500 uppercase mb-1 hover:text-slate-600 transition-colors group"
+              >
+                <span className="flex items-center space-x-2">
+                  <svg className="w-4 h-4 transition-transform" style={{ transform: sectionsExpanded.generationSettings ? 'rotate(90deg)' : 'rotate(0deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                  <span>Generation Settings</span>
+                </span>
+              </button>
+              {sectionsExpanded.generationSettings && (
+              <div className="space-y-5">
               
               <div className="space-y-3">
                 <div>
@@ -1029,6 +1104,8 @@ const App: React.FC = () => {
                   <span>Build Instruction Suite</span>
                 )}
               </button>
+              </div>
+              )}
             </section>
           )}
         </div>
@@ -1121,29 +1198,62 @@ const App: React.FC = () => {
               onUpdateSuite={handleUpdateSuite}
             />
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-6 p-8 animate-fade-in">
-              <div className="w-28 h-28 border-4 border-dashed border-purple-200 rounded-3xl flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 animate-pulse-slow">
-                <svg className="w-14 h-14 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+            <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-8 p-8 animate-fade-in relative overflow-hidden">
+              {/* Background pattern */}
+              <div className="absolute inset-0 opacity-5">
+                <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#a855f7" strokeWidth="1"/>
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#grid)" />
+                </svg>
               </div>
-              <div className="text-center max-w-md">
-                <h2 className="text-2xl font-bold gradient-text-animated mb-3">Get Started</h2>
-                <p className="text-sm text-slate-600 mb-6">Create materials from scratch using our guided wizard, or upload a curriculum (PDF/Image) or paste syllabus text to analyze it into lesson nodes.</p>
-                <button
-                  onClick={() => setShowWizard(true)}
-                  className="px-6 py-3 bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 hover:from-pink-600 hover:via-purple-700 hover:to-blue-700 text-white rounded-xl font-bold btn-modern shadow-lg hover:shadow-2xl hover-glow"
-                >
-                  Start Guided Wizard
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-4 mt-8 w-full max-w-md">
-                 <div className="p-5 glass rounded-xl border-2 border-purple-100 shadow-lg hover:shadow-xl text-center card-interactive animate-scale-in">
+              
+              <div className="relative z-10 flex flex-col items-center space-y-6">
+                <div className="w-32 h-32 border-4 border-dashed border-purple-300 rounded-3xl flex items-center justify-center bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 animate-pulse-slow shadow-xl relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-pink-200/20 to-purple-200/20 animate-shimmer"></div>
+                  <svg className="w-16 h-16 text-purple-500 relative z-10 animate-float" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                </div>
+                
+                <div className="text-center max-w-lg">
+                  <h2 className="text-3xl font-bold gradient-text-animated mb-4">Get Started</h2>
+                  <p className="text-sm text-slate-600 mb-8 leading-relaxed">Create materials from scratch using our guided wizard, or upload a curriculum (PDF/Image) or paste syllabus text to analyze it into lesson nodes.</p>
+                  <button
+                    onClick={() => setShowWizard(true)}
+                    className="px-8 py-4 bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 hover:from-pink-600 hover:via-purple-700 hover:to-blue-700 text-white rounded-xl font-bold btn-modern shadow-lg hover:shadow-2xl hover-glow text-base transition-all transform hover:scale-105"
+                  >
+                    Start Guided Wizard
+                  </button>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-5 mt-4 w-full max-w-md">
+                  <div className="tooltip-container p-6 glass rounded-xl border-2 border-purple-100 shadow-lg hover:shadow-xl text-center card-interactive animate-scale-in hover:border-purple-300 cursor-help">
+                    <div className="tooltip">All documents are optimized for A4 paper size (210mm x 297mm) for easy printing and professional presentation</div>
+                    <div className="w-10 h-10 bg-gradient-to-br from-pink-100 to-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                      <svg className="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
                     <p className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent font-black text-3xl mb-2">100%</p>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600">A4 Ready</p>
-                 </div>
-                 <div className="p-5 glass rounded-xl border-2 border-purple-100 shadow-lg hover:shadow-xl text-center card-interactive animate-scale-in" style={{ animationDelay: '0.1s' }}>
+                    <p className="text-[9px] text-slate-500 mt-2 leading-tight">Print-perfect formatting</p>
+                  </div>
+                  <div className="tooltip-container p-6 glass rounded-xl border-2 border-purple-100 shadow-lg hover:shadow-xl text-center card-interactive animate-scale-in hover:border-purple-300 cursor-help" style={{ animationDelay: '0.1s' }}>
+                    <div className="tooltip">Powered by Google Gemini 3 Pro, our AI uses advanced reasoning to create high-quality educational materials</div>
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                      <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                    </div>
                     <p className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-black text-3xl mb-2">G3P</p>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Reasoning Core</p>
-                 </div>
+                    <p className="text-[9px] text-slate-500 mt-2 leading-tight">AI-powered generation</p>
+                  </div>
+                </div>
               </div>
             </div>
           )}
