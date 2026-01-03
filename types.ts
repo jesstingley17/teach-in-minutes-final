@@ -48,36 +48,28 @@ export enum GradeLevel {
 export enum StandardsFramework {
   COMMON_CORE_MATH = 'Common Core Math',
   COMMON_CORE_ELA = 'Common Core ELA',
-  NGSS = 'NGSS (Next Gen Science)',
-  STATE_TEXAS = 'Texas TEKS',
-  STATE_CALIFORNIA = 'California Standards',
-  STATE_FLORIDA = 'Florida Standards',
-  STATE_NEW_YORK = 'New York Standards',
-  INTERNATIONAL_BAC = 'IB (International Baccalaureate)',
-  AP = 'AP (Advanced Placement)',
-  CUSTOM = 'Custom/Other'
+  NEXT_GEN_SCIENCE = 'Next Generation Science Standards',
+  TEKS = 'Texas Essential Knowledge and Skills',
+  FLORIDA_BEST = 'Florida B.E.S.T. Standards',
+  OTHER = 'Other/General'
+}
+
+export enum AIProvider {
+  GEMINI = 'Google Gemini',
+  OPENAI = 'OpenAI',
+  CLAUDE = 'Anthropic Claude'
+}
+
+export interface BrandingConfig {
+  institution?: string;
+  instructor?: string;
 }
 
 export interface EducationalStandard {
-  code: string; // e.g., "CCSS.MATH.CONTENT.3.OA.A.1"
-  description: string; // Full text of the standard
+  code: string;
+  description: string;
   framework: StandardsFramework;
-  subject?: string; // Math, ELA, Science, etc.
-}
-
-export interface RubricCriterion {
-  criterion: string; // What is being evaluated (e.g., "Understanding of concepts")
-  excellent: string; // Description for excellent performance
-  good: string; // Description for good performance
-  satisfactory: string; // Description for satisfactory performance
-  needsImprovement: string; // Description for needs improvement
-  points: number; // Maximum points for this criterion
-}
-
-export interface Rubric {
-  criteria: RubricCriterion[];
-  totalPoints: number;
-  scale?: string; // e.g., "4-point scale" or custom
+  subject?: string;
 }
 
 export interface CurriculumNode {
@@ -94,12 +86,12 @@ export interface DocumentSection {
   type: 'text' | 'question' | 'instruction' | 'diagram_placeholder' | 'matching';
   content: string;
   points?: number;
-  options?: string[]; // for MCQ or matching options
-  correctAnswer?: string | number | string[]; // for auto-grading
-  pageNumber?: number; // which page this section belongs to
-  order?: number; // order within page
-  imageUrl?: string; // URL or base64 data URL for images/diagrams
-  imageBase64?: string; // Base64 encoded image data
+  options?: string[];
+  correctAnswer?: string | number | string[];
+  imageUrl?: string;
+  imageBase64?: string;
+  pageNumber?: number;
+  order?: number;
 }
 
 export interface Page {
@@ -108,54 +100,68 @@ export interface Page {
   sections: DocumentSection[];
 }
 
+export interface RubricCriterion {
+  criterion: string;
+  excellent: string;
+  good: string;
+  satisfactory: string;
+  needsImprovement: string;
+  points: number;
+}
+
+export interface Rubric {
+  criteria: RubricCriterion[];
+  totalPoints: number;
+  scale: string;
+}
+
 export interface InstructionalSuite {
   id: string;
-  nodeId: string;
   title: string;
-  institutionName: string;
-  instructorName: string;
   outputType: OutputType;
   bloomLevel: BloomLevel;
   differentiation: Differentiation;
   aesthetic: AestheticStyle;
+  institutionName?: string;
+  instructorName?: string;
   sections: DocumentSection[];
-  pages?: Page[]; // Multi-page support
-  pageCount?: number; // Number of pages (1-10)
-  doodlePrompt?: string;
+  pages?: Page[];
+  pageCount?: number;
+  standards?: EducationalStandard[];
+  rubric?: Rubric;
   doodleBase64?: string;
-  folderId?: string; // Folder organization
-  createdAt?: string;
-  updatedAt?: string;
-  isInteractive?: boolean; // Interactive mode flag
-  gradeLevel?: GradeLevel;
-  standardsFramework?: StandardsFramework;
-  standards?: EducationalStandard[]; // Aligned educational standards
-  showStandards?: boolean; // Whether to display standards on materials
-  rubric?: Rubric; // Grading rubric for teacher key
-}
-
-export interface Folder {
-  id: string;
-  name: string;
-  parentId?: string; // For nested folders
-  userId?: string;
   createdAt?: string;
   updatedAt?: string;
 }
 
-export interface InteractiveProgress {
-  suiteId: string;
-  userId?: string;
-  answers: Record<string, string | number | string[]>; // sectionId -> answer
-  score?: number;
-  totalPoints?: number;
-  completedAt?: string;
-  startedAt?: string;
+export interface InspirationAnalysis {
+  layout?: {
+    structure: string;
+    spacing: string;
+    organization: string;
+  };
+  design?: {
+    colors: string;
+    typography: string;
+    visualElements: string;
+  };
+  recommendations: string;
 }
 
-export interface BrandingConfig {
-  institution: string;
-  instructor: string;
-  logoUrl?: string;
-  signatureUrl?: string;
+export interface InspirationConfig {
+  enabled: boolean;
+  copyLayout: boolean;
+  copyDesign: boolean;
+  file: File | null;
+}
+
+export interface GenerationConfig {
+  outputType: OutputType;
+  bloomLevel: BloomLevel;
+  differentiation: Differentiation;
+  aesthetic: AestheticStyle;
+  pageCount: number;
+  includeVisuals: boolean;
+  visualType: 'doodles' | 'diagrams' | 'both';
+  provider?: AIProvider;
 }

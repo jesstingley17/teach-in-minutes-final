@@ -15,6 +15,11 @@ View your app in AI Studio: https://ai.studio/apps/drive/1smb3LjYfxEFYK_JIiHHLLZ
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+2. Set API keys in `.env.local`:
+   - `GEMINI_API_KEY` (Recommended - Required for image generation)
+   - `OPENAI_API_KEY` (Optional - for GPT-4o)
+   - `ANTHROPIC_API_KEY` (Optional - for Claude)
+   
+   See [MULTI_PROVIDER_SETUP.md](MULTI_PROVIDER_SETUP.md) for detailed setup instructions.
 3. Run the app:
    `npm run dev`

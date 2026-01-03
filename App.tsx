@@ -8,9 +8,11 @@ import {
   AestheticStyle,
   BrandingConfig,
   GradeLevel,
-  StandardsFramework
+  StandardsFramework,
+  AIProvider
 } from './types';
-import { analyzeCurriculum, analyzeDocument, generateSuite, generateDoodle } from './services/geminiService';
+import { analyzeCurriculum, analyzeDocument, generateSuite, getAvailableProviders, getDefaultProvider } from './services/aiService';
+import { generateDoodle } from './services/geminiService';
 import { SupabaseService } from './services/supabaseService';
 import { StandardsService } from './services/standardsService';
 import { PDFService } from './services/pdfService';
@@ -66,7 +68,8 @@ const App: React.FC = () => {
     aesthetic: AestheticStyle.MODERN,
     pageCount: 1,
     includeVisuals: true,
-    visualType: 'doodles' as 'doodles' | 'diagrams' | 'both'
+    visualType: 'doodles' as 'doodles' | 'diagrams' | 'both',
+    provider: getDefaultProvider()
   });
 
   const [inspirationConfig, setInspirationConfig] = useState({
@@ -335,9 +338,15 @@ const App: React.FC = () => {
         genConfig.bloomLevel, 
         genConfig.differentiation,
         genConfig.aesthetic,
-        branding,
-        doodleData,
-        genConfig.pageCount
+        {
+          institution: branding.institution || '',
+          instructor: branding.instructor || ''
+        },
+        genConfig.pageCount,
+        parseConfig.gradeLevel,
+        undefined, // standards - could be added later
+        genConfig.provider,
+        doodleData
       );
       console.log('Suite generated successfully:', suite.title, suite.sections.length, 'sections');
       setActiveSuite(suite);
@@ -401,10 +410,11 @@ const App: React.FC = () => {
           institution: wizardData.institution,
           instructor: wizardData.instructor
         },
-        doodleData,
         wizardData.pageCount,
         wizardData.gradeLevel,
-        standards
+        standards,
+        genConfig.provider,
+        doodleData
       );
       setActiveSuite(suite);
       // Update branding state
@@ -990,6 +1000,22 @@ const App: React.FC = () => {
                     onChange={(e) => setGenConfig({...genConfig, pageCount: Math.max(1, Math.min(10, parseInt(e.target.value) || 1))})}
                     className="w-full mt-1 p-2.5 text-sm glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
                   />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">AI Provider</label>
+                  <select 
+                    value={genConfig.provider}
+                    onChange={(e) => setGenConfig({...genConfig, provider: e.target.value as AIProvider})}
+                    className="w-full mt-1 p-2.5 text-sm glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
+                  >
+                    {getAvailableProviders().map(provider => (
+                      <option key={provider} value={provider}>{provider}</option>
+                    ))}
+                  </select>
+                  <p className="text-[9px] text-slate-500 mt-1 italic">
+                    Auto-fallback to other providers if selected one fails
+                  </p>
                 </div>
 
                 <div className="pt-2 border-t border-purple-200">
