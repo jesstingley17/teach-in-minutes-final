@@ -8,6 +8,10 @@ export class SupabaseService {
    */
   static async saveSuite(suite: InstructionalSuite): Promise<{ success: boolean; error?: string }> {
     try {
+      // Get current user ID from Supabase Auth
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id || null;
+
       const { data: existingData } = await supabase
         .from('instructional_suites')
         .select('id')
@@ -35,12 +39,12 @@ export class SupabaseService {
 
         if (error) throw error;
       } else {
-        // Insert new
+        // Insert new with authenticated user ID
         const { error } = await supabase
           .from('instructional_suites')
           .insert({
             id: suite.id,
-            user_id: null, // Anonymous for now
+            user_id: userId,
             node_id: suite.nodeId,
             title: suite.title,
             sections: suite.sections,

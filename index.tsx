@@ -1,6 +1,6 @@
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { AuthProvider } from './contexts/AuthContext';
 import App from './App';
 
 console.log('App loading...', {
@@ -49,7 +49,9 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
 root.render(
   <React.StrictMode>
     <ErrorBoundary>
-      <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </ErrorBoundary>
   </React.StrictMode>
 );
