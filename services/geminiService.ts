@@ -144,87 +144,130 @@ export const generateSuite = async (
   const outputTypeInstructions = outputType === OutputType.GUIDED_NOTES 
     ? `CRITICAL GUIDED NOTES REQUIREMENTS - Professional Classroom-Ready Level:
 
-1. PEDAGOGICAL STRUCTURE - Use "I Do → We Do → You Do" framework:
-   - I Do: Start with 1-2 worked examples with complete solutions shown
-   - We Do: Include guided practice with sentence frames and scaffolding
-   - You Do: Independent practice with clear instructions
+1. OPENING HOOK - Make it sticky and frame future payoff:
+   - Start with a hook that signals why this lesson matters beyond today
+   - Include one sentence about future payoff or how this connects to bigger learning
+   - Example: "Understanding like denominators is the foundation for all fraction addition and subtraction you'll do later — this is the rule everything else builds on."
+   - Position the lesson as a key concept, not just a task
 
-2. REDUCE REPETITIVE FILL-INS - Replace excessive fill-in-the-blanks with:
-   - Sentence frames: "When fractions have like denominators, we can ______ because ______."
-   - Think-aloud prompts: "Think about: Why can't we add 1/2 and 1/3 directly?"
-   - Guided scaffolding: Progressive steps with partial information provided
-   - Mix of fill-ins (30-40%), sentence completion (30%), short responses (30%)
-
-3. VISUAL INSTRUCTION CLARITY:
-   - Labeled diagram placeholders with explicit teacher directions in content field
-   - Examples: "Teacher: Draw a rectangle divided into 8 equal parts. Label each part as 1/8. Point out that all parts are the same size - this is what 'like denominators' means visually."
-   - Include 1-2 fully worked examples BEFORE independent practice
-   - Diagram instructions should be complete sentences outside the drawing box
-
-4. COGNITIVE FLOW & EXPLANATIONS:
-   - Add brief checkpoints explaining WHY rules work, not just what they are
-   - Use natural teacher voice: "Here's why this works..." or "Think of it like..."
-   - Include "Why It Matters" connections throughout
-   - Grade-appropriate language that sounds human, not robotic
-
-5. DIFFERENTIATION BUILT-IN:
-   - Add ONE challenge extension (marked clearly) for students ready to go deeper
-   - Add ONE remediation option (marked clearly) with extra scaffolding for struggling learners
-   - Do NOT increase page length - integrate these seamlessly
-
-6. ACCESSIBILITY OPTIMIZATION:
-   - ADHD-friendly: Generous white space, clear visual anchors, chunked information
-   - Dyslexia-friendly: Clear spacing, visual breaks, avoid dense text blocks
-   - Print-safe margins (20mm), intentional white space between sections
-   - Multi-page format with clear page breaks
-
-7. PROFESSIONAL QUALITY:
-   - Content should match what a strong teacher or curriculum publisher would create
-   - NO fluff - every element serves a learning purpose
-   - Maintain rigor while being accessible
-   - Clean, editable, visually organized
-
-8. CONTENT STRUCTURE:
-   - Follow the original curriculum structure but enhance it professionally
-   - Mix of formats: fill-ins, sentence frames, diagrams, worked examples, practice
-   - Clear progression from concept introduction → practice → application`
-    : `CRITICAL WORKSHEET REQUIREMENTS - Professional Classroom-Ready Level:
-
-1. PEDAGOGICAL STRUCTURE - Use "I Do → We Do → You Do" framework:
+2. PEDAGOGICAL STRUCTURE - Use "I Do → We Do → You Do" framework:
    - I Do: Start with 1-2 worked examples with complete solutions shown step-by-step
    - We Do: Include guided practice with sentence frames, scaffolding, and partial solutions
    - You Do: Independent practice with clear instructions
+   - Add visual hierarchy: Use section headers like "Vocabulary", "Why This Works", "Try It"
 
-2. WORKED EXAMPLES FIRST:
+3. VISUAL INSTRUCTION CLARITY - Reduce cognitive load:
+   - Break long instruction blocks into action beats with visual cues
+   - Use emoji/icon cues when appropriate: 🖍 Draw, ✏️ Label, 👀 Notice
+   - Labeled diagram placeholders with explicit teacher directions
+   - Include 1-2 fully worked examples BEFORE independent practice
+   - Diagram instructions should be complete sentences outside the drawing box
+   - Make instructions scannable, not just readable
+
+4. COGNITIVE DEPTH - Push reasoning deeper:
+   - Sentence frames should invite explanation, not just one-word answers
+   - Add forced reasoning clauses: "because the parts are the same size, which means __________."
+   - Move from recall → explanation
+   - Use think-aloud prompts: "Think about: Why can't we add 1/2 and 1/3 directly?"
+   - Include "Why It Matters" connections with clear headers
+
+5. MULTIPLE CHOICE - Expose misconceptions:
+   - Include at least one option that sounds tempting but wrong (common misconceptions)
+   - Make errors teachable, not silent
+   - Example: Include an option like "7/24 because we add everything" to catch students who add denominators
+
+6. DIFFERENTIATION WITH VISUAL BADGES:
+   - Challenge extension: Mark clearly with visual badge like "⭐ Preview of What's Next" or "Challenge:"
+   - Remediation option: Mark clearly with "💡 Extra Help:" or "Support Option:"
+   - Signal curriculum coherence and vertical alignment
+   - Do NOT increase page length - integrate seamlessly
+
+7. VISUAL HIERARCHY & AUTHORITY:
+   - Add subtle section headers with clear hierarchy
+   - Increase white space around worked examples (visual breathing room)
+   - Add one boxed "Golden Rule" statement for key concepts (e.g., "Golden Rule: When denominators are the same, only the numerators change.")
+   - Make it look like premium curriculum, not "AI-assisted notes"
+   - Use visual structure to separate instruction from practice
+
+8. ACCESSIBILITY OPTIMIZATION:
+   - ADHD-friendly: Generous white space, clear visual anchors, chunked information, icon cues
+   - Dyslexia-friendly: Clear spacing, visual breaks, avoid dense text blocks, scannable format
+   - Print-safe margins (20mm), intentional white space between sections
+   - Multi-page format with clear page breaks
+
+9. CONTENT QUALITY:
+   - NO fluff - every element serves a learning purpose
+   - Maintain rigor while being accessible
+   - Natural teacher voice, not robotic
+   - Clear progression from concept introduction → practice → application`
+    : `CRITICAL WORKSHEET REQUIREMENTS - Professional Classroom-Ready Level:
+
+1. OPENING HOOK - Make it sticky:
+   - Start with a hook that signals why this lesson matters beyond today
+   - Include one sentence about future payoff or how this connects to bigger learning
+   - Example: "Understanding like denominators is the foundation for all fraction addition and subtraction you'll do later — this is the rule everything else builds on."
+   - Position the lesson as a key concept, not just a task
+
+2. PEDAGOGICAL STRUCTURE - Use "I Do → We Do → You Do" framework:
+   - I Do: Start with 1-2 worked examples with complete solutions shown step-by-step
+   - We Do: Include guided practice with sentence frames, scaffolding, and partial solutions
+   - You Do: Independent practice with clear instructions
+   - Add visual hierarchy: Use section headers like "Vocabulary", "Why This Works", "Try It"
+
+3. WORKED EXAMPLES FIRST:
    - ALWAYS include 1-2 fully solved examples BEFORE independent practice questions
    - Show complete step-by-step solutions with explanations
-   - Example format: "Example: Add 1/5 + 2/5. Solution: Since both denominators are 5, we add the numerators: 1 + 2 = 3. The answer is 3/5."
+   - Increase white space around worked examples for visual breathing room
+   - Format: "Example: Add 1/5 + 2/5. Solution: Since both denominators are 5, we add the numerators: 1 + 2 = 3. The answer is 3/5."
 
-3. REDUCE REPETITION:
+4. VISUAL INSTRUCTIONS - Reduce cognitive load:
+   - Break long instruction blocks into action beats with visual cues
+   - Use emoji/icon cues when appropriate: 🖍 Draw, ✏️ Label, 👀 Notice
+   - Make instructions scannable, not just readable
+   - ALL diagram instructions must be complete sentences with proper endings
+   - Be specific: "Draw two separate rectangles of equal size. Divide the first rectangle into 5 equal horizontal strips. Divide the second rectangle into 5 equal horizontal strips. Shade 2 strips in the first rectangle and 3 strips in the second rectangle to show 2/5 + 3/5."
+
+5. COGNITIVE DEPTH - Push reasoning deeper:
+   - Sentence frames should invite explanation, not just one-word answers
+   - Add forced reasoning clauses: "because the parts are the same size, which means __________."
+   - Move from recall → explanation
+   - Include "why" explanations, not just "what"
+   - Use think-aloud prompts: "Think about: Why can we add 1/5 and 2/5 but not 1/5 and 1/3?"
+
+6. MULTIPLE CHOICE - Expose misconceptions:
+   - Include at least one option that sounds tempting but wrong (common misconceptions)
+   - Make errors teachable, not silent
+   - Example: Include an option like "7/24 because we add everything" to catch students who add denominators
+   - Surface student thinking through distractor quality
+
+7. REDUCE REPETITION:
    - Avoid asking the same type of question multiple times (e.g., "identify the denominator" appears 3+ times)
    - Vary question types: multiple choice, short answer, matching, drawing, sentence completion
    - Each question should target a different aspect or skill level
 
-4. COMPLETE MATCHING EXERCISES:
+8. COMPLETE MATCHING EXERCISES:
    - MUST include both items to match AND a complete word bank/options array
    - Never create matching exercises with only items but no options
    - Example: Items: "Numerator\nDenominator" Options: ["Top number of fraction", "Bottom number of fraction"]
 
-5. COMPLETE DIAGRAM INSTRUCTIONS:
-   - ALL diagram instructions must be complete sentences with proper endings
-   - Be specific: "Draw two separate rectangles of equal size. Divide the first rectangle into 5 equal horizontal strips. Divide the second rectangle into 5 equal horizontal strips. Shade 2 strips in the first rectangle and 3 strips in the second rectangle to show 2/5 + 3/5."
-
-6. DIFFERENTIATION:
-   - Include ONE challenge extension (marked clearly: "Challenge:" or "Extension:")
-   - Include ONE remediation option (marked clearly: "Extra Help:" or "Hint:")
+9. DIFFERENTIATION WITH VISUAL BADGES:
+   - Challenge extension: Mark clearly with visual badge like "⭐ Preview of What's Next" or "Challenge:"
+   - Remediation option: Mark clearly with "💡 Extra Help:" or "Support Option:"
+   - Signal curriculum coherence and vertical alignment
    - Integrate seamlessly without increasing page length
 
-7. COGNITIVE DEPTH:
-   - Include "why" explanations, not just "what"
-   - Use think-aloud prompts: "Think about: Why can we add 1/5 and 2/5 but not 1/5 and 1/3?"
-   - Include real-world connections and analogies
+10. VISUAL HIERARCHY & AUTHORITY:
+   - Add subtle section headers with clear hierarchy
+   - Add one boxed "Golden Rule" statement for key concepts (e.g., "Golden Rule: When denominators are the same, only the numerators change.")
+   - Make it look like premium curriculum, not "AI-assisted notes"
+   - Use visual structure to separate instruction from practice
 
-8. COMPLETE CONTENT:
+11. ACCESSIBILITY:
+   - ADHD-friendly: Generous white space, clear visual anchors, chunked information, icon cues
+   - Dyslexia-friendly: Clear spacing, visual breaks, avoid dense text blocks, scannable format
+   - Print-safe margins (20mm), intentional white space
+
+12. COMPLETE CONTENT:
    - NO truncated sentences, NO cut-off text, NO incomplete thoughts
    - Every section must be fully usable by students
    - All questions must have complete instructions`;
@@ -263,6 +306,13 @@ export const generateSuite = async (
   Generate comprehensive, substantial content that fully utilizes ${pageCount} page${pageCount > 1 ? 's' : ''} of material while maintaining professional spacing and visual clarity.
   
   CRITICAL REQUIREMENTS - READ CAREFULLY:
+  
+  ⚠️ ANSWERS ARE REQUIRED: For EVERY question and matching exercise, you MUST include a 'correctAnswer' field in the JSON output. This field is essential for the teacher key. The format depends on question type:
+     - Multiple choice questions: correctAnswer must be a NUMBER (0, 1, 2, etc.) representing the index of the correct option
+     - Short answer questions: correctAnswer must be a STRING with the expected answer text
+     - Matching exercises: correctAnswer must be an ARRAY of numbers like [0, 1, 2] mapping each item to its matching option index
+     - Do NOT omit this field. Every question and matching section MUST have a correctAnswer.
+  
   
   1. COMPLETE CONTENT: ALL text must be complete. NO truncated sentences, NO incomplete thoughts, NO cut-off words. Every sentence must have a proper ending. Every section must have complete, usable content.
   
@@ -330,6 +380,14 @@ export const generateSuite = async (
     
     // Ensure we have enough sections
     const sections = rawData.sections || [];
+    
+    // Log sections with answers for debugging
+    const sectionsWithAnswers = sections.filter((s: any) => s.correctAnswer !== undefined);
+    if (sectionsWithAnswers.length > 0) {
+      console.log(`Generated ${sectionsWithAnswers.length} sections with correctAnswer fields`);
+    } else {
+      console.warn('WARNING: No sections have correctAnswer fields. Teacher key will be empty.');
+    }
     
     const suite = {
       ...rawData,
