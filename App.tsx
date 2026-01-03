@@ -560,8 +560,9 @@ const App: React.FC = () => {
     <div className="min-h-screen flex flex-col md:flex-row" style={{ background: 'linear-gradient(to bottom, #fef3c7 0%, #ffffff 100%)' }}>
       
       {/* Sidebar: Curriculum Intake & Control */}
-      <aside className="w-full md:w-80 lg:w-96 bg-gradient-to-b from-pink-50 via-purple-50 to-blue-50 border-r-2 border-purple-300 flex flex-col h-screen no-print overflow-y-auto shrink-0 custom-scrollbar shadow-2xl" style={{ borderColor: '#c084fc' }}>
-        <div className="p-6 border-b-2 border-purple-200/60">
+      <aside className="w-full md:w-80 lg:w-96 bg-gradient-to-b from-pink-50 via-purple-50 to-blue-50 border-r-2 border-purple-300 flex flex-col h-screen no-print shrink-0 shadow-2xl" style={{ borderColor: '#c084fc' }}>
+        {/* Header - Fixed */}
+        <div className="p-6 border-b-2 border-purple-200/60 flex-shrink-0">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-3">
               {/* Logo Image */}
@@ -1243,7 +1244,7 @@ const App: React.FC = () => {
                   <svg className="w-16 h-16 text-purple-500 relative z-10 animate-float" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                   </svg>
-                </div>
+              </div>
                 
                 <div className="text-center max-w-lg">
                   <h2 className="text-3xl font-bold gradient-text-animated mb-4">Get Started</h2>
@@ -1254,7 +1255,7 @@ const App: React.FC = () => {
                   >
                     Start Guided Wizard
                   </button>
-                </div>
+                 </div>
                 
                 <div className="grid grid-cols-2 gap-5 mt-4 w-full max-w-md">
                   <div className="tooltip-container p-6 glass rounded-xl border-2 border-purple-100 shadow-lg hover:shadow-xl text-center card-interactive animate-scale-in hover:border-purple-300 cursor-help">
@@ -1263,7 +1264,7 @@ const App: React.FC = () => {
                       <svg className="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                    </div>
+                 </div>
                     <p className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent font-black text-3xl mb-2">100%</p>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600">A4 Ready</p>
                     <p className="text-[9px] text-slate-500 mt-2 leading-tight">Print-perfect formatting</p>
