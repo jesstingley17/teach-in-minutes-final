@@ -21,3 +21,5 @@ Place your logo image file here as `logo.png`.
 1. Replace the file at `public/assets/logo.png` with your new logo
 2. The app will automatically pick up the new logo on refresh
 
+
+

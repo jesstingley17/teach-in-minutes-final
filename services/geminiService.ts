@@ -138,7 +138,8 @@ export const generateSuite = async (
   doodleBase64?: string,
   pageCount: number = 1,
   gradeLevel?: GradeLevel,
-  standards?: EducationalStandard[]
+  standards?: EducationalStandard[],
+  visualType?: 'doodles' | 'diagrams' | 'both'
 ): Promise<InstructionalSuite> => {
   const apiKey = import.meta.env.GEMINI_API_KEY;
   
@@ -329,7 +330,7 @@ export const generateSuite = async (
   CONTENT MIX (Scaled for ${pageCount} pages - MUST total ${totalSections} sections):
   - Instructional content with worked examples: ${instructionalSections} sections MINIMUM - Include multiple complete worked examples with full explanations. For ${pageCount} pages, distribute these across all pages.
   - Guided practice with sentence frames/scaffolding: ${guidedPracticeSections} sections MINIMUM - Provide extensive practice opportunities distributed across pages
-  - Diagram/visualization with explicit teacher directions: ${diagramSections} sections MINIMUM (type: 'diagram_placeholder') - ⚠️ REQUIRED: You MUST create exactly ${diagramSections} sections with type 'diagram_placeholder'. These are visual learning opportunities where students draw diagrams. Spread across pages.
+  - Diagram/visualization with explicit teacher directions: ${diagramSections} sections MINIMUM (type: 'diagram_placeholder') - ⚠️ REQUIRED: You MUST create exactly ${diagramSections} sections with type 'diagram_placeholder'. These are visual learning opportunities where students draw diagrams. Spread across pages.${visualType === 'diagrams' || visualType === 'both' ? ' CRITICAL: Visual type is set to diagrams or both - ensure you generate ALL requested diagram_placeholder sections with clear, complete drawing instructions.' : ''}
   - Multiple choice questions: ${multipleChoiceSections} sections MINIMUM - Use thoughtfully, focus on conceptual understanding, distribute across pages
   - Short answer with think-aloud prompts: ${shortAnswerSections} sections MINIMUM - Encourage deep thinking, spread across all pages
   - Matching exercises: ${matchingSections} sections MINIMUM - MUST include complete options array with multiple items, distribute across pages

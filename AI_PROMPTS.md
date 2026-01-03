@@ -479,3 +479,5 @@ Output:
 - For visual tasks, always include OCR text and request confidence/caveats.
 - Record promptVersion and modelUsed in metadata.
 
+
+

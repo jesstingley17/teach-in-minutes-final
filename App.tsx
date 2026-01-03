@@ -9,7 +9,8 @@ import {
   BrandingConfig,
   GradeLevel,
   StandardsFramework,
-  AIProvider
+  AIProvider,
+  EducationalStandard
 } from './types';
 import { analyzeCurriculum, analyzeDocument, generateSuite, getAvailableProviders, getDefaultProvider } from './services/aiService';
 import { generateDoodle } from './services/geminiService';
@@ -56,7 +57,10 @@ const App: React.FC = () => {
     instructor: ''
   });
 
-  const [parseConfig, setParseConfig] = useState({
+  const [parseConfig, setParseConfig] = useState<{
+    gradeLevel: GradeLevel;
+    standardsFramework: StandardsFramework;
+  }>({
     gradeLevel: GradeLevel.GRADE_5,
     standardsFramework: StandardsFramework.COMMON_CORE_MATH
   });
@@ -330,7 +334,7 @@ const App: React.FC = () => {
       // Generate doodle and suite in parallel for better performance
       console.log('Starting generation (suite + doodle in parallel)...');
       const [doodleData, suite] = await Promise.all([
-        genConfig.includeVisuals 
+        genConfig.includeVisuals && (genConfig.visualType === 'doodles' || genConfig.visualType === 'both')
           ? generateDoodle(selectedNode, genConfig.aesthetic).catch(err => {
               console.warn('Doodle generation failed, continuing without it:', err);
               return undefined;
@@ -348,9 +352,9 @@ const App: React.FC = () => {
           },
           genConfig.pageCount,
           parseConfig.gradeLevel,
-          undefined, // standards - could be added later
-          genConfig.provider,
-          undefined // doodle will be added after if generated
+          undefined as EducationalStandard[] | undefined, // standards - could be added later
+          genConfig.provider, // preferredProvider
+          undefined as string | undefined // doodleBase64 - will be added after if generated
         )
       ]);
       
@@ -423,11 +427,11 @@ const App: React.FC = () => {
           institution: wizardData.institution,
           instructor: wizardData.instructor
         },
+        doodleData, // doodleBase64
         wizardData.pageCount,
         wizardData.gradeLevel,
         standards,
-        genConfig.provider,
-        doodleData
+        genConfig.visualType // visualType
       );
       setActiveSuite(suite);
       // Update branding state
