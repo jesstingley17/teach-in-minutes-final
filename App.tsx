@@ -603,7 +603,7 @@ const App: React.FC = () => {
               ) : (
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="w-full flex items-center justify-center space-x-2 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all"
+                  className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 hover:from-pink-600 hover:via-purple-700 hover:to-blue-700 text-white rounded-xl text-xs font-bold btn-modern shadow-lg hover:shadow-xl hover-glow"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
@@ -622,11 +622,11 @@ const App: React.FC = () => {
               <label className="block text-xs font-bold text-purple-700 uppercase mb-3">Saved Parsed Documents</label>
               {savedParsedCurriculums.length > 0 ? (
                 <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                  {savedParsedCurriculums.map(saved => (
+                  {savedParsedCurriculums.map((saved, index) => (
                     <div
                       key={saved.id}
                       onClick={() => handleLoadSavedCurriculum(saved)}
-                      className="group relative w-full text-left p-3 rounded-xl border-2 cursor-pointer transition-all border-purple-200 bg-white/80 hover:border-purple-400 hover:bg-purple-50/80 shadow-sm hover:shadow-md"
+                      className={`stagger-item group relative w-full text-left p-4 rounded-xl border-2 cursor-pointer card-interactive glass border-purple-200 bg-white/90 hover:border-purple-400 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 shadow-sm hover:shadow-lg`}
                     >
                       <p className="text-xs font-bold line-clamp-1 pr-6 text-slate-800">{saved.name}</p>
                       <p className="text-[10px] text-slate-600 mt-1">
@@ -660,7 +660,7 @@ const App: React.FC = () => {
               {/* Create from Scratch Button */}
               <button
                 onClick={() => setShowWizard(true)}
-                className="w-full mb-4 p-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
+                className="w-full mb-4 p-4 bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 hover:from-pink-600 hover:via-purple-700 hover:to-blue-700 text-white rounded-xl font-bold btn-modern shadow-lg hover:shadow-2xl hover-glow flex items-center justify-center space-x-2 animate-scale-in"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -687,7 +687,7 @@ const App: React.FC = () => {
                   <select 
                     value={parseConfig.gradeLevel}
                     onChange={(e) => setParseConfig({...parseConfig, gradeLevel: e.target.value as GradeLevel})}
-                    className="w-full mt-1 p-2 text-sm bg-white border border-slate-200 rounded-lg"
+                    className="w-full mt-1 p-2.5 text-sm glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
                   >
                     {Object.values(GradeLevel).map(grade => <option key={grade} value={grade}>{grade}</option>)}
                   </select>
@@ -698,7 +698,7 @@ const App: React.FC = () => {
                   <select 
                     value={parseConfig.standardsFramework}
                     onChange={(e) => setParseConfig({...parseConfig, standardsFramework: e.target.value as StandardsFramework})}
-                    className="w-full mt-1 p-2 text-sm bg-white border border-slate-200 rounded-lg"
+                    className="w-full mt-1 p-2.5 text-sm glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
                   >
                     {Object.values(StandardsFramework).map(framework => <option key={framework} value={framework}>{framework}</option>)}
                   </select>
@@ -711,15 +711,15 @@ const App: React.FC = () => {
               <label className="block text-xs font-bold text-slate-500 uppercase mb-3">AI Curriculum Parser</label>
               <div 
                 onClick={() => fileInputRef.current?.click()}
-                className="group border-2 border-dashed border-slate-200 rounded-xl p-4 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all"
+                className="group card-interactive glass border-2 border-dashed border-purple-200 rounded-xl p-6 text-center cursor-pointer hover:border-purple-400 hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50 transition-all animate-fade-in"
               >
-                <div className="w-10 h-10 bg-slate-100 group-hover:bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2 transition-colors">
-                  <svg className="w-5 h-5 text-slate-400 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 group-hover:from-purple-200 group-hover:to-pink-200 rounded-full flex items-center justify-center mx-auto mb-3 transition-all animate-float">
+                  <svg className="w-6 h-6 text-purple-600 group-hover:text-purple-700 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                   </svg>
                 </div>
-                <p className="text-xs font-bold text-slate-700">Upload Syllabus (PDF/JPG)</p>
-                <p className="text-[10px] text-slate-400 mt-1">Gemini 3 Pro multimodal parsing</p>
+                <p className="text-sm font-bold text-slate-800 group-hover:text-purple-700 transition-colors">Upload Syllabus (PDF/JPG)</p>
+                <p className="text-[10px] text-slate-500 mt-1">Gemini 3 Pro multimodal parsing</p>
                 <input 
                   type="file" 
                   ref={fileInputRef} 
@@ -744,14 +744,22 @@ const App: React.FC = () => {
                 value={rawCurriculum}
                 onChange={(e) => setRawCurriculum(e.target.value)}
                 placeholder="Paste syllabus text here..."
-                className="w-full h-32 p-4 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none resize-none"
+                className="w-full h-32 p-4 text-sm glass border-2 border-purple-100 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-300 transition-all outline-none resize-none hover:border-purple-200"
               />
               <button 
                 onClick={handleAnalyze}
                 disabled={isAnalyzing || !rawCurriculum.trim()}
-                className="w-full mt-2 bg-slate-900 hover:bg-black text-white py-3 px-4 rounded-xl text-sm font-bold transition-all disabled:opacity-50"
+                className="w-full mt-2 bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-900 hover:to-black text-white py-3 px-4 rounded-xl text-sm font-bold btn-modern shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isAnalyzing ? 'Analyzing...' : 'Parse Text'}
+                {isAnalyzing ? (
+                  <span className="flex items-center justify-center space-x-2">
+                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Analyzing...</span>
+                  </span>
+                ) : 'Parse Text'}
               </button>
             </div>
           </section>
@@ -761,14 +769,14 @@ const App: React.FC = () => {
             <section>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-3">Instructional Nodes ({nodes.length})</label>
               <div className="space-y-2 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
-                {nodes.map(node => (
+                {nodes.map((node, index) => (
                   <button
                     key={node.id}
                     onClick={() => setSelectedNode(node)}
-                    className={`w-full text-left p-3 rounded-xl border transition-all ${
+                    className={`stagger-item w-full text-left p-3 rounded-xl border-2 transition-all card-interactive ${
                       selectedNode?.id === node.id 
-                      ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-sm' 
-                      : 'border-slate-100 bg-white hover:border-slate-300'
+                      ? 'border-purple-500 bg-gradient-to-r from-purple-50 to-pink-50 text-purple-900 shadow-lg' 
+                      : 'border-slate-200 bg-white hover:border-purple-300 hover:bg-purple-50/50 hover:shadow-md'
                     }`}
                   >
                     <p className="text-xs font-bold line-clamp-1">{node.title}</p>
@@ -790,7 +798,7 @@ const App: React.FC = () => {
                   <select 
                     value={genConfig.outputType}
                     onChange={(e) => setGenConfig({...genConfig, outputType: e.target.value as OutputType})}
-                    className="w-full mt-1 p-2 text-sm bg-white border border-slate-200 rounded-lg"
+                    className="w-full mt-1 p-2.5 text-sm glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
                   >
                     {Object.values(OutputType).map(val => <option key={val} value={val}>{val}</option>)}
                   </select>
@@ -801,7 +809,7 @@ const App: React.FC = () => {
                   <select 
                     value={genConfig.bloomLevel}
                     onChange={(e) => setGenConfig({...genConfig, bloomLevel: e.target.value as BloomLevel})}
-                    className="w-full mt-1 p-2 text-sm bg-white border border-slate-200 rounded-lg"
+                    className="w-full mt-1 p-2.5 text-sm glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
                   >
                     {Object.values(BloomLevel).map(val => <option key={val} value={val}>{val}</option>)}
                   </select>
@@ -815,7 +823,7 @@ const App: React.FC = () => {
                   <select 
                     value={genConfig.differentiation}
                     onChange={(e) => setGenConfig({...genConfig, differentiation: e.target.value as Differentiation})}
-                    className="w-full mt-1 p-2 text-sm bg-white border border-slate-200 rounded-lg"
+                    className="w-full mt-1 p-2.5 text-sm glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
                   >
                     {Object.values(Differentiation).map(val => <option key={val} value={val}>{val}</option>)}
                   </select>
@@ -826,7 +834,7 @@ const App: React.FC = () => {
                   <select 
                     value={genConfig.aesthetic}
                     onChange={(e) => setGenConfig({...genConfig, aesthetic: e.target.value as AestheticStyle})}
-                    className="w-full mt-1 p-2 text-sm bg-white border border-slate-200 rounded-lg"
+                    className="w-full mt-1 p-2.5 text-sm glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
                   >
                     {Object.values(AestheticStyle).map(val => <option key={val} value={val}>{val}</option>)}
                   </select>
@@ -840,7 +848,7 @@ const App: React.FC = () => {
                     max="10"
                     value={genConfig.pageCount}
                     onChange={(e) => setGenConfig({...genConfig, pageCount: Math.max(1, Math.min(10, parseInt(e.target.value) || 1))})}
-                    className="w-full mt-1 p-2 text-sm bg-white border border-slate-200 rounded-lg"
+                    className="w-full mt-1 p-2.5 text-sm glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
                   />
                 </div>
 
@@ -942,7 +950,7 @@ const App: React.FC = () => {
               <button 
                 onClick={handleGenerate}
                 disabled={isGenerating}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 px-4 rounded-xl text-sm font-bold shadow-lg shadow-blue-200 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+                className="w-full bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 hover:from-pink-600 hover:via-purple-700 hover:to-blue-700 text-white py-4 px-4 rounded-xl text-sm font-bold btn-modern shadow-lg hover:shadow-2xl hover-glow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
               >
                 {isGenerating ? (
                   <>
@@ -961,22 +969,22 @@ const App: React.FC = () => {
         </div>
 
         {/* Institutional Branding Portal */}
-        <div className="p-6 bg-slate-50 border-t border-slate-200 space-y-4">
-          <label className="block text-xs font-bold text-slate-500 uppercase">Institutional Branding</label>
-          <div className="space-y-2">
+        <div className="p-6 glass border-t-2 border-purple-200/60 space-y-4">
+          <label className="block text-xs font-bold text-purple-700 uppercase">Institutional Branding</label>
+          <div className="space-y-3">
             <input 
               type="text" 
               placeholder="Institution Name (Optional)"
               value={branding.institution}
               onChange={(e) => setBranding({...branding, institution: e.target.value})}
-              className="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white"
+              className="w-full p-2.5 text-xs border-2 border-purple-100 rounded-xl bg-white/80 hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
             />
             <input 
               type="text" 
               placeholder="Instructor Name (Optional)"
               value={branding.instructor}
               onChange={(e) => setBranding({...branding, instructor: e.target.value})}
-              className="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white"
+              className="w-full p-2.5 text-xs border-2 border-purple-100 rounded-xl bg-white/80 hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
             />
           </div>
         </div>
@@ -1048,28 +1056,28 @@ const App: React.FC = () => {
               onUpdateSuite={handleUpdateSuite}
             />
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-4 p-8">
-              <div className="w-24 h-24 border-4 border-dashed border-slate-300 rounded-3xl flex items-center justify-center">
-                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+            <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-6 p-8 animate-fade-in">
+              <div className="w-28 h-28 border-4 border-dashed border-purple-200 rounded-3xl flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 animate-pulse-slow">
+                <svg className="w-14 h-14 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
               </div>
-              <div className="text-center max-w-sm">
-                <h2 className="text-xl font-bold text-slate-900 mb-2">Get Started</h2>
-                <p className="text-sm mb-4">Create materials from scratch using our guided wizard, or upload a curriculum (PDF/Image) or paste syllabus text to analyze it into lesson nodes.</p>
+              <div className="text-center max-w-md">
+                <h2 className="text-2xl font-bold gradient-text-animated mb-3">Get Started</h2>
+                <p className="text-sm text-slate-600 mb-6">Create materials from scratch using our guided wizard, or upload a curriculum (PDF/Image) or paste syllabus text to analyze it into lesson nodes.</p>
                 <button
                   onClick={() => setShowWizard(true)}
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-all shadow-lg"
+                  className="px-6 py-3 bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 hover:from-pink-600 hover:via-purple-700 hover:to-blue-700 text-white rounded-xl font-bold btn-modern shadow-lg hover:shadow-2xl hover-glow"
                 >
                   Start Guided Wizard
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-4 mt-8 w-full max-w-md">
-                 <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-                    <p className="text-blue-600 font-black text-2xl mb-1">100%</p>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">A4 Ready</p>
+                 <div className="p-5 glass rounded-xl border-2 border-purple-100 shadow-lg hover:shadow-xl text-center card-interactive animate-scale-in">
+                    <p className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent font-black text-3xl mb-2">100%</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600">A4 Ready</p>
                  </div>
-                 <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
-                    <p className="text-blue-600 font-black text-2xl mb-1">G3P</p>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Reasoning Core</p>
+                 <div className="p-5 glass rounded-xl border-2 border-purple-100 shadow-lg hover:shadow-xl text-center card-interactive animate-scale-in" style={{ animationDelay: '0.1s' }}>
+                    <p className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-black text-3xl mb-2">G3P</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Reasoning Core</p>
                  </div>
               </div>
             </div>

@@ -142,10 +142,55 @@ export const generateSuite = async (
   const gradeText = gradeLevel ? `\n  - Grade Level: ${gradeLevel}` : '';
 
   const outputTypeInstructions = outputType === OutputType.GUIDED_NOTES 
-    ? `IMPORTANT: For GUIDED NOTES, you must create content that VERBATIM follows the structure and content of the original curriculum/document. Use fill-in-the-blank format, key terms with spaces, and structured outlines that match the source material exactly. This should help students take notes alongside the content, not create new questions.`
-    : `For WORKSHEET, create questions, exercises, and activities for students to complete.`;
+    ? `CRITICAL GUIDED NOTES REQUIREMENTS - Professional Classroom-Ready Level:
 
-  const prompt = `Act as a world-class Instructional Designer. Generate a professionally structured ${outputType} for the topic: "${node.title}".
+1. PEDAGOGICAL STRUCTURE - Use "I Do → We Do → You Do" framework:
+   - I Do: Start with 1-2 worked examples with complete solutions shown
+   - We Do: Include guided practice with sentence frames and scaffolding
+   - You Do: Independent practice with clear instructions
+
+2. REDUCE REPETITIVE FILL-INS - Replace excessive fill-in-the-blanks with:
+   - Sentence frames: "When fractions have like denominators, we can ______ because ______."
+   - Think-aloud prompts: "Think about: Why can't we add 1/2 and 1/3 directly?"
+   - Guided scaffolding: Progressive steps with partial information provided
+   - Mix of fill-ins (30-40%), sentence completion (30%), short responses (30%)
+
+3. VISUAL INSTRUCTION CLARITY:
+   - Labeled diagram placeholders with explicit teacher directions in content field
+   - Examples: "Teacher: Draw a rectangle divided into 8 equal parts. Label each part as 1/8. Point out that all parts are the same size - this is what 'like denominators' means visually."
+   - Include 1-2 fully worked examples BEFORE independent practice
+   - Diagram instructions should be complete sentences outside the drawing box
+
+4. COGNITIVE FLOW & EXPLANATIONS:
+   - Add brief checkpoints explaining WHY rules work, not just what they are
+   - Use natural teacher voice: "Here's why this works..." or "Think of it like..."
+   - Include "Why It Matters" connections throughout
+   - Grade-appropriate language that sounds human, not robotic
+
+5. DIFFERENTIATION BUILT-IN:
+   - Add ONE challenge extension (marked clearly) for students ready to go deeper
+   - Add ONE remediation option (marked clearly) with extra scaffolding for struggling learners
+   - Do NOT increase page length - integrate these seamlessly
+
+6. ACCESSIBILITY OPTIMIZATION:
+   - ADHD-friendly: Generous white space, clear visual anchors, chunked information
+   - Dyslexia-friendly: Clear spacing, visual breaks, avoid dense text blocks
+   - Print-safe margins (20mm), intentional white space between sections
+   - Multi-page format with clear page breaks
+
+7. PROFESSIONAL QUALITY:
+   - Content should match what a strong teacher or curriculum publisher would create
+   - NO fluff - every element serves a learning purpose
+   - Maintain rigor while being accessible
+   - Clean, editable, visually organized
+
+8. CONTENT STRUCTURE:
+   - Follow the original curriculum structure but enhance it professionally
+   - Mix of formats: fill-ins, sentence frames, diagrams, worked examples, practice
+   - Clear progression from concept introduction → practice → application`
+    : `For WORKSHEET, create questions, exercises, and activities for students to complete with the same professional quality standards above.`;
+
+  const prompt = `Act as a world-class Instructional Designer and Curriculum Developer. Generate a professionally structured, classroom-ready ${outputType} for the topic: "${node.title}".
   
   Details:
   - Target Bloom's Taxonomy Level: ${bloomLevel}
@@ -156,24 +201,27 @@ export const generateSuite = async (
   
   ${outputTypeInstructions}
   
-  The output should be high-fidelity, pedagogically sound, and ready for classroom use. 
+  The output should be high-fidelity, pedagogically sound, professionally designed, and ready for immediate classroom use. Quality over quantity - every section must serve a clear learning purpose.
   
-  MANDATORY: You MUST generate AT LEAST ${totalSections} sections. This is a minimum requirement, not a suggestion. Each section should be substantial and meaningful.
+  MANDATORY: You MUST generate AT LEAST ${totalSections} sections. This is a minimum requirement, not a suggestion. Each section should be substantial, meaningful, and professionally crafted.
   
-  Include a diverse mix of:
-  - Text/instructional content sections (2-3 sections)
-  - Multiple choice questions (2-3 sections)
-  - Short answer questions (2-3 sections)
-  - Matching exercises (1-2 sections) - MUST include complete options array
-  - Diagram/visualization activities (1-2 sections)
-  - Application/practice problems (1-2 sections)
+  CONTENT MIX (Professional Distribution):
+  - Instructional content with worked examples (2-3 sections) - Include at least 1-2 complete worked examples
+  - Guided practice with sentence frames/scaffolding (2-3 sections)
+  - Diagram/visualization with explicit teacher directions (1-2 sections)
+  - Multiple choice questions (1-2 sections) - Use sparingly, focus on conceptual understanding
+  - Short answer with think-aloud prompts (2-3 sections)
+  - Matching exercises (1 section) - MUST include complete options array
+  - Independent practice problems (1-2 sections)
+  - Challenge extension (1 section, clearly marked) - Optional enrichment
+  - Remediation option (1 section, clearly marked) - Extra support for struggling learners
   
   For ${differentiation}, ensure:
-  - ADHD: Clear headers, chunked information, visual cues, extra white space.
-  - ESL: Simplified phrasing, focus on vocabulary, visual scaffolding.
-  - Gifted: Higher complexity, open-ended inquiries, synthesis tasks.
+  - ADHD: Clear headers, chunked information, visual cues, generous white space, visual anchors.
+  - ESL: Simplified phrasing, vocabulary focus, visual scaffolding, sentence frames.
+  - Gifted: Challenge extensions, higher complexity, open-ended inquiries, synthesis tasks.
   
-  Generate comprehensive, substantial content that fully utilizes ${pageCount} page${pageCount > 1 ? 's' : ''} of material.
+  Generate comprehensive, substantial content that fully utilizes ${pageCount} page${pageCount > 1 ? 's' : ''} of material while maintaining professional spacing and visual clarity.
   
   CRITICAL REQUIREMENTS - READ CAREFULLY:
   
