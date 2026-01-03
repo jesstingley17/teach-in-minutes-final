@@ -122,6 +122,52 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSave, 
             </div>
           </section>
 
+          {/* API Status Section */}
+          <section className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <h3 className="text-lg font-bold text-slate-900 mb-3">API Configuration Status</h3>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="flex items-center space-x-2">
+                <div className={`w-2 h-2 rounded-full ${import.meta.env.GEMINI_API_KEY ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <span className={import.meta.env.GEMINI_API_KEY ? 'text-green-700' : 'text-red-700'}>
+                  Gemini API {import.meta.env.GEMINI_API_KEY ? '✓' : '✗'}
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className={`w-2 h-2 rounded-full ${import.meta.env.OPENAI_API_KEY ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                <span className={import.meta.env.OPENAI_API_KEY ? 'text-green-700' : 'text-gray-600'}>
+                  OpenAI API {import.meta.env.OPENAI_API_KEY ? '✓' : '○'}
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className={`w-2 h-2 rounded-full ${import.meta.env.ANTHROPIC_API_KEY ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                <span className={import.meta.env.ANTHROPIC_API_KEY ? 'text-green-700' : 'text-gray-600'}>
+                  Claude API {import.meta.env.ANTHROPIC_API_KEY ? '✓' : '○'}
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className={`w-2 h-2 rounded-full ${import.meta.env.ADOBE_CLIENT_ID && import.meta.env.ADOBE_CLIENT_SECRET ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                <span className={import.meta.env.ADOBE_CLIENT_ID && import.meta.env.ADOBE_CLIENT_SECRET ? 'text-green-700' : 'text-gray-600'}>
+                  Adobe PDF Services {import.meta.env.ADOBE_CLIENT_ID && import.meta.env.ADOBE_CLIENT_SECRET ? '✓' : '○'}
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className={`w-2 h-2 rounded-full ${import.meta.env.GAMMA_API_KEY ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                <span className={import.meta.env.GAMMA_API_KEY ? 'text-green-700' : 'text-gray-600'}>
+                  Gamma API {import.meta.env.GAMMA_API_KEY ? '✓' : '○'}
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className={`w-2 h-2 rounded-full ${import.meta.env.SUPABASE_URL && import.meta.env.SUPABASE_ANON_KEY ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                <span className={import.meta.env.SUPABASE_URL && import.meta.env.SUPABASE_ANON_KEY ? 'text-green-700' : 'text-gray-600'}>
+                  Supabase {import.meta.env.SUPABASE_URL && import.meta.env.SUPABASE_ANON_KEY ? '✓' : '○'}
+                </span>
+              </div>
+            </div>
+            <p className="text-xs text-slate-500 mt-3 italic">
+              ✓ = Configured | ○ = Not configured | All APIs are set in Vercel environment variables
+            </p>
+          </section>
+
           {/* Default Settings Section */}
           <section>
             <h3 className="text-lg font-bold text-slate-900 mb-4">Default Material Settings</h3>

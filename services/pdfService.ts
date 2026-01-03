@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import { InstructionalSuite, Page, DocumentSection, Differentiation, AestheticStyle } from '../types';
+import { createPDFFromHTML, compressPDF, AdobePDFOptions, isAdobeConfigured, getAdobeConfigStatus } from './adobeService';
 
 /**
  * Decode HTML entities and clean text for PDF export
@@ -45,6 +46,178 @@ const cleanTextForPDF = (text: string): string => {
 };
 
 export class PDFService {
+  /**
+   * Export instructional suite to high-quality PDF using Adobe PDF Services (if available)
+   * Falls back to jsPDF if Adobe services are not configured
+   */
+  static async exportToPDFWithAdobe(suite: InstructionalSuite, useAdobe: boolean = true): Promise<void> {
+    // Check if Adobe credentials are configured
+    const hasAdobeCredentials = isAdobeConfigured();
+    
+    if (useAdobe && hasAdobeCredentials) {
+      const configStatus = getAdobeConfigStatus();
+      console.log('Adobe PDF export - Configuration status:', configStatus);
+      try {
+        console.log('Using Adobe PDF Services for export...');
+        
+        // Convert suite to HTML
+        const htmlContent = this.suiteToHTML(suite);
+        
+        // Create PDF using Adobe
+        const result = await createPDFFromHTML(htmlContent, {
+          compress: true,
+          linearize: true
+        });
+
+        if (result.success && result.fileData) {
+          // Download the PDF
+          const blob = new Blob([result.fileData], { type: 'application/pdf' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `${suite.title.replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          return;
+        } else {
+          console.warn('Adobe PDF creation failed, falling back to jsPDF:', result.error);
+        }
+      } catch (error) {
+        console.warn('Adobe PDF Services error, falling back to jsPDF:', error);
+      }
+    }
+
+    // Fallback to jsPDF
+    return this.exportToPDF(suite);
+  }
+
+  /**
+   * Convert suite to HTML for Adobe PDF generation
+   */
+  private static suiteToHTML(suite: InstructionalSuite): string {
+    const pages = suite.pages || this.sectionsToPages(suite.sections, suite.pageCount);
+    
+    let html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @page {
+      size: A4;
+      margin: 20mm;
+    }
+    body {
+      font-family: ${suite.aesthetic === AestheticStyle.ACADEMIC 
+        ? 'Times, serif' 
+        : (suite.aesthetic === AestheticStyle.CLASSIC || suite.aesthetic === AestheticStyle.CREATIVE) 
+          ? 'Courier, monospace' 
+          : 'Helvetica, Arial, sans-serif'};
+      font-size: 11pt;
+      line-height: 1.6;
+      color: #000;
+    }
+    .header {
+      border-bottom: 2px solid #000;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    .institution {
+      font-size: 18pt;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    .title {
+      font-size: 16pt;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    .section {
+      margin: 20px 0;
+      page-break-inside: avoid;
+    }
+    .section-title {
+      font-size: 12pt;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .diagram-box {
+      border: 2px dashed #ccc;
+      min-height: 200px;
+      margin: 10px 0;
+    }
+    .footer {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      font-size: 8pt;
+      border-top: 2px solid #000;
+      padding-top: 5px;
+    }
+  </style>
+</head>
+<body>
+`;
+
+    pages.forEach((page, pageIndex) => {
+      html += `
+  <div class="page">
+    <div class="header">
+      ${suite.institutionName ? `<div class="institution">${suite.institutionName}</div>` : ''}
+      <div class="title">${suite.title}</div>
+      <div>Name: _________________ Date: _________________ Instructor: ${suite.instructorName || '______________'}</div>
+    </div>
+`;
+
+      page.sections.forEach(section => {
+        html += `
+    <div class="section">
+      <div class="section-title">${section.title}</div>`;
+
+        switch (section.type) {
+          case 'text':
+            html += `<p>${section.content.replace(/\n/g, '<br>')}</p>`;
+            break;
+          case 'question':
+            html += `<p><strong>${section.content}</strong></p>`;
+            if (section.options) {
+              html += '<ul>';
+              section.options.forEach(opt => {
+                html += `<li>${opt}</li>`;
+              });
+              html += '</ul>';
+            }
+            break;
+          case 'diagram_placeholder':
+            html += `<p><em>${section.content}</em></p><div class="diagram-box"></div>`;
+            break;
+          case 'matching':
+            html += `<p>${section.content.replace(/\n/g, '<br>')}</p>`;
+            break;
+          default:
+            html += `<p>${section.content}</p>`;
+        }
+
+        html += `
+    </div>`;
+      });
+
+      html += `
+    <div class="footer">
+      <div>© ${suite.institutionName || 'Educational Material'} | Page ${pageIndex + 1} of ${pages.length}</div>
+    </div>
+  </div>`;
+    });
+
+    html += `
+</body>
+</html>`;
+
+    return html;
+  }
+
   /**
    * Get PDF font based on aesthetic style
    * jsPDF has limited fonts, so we map to closest available

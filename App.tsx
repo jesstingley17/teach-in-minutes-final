@@ -499,10 +499,29 @@ const App: React.FC = () => {
     }
   }, [activeSuite, drafts]);
 
-  const handleExportPDF = async () => {
+  const handleExportPDF = async (useAdobe: boolean = false) => {
     if (!activeSuite) return;
     try {
-      await PDFService.exportToPDF(activeSuite);
+      // Check if Adobe is available and user wants to use it
+      const hasAdobe = !!(
+        import.meta.env.ADOBE_CLIENT_ID &&
+        import.meta.env.ADOBE_CLIENT_SECRET
+      );
+      
+      console.log('PDF Export:', {
+        useAdobe,
+        hasAdobe,
+        clientIdPresent: !!import.meta.env.ADOBE_CLIENT_ID,
+        clientSecretPresent: !!import.meta.env.ADOBE_CLIENT_SECRET
+      });
+      
+      if (useAdobe && hasAdobe) {
+        console.log('Attempting Adobe PDF export...');
+        await PDFService.exportToPDFWithAdobe(activeSuite, true);
+      } else {
+        console.log('Using standard jsPDF export...');
+        await PDFService.exportToPDF(activeSuite);
+      }
     } catch (error) {
       console.error('PDF export failed:', error);
       alert('PDF export failed. Please try again.');
@@ -1210,13 +1229,36 @@ const App: React.FC = () => {
                  >
                    Interactive Quiz
                  </button>
-                 <button 
-                  onClick={handleExportPDF}
-                  className="px-6 py-2 bg-slate-900 text-white text-sm font-bold rounded-lg hover:bg-black transition-all shadow-md flex items-center space-x-2"
-                 >
-                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                   <span>Export PDF</span>
-                 </button>
+                 <div className="relative group">
+                   <button 
+                    onClick={() => handleExportPDF(false)}
+                    className="px-6 py-2 bg-slate-900 text-white text-sm font-bold rounded-lg hover:bg-black transition-all shadow-md flex items-center space-x-2"
+                   >
+                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                     <span>Export PDF</span>
+                     {!!(import.meta.env.ADOBE_CLIENT_ID && import.meta.env.ADOBE_CLIENT_SECRET) && (
+                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                       </svg>
+                     )}
+                   </button>
+                   {!!(import.meta.env.ADOBE_CLIENT_ID && import.meta.env.ADOBE_CLIENT_SECRET) && (
+                     <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                       <button
+                         onClick={() => handleExportPDF(false)}
+                         className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-t-lg"
+                       >
+                         Standard PDF (jsPDF)
+                       </button>
+                       <button
+                         onClick={() => handleExportPDF(true)}
+                         className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-b-lg border-t border-slate-200"
+                       >
+                         Enhanced PDF (Adobe) ⭐
+                       </button>
+                     </div>
+                   )}
+                 </div>
                  <button 
                   onClick={handlePrint}
                   className="px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors flex items-center space-x-2"
