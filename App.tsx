@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { 
   CurriculumNode, 
@@ -10,9 +9,11 @@ import {
   BrandingConfig 
 } from './types';
 import { analyzeCurriculum, analyzeDocument, generateSuite, generateDoodle } from './services/geminiService';
+import { SupabaseService } from './services/supabaseService';
 import SuitePreview from './components/SuitePreview';
 
 const STORAGE_KEY = 'blueprint_pro_drafts_v1';
+const USE_SUPABASE = !!(import.meta.env.SUPABASE_URL && import.meta.env.SUPABASE_ANON_KEY);
 
 const App: React.FC = () => {
   const [apiKeySelected, setApiKeySelected] = useState<boolean | null>(null);
@@ -39,15 +40,40 @@ const App: React.FC = () => {
 
   // Load drafts and check API Key on mount
   useEffect(() => {
-    const savedDrafts = localStorage.getItem(STORAGE_KEY);
-    if (savedDrafts) {
-      try {
-        const parsed = JSON.parse(savedDrafts);
-        if (Array.isArray(parsed)) setDrafts(parsed);
-      } catch (e) {
-        console.error("Failed to parse saved drafts", e);
+    const loadDrafts = async () => {
+      if (USE_SUPABASE) {
+        // Load from Supabase
+        const suites = await SupabaseService.loadSuites();
+        setDrafts(suites);
+        
+        // Auto-migrate from localStorage if data exists
+        const localData = localStorage.getItem(STORAGE_KEY);
+        if (localData) {
+          const migrated = await SupabaseService.migrateFromLocalStorage(STORAGE_KEY);
+          if (migrated > 0) {
+            console.log(`Migrated ${migrated} drafts to Supabase`);
+            // Clear localStorage after successful migration
+            localStorage.removeItem(STORAGE_KEY);
+            // Reload from Supabase
+            const updated = await SupabaseService.loadSuites();
+            setDrafts(updated);
+          }
+        }
+      } else {
+        // Fallback to localStorage
+        const savedDrafts = localStorage.getItem(STORAGE_KEY);
+        if (savedDrafts) {
+          try {
+            const parsed = JSON.parse(savedDrafts);
+            if (Array.isArray(parsed)) setDrafts(parsed);
+          } catch (e) {
+            console.error("Failed to parse saved drafts", e);
+          }
+        }
       }
-    }
+    };
+
+    loadDrafts();
 
     const checkKey = async () => {
       try {
@@ -57,6 +83,7 @@ const App: React.FC = () => {
         } else {
           const apiKey = import.meta.env.GEMINI_API_KEY;
           console.log('API Key present:', !!apiKey);
+          console.log('Supabase enabled:', USE_SUPABASE);
           setApiKeySelected(!!apiKey);
         }
       } catch (error) {
@@ -124,17 +151,16 @@ const App: React.FC = () => {
     if (!selectedNode) return;
     setIsGenerating(true);
     try {
-      const suite = await generateSuite(selectedNode, {
-        outputType: genConfig.outputType,
-        bloomLevel: genConfig.bloomLevel,
-        differentiation: genConfig.differentiation,
-        branding
-      });
-      
-      const doodle = await generateDoodle(suite.doodlePrompt || selectedNode.title);
-      suite.doodleBase64 = doodle;
-      suite.aesthetic = genConfig.aesthetic;
-
+      const doodleData = await generateDoodle(selectedNode, genConfig.aesthetic);
+      const suite = await generateSuite(
+        selectedNode, 
+        genConfig.outputType, 
+        genConfig.bloomLevel, 
+        genConfig.differentiation,
+        genConfig.aesthetic,
+        branding,
+        doodleData
+      );
       setActiveSuite(suite);
     } catch (error) {
       console.error(error);
@@ -144,34 +170,61 @@ const App: React.FC = () => {
     }
   };
 
-  const handleSaveDraft = useCallback(() => {
+  const handleSaveDraft = useCallback(async () => {
     if (!activeSuite) return;
     
-    setDrafts(prev => {
-      const exists = prev.find(d => d.id === activeSuite.id);
-      let updated;
-      if (exists) {
-        updated = prev.map(d => d.id === activeSuite.id ? activeSuite : d);
+    if (USE_SUPABASE) {
+      // Save to Supabase
+      const result = await SupabaseService.saveSuite(activeSuite);
+      if (result.success) {
+        // Reload all suites
+        const updated = await SupabaseService.loadSuites();
+        setDrafts(updated);
+        alert('Progress saved to cloud.');
       } else {
-        updated = [activeSuite, ...prev];
+        alert(`Failed to save: ${result.error}`);
       }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      return updated;
-    });
-    
-    alert('Progress saved to local drafts.');
+    } else {
+      // Fallback to localStorage
+      setDrafts(prev => {
+        const exists = prev.find(d => d.id === activeSuite.id);
+        let updated;
+        if (exists) {
+          updated = prev.map(d => d.id === activeSuite.id ? activeSuite : d);
+        } else {
+          updated = [activeSuite, ...prev];
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        return updated;
+      });
+      
+      alert('Progress saved to local drafts.');
+    }
   }, [activeSuite]);
 
-  const handleDeleteDraft = (e: React.MouseEvent, id: string) => {
+  const handleDeleteDraft = useCallback(async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     const confirmed = window.confirm("Are you sure you want to delete this draft?");
     if (!confirmed) return;
     
-    const newDrafts = drafts.filter(d => d.id !== id);
-    setDrafts(newDrafts);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newDrafts));
-    if (activeSuite?.id === id) setActiveSuite(null);
-  };
+    if (USE_SUPABASE) {
+      // Delete from Supabase
+      const result = await SupabaseService.deleteSuite(id);
+      if (result.success) {
+        const updated = await SupabaseService.loadSuites();
+        setDrafts(updated);
+        if (activeSuite?.id === id) setActiveSuite(null);
+      } else {
+        alert(`Failed to delete: ${result.error}`);
+      }
+    } else {
+      // Delete from localStorage
+      const newDrafts = drafts.filter(d => d.id !== id);
+      setDrafts(newDrafts);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newDrafts));
+      if (activeSuite?.id === id) setActiveSuite(null);
+    }
+  }, [activeSuite, drafts]);
 
   const handlePrint = () => {
     if (!activeSuite) return;
