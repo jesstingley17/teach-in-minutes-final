@@ -8,11 +8,13 @@ import { CurriculumNode, InstructionalSuite, OutputType, BloomLevel, Differentia
 const getOpenAIClient = (): OpenAI => {
   const apiKey = import.meta.env.OPENAI_API_KEY;
   
-  if (!apiKey) {
-    throw new Error('OPENAI_API_KEY is not configured. Please check your environment variables.');
+  // Always prefer direct API key if available
+  if (apiKey) {
+    return new OpenAI({ apiKey });
   }
   
-  return new OpenAI({ apiKey });
+  // Only use Cloudflare Gateway if no direct API key is configured
+  throw new Error('OPENAI_API_KEY is not configured. Please set OPENAI_API_KEY in your environment variables.');
 };
 
 export const analyzeCurriculumOpenAI = async (
