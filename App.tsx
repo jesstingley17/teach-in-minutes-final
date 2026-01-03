@@ -10,8 +10,9 @@ import {
 } from './types';
 import { analyzeCurriculum, analyzeDocument, generateSuite, generateDoodle } from './services/geminiService';
 import { SupabaseService } from './services/supabaseService';
+import { PDFService } from './services/pdfService';
 import { useAuth } from './contexts/AuthContext';
-import SuitePreview from './components/SuitePreview';
+import EnhancedSuiteEditor from './components/EnhancedSuiteEditor';
 import AuthModal from './components/AuthModal';
 
 const STORAGE_KEY = 'blueprint_pro_drafts_v1';
@@ -36,10 +37,11 @@ const App: React.FC = () => {
   });
 
   const [genConfig, setGenConfig] = useState({
-    outputType: OutputType.HOMEWORK,
+    outputType: OutputType.WORKSHEET,
     bloomLevel: BloomLevel.APPLICATION,
     differentiation: Differentiation.GENERAL,
-    aesthetic: AestheticStyle.MODERN
+    aesthetic: AestheticStyle.MODERN,
+    pageCount: 1
   });
 
   // Load drafts and check API Key on mount
@@ -163,7 +165,8 @@ const App: React.FC = () => {
         genConfig.differentiation,
         genConfig.aesthetic,
         branding,
-        doodleData
+        doodleData,
+        genConfig.pageCount
       );
       setActiveSuite(suite);
     } catch (error) {
@@ -230,12 +233,26 @@ const App: React.FC = () => {
     }
   }, [activeSuite, drafts]);
 
+  const handleExportPDF = async () => {
+    if (!activeSuite) return;
+    try {
+      await PDFService.exportToPDF(activeSuite);
+    } catch (error) {
+      console.error('PDF export failed:', error);
+      alert('PDF export failed. Please try again.');
+    }
+  };
+
   const handlePrint = () => {
     if (!activeSuite) return;
     const originalTitle = document.title;
-    document.title = `${activeSuite.title}_BlueprintPro`;
+    document.title = `${activeSuite.title}_TeachInMinutes`;
     window.print();
     document.title = originalTitle;
+  };
+
+  const handleUpdateSuite = (updatedSuite: InstructionalSuite) => {
+    setActiveSuite(updatedSuite);
   };
 
   const handleEditSuiteContent = (id: string, newContent: string) => {
@@ -265,8 +282,8 @@ const App: React.FC = () => {
             {apiKeySelected === null ? 'Loading...' : 'API Authentication Required'}
           </h1>
           <p className="text-slate-600 mb-8">
-            Blueprint Pro utilizes Gemini 3 Pro for advanced pedagogical reasoning. 
-            You must select an API key from a billing-enabled Google Cloud project.
+            Teach in Minutes utilizes Gemini 3 Pro for advanced content generation. 
+            You must configure your Gemini API key in the environment variables.
           </p>
           {apiKeySelected === false && (
             <>
@@ -294,11 +311,11 @@ const App: React.FC = () => {
         <div className="p-6 border-b border-slate-100">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black">B</div>
-              <h1 className="text-xl font-black tracking-tight text-slate-900">BLUEPRINT PRO</h1>
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black">T</div>
+              <h1 className="text-xl font-black tracking-tight text-slate-900">TEACH IN MINUTES</h1>
             </div>
           </div>
-          <p className="text-xs text-slate-400 font-medium uppercase tracking-widest">Pedagogical Architect Engine</p>
+          <p className="text-xs text-slate-400 font-medium uppercase tracking-widest">Educational Materials Generator</p>
           
           {/* User Profile Section */}
           {USE_SUPABASE && (
@@ -445,7 +462,7 @@ const App: React.FC = () => {
           {/* Configuration Section */}
           {selectedNode && (
             <section className="space-y-5 animate-in fade-in slide-in-from-bottom-4">
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Architectural Config</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Generation Settings</label>
               
               <div className="space-y-3">
                 <div>
@@ -490,6 +507,18 @@ const App: React.FC = () => {
                   >
                     {Object.values(AestheticStyle).map(val => <option key={val} value={val}>{val}</option>)}
                   </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Number of Pages (1-10)</label>
+                  <input 
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={genConfig.pageCount}
+                    onChange={(e) => setGenConfig({...genConfig, pageCount: Math.max(1, Math.min(10, parseInt(e.target.value) || 1))})}
+                    className="w-full mt-1 p-2 text-sm bg-white border border-slate-200 rounded-lg"
+                  />
                 </div>
               </div>
 
@@ -566,11 +595,18 @@ const App: React.FC = () => {
                    Interactive Quiz
                  </button>
                  <button 
-                  onClick={handlePrint}
+                  onClick={handleExportPDF}
                   className="px-6 py-2 bg-slate-900 text-white text-sm font-bold rounded-lg hover:bg-black transition-all shadow-md flex items-center space-x-2"
                  >
+                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                   <span>Export PDF</span>
+                 </button>
+                 <button 
+                  onClick={handlePrint}
+                  className="px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors flex items-center space-x-2"
+                 >
                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                   <span>Export to PDF</span>
+                   <span>Print</span>
                  </button>
                </>
              )}
@@ -580,9 +616,10 @@ const App: React.FC = () => {
         {/* Content View */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           {activeSuite ? (
-            <SuitePreview 
+            <EnhancedSuiteEditor 
               suite={activeSuite} 
               onEditSection={handleEditSuiteContent}
+              onUpdateSuite={handleUpdateSuite}
             />
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-4 p-8">
@@ -590,8 +627,8 @@ const App: React.FC = () => {
                 <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
               </div>
               <div className="text-center max-w-sm">
-                <h2 className="text-xl font-bold text-slate-900 mb-2">Architect's Desk Empty</h2>
-                <p className="text-sm">Upload a curriculum (PDF/Image) or paste syllabus text in the sidebar to decompose it into design nodes. Then, select a node to build your multi-page instructional suite.</p>
+                <h2 className="text-xl font-bold text-slate-900 mb-2">Get Started</h2>
+                <p className="text-sm">Upload a curriculum (PDF/Image) or paste syllabus text in the sidebar to analyze it into lesson nodes. Then, select a node to generate your multi-page educational materials.</p>
               </div>
               <div className="grid grid-cols-2 gap-4 mt-8 w-full max-w-md">
                  <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm text-center">

@@ -104,7 +104,8 @@ export const generateSuite = async (
   differentiation: Differentiation,
   aesthetic: AestheticStyle,
   branding: { institution: string, instructor: string },
-  doodleBase64?: string
+  doodleBase64?: string,
+  pageCount: number = 1
 ): Promise<InstructionalSuite> => {
   const apiKey = import.meta.env.GEMINI_API_KEY;
   
@@ -116,6 +117,9 @@ export const generateSuite = async (
   
   const ai = new GoogleGenAI({ apiKey });
 
+  const sectionsPerPage = pageCount === 1 ? 8 : pageCount <= 3 ? 6 : 5;
+  const totalSections = pageCount * sectionsPerPage;
+  
   const prompt = `Act as a world-class Instructional Designer. Generate a professionally structured ${outputType} for the topic: "${node.title}".
   
   Details:
@@ -123,14 +127,19 @@ export const generateSuite = async (
   - Differentiation Strategy: ${differentiation}
   - Learning Objectives: ${node.learningObjectives.join(', ')}
   - Topic Description: ${node.description}
+  - Target Pages: ${pageCount} pages (generate approximately ${totalSections} sections total, distributed across ${pageCount} pages)
   
   The output should be high-fidelity, pedagogically sound, and ready for classroom use. 
-  Include clear instructions, a mix of question types (conceptual, calculation, critical thinking), and enough content for a multi-page document.
+  Generate approximately ${totalSections} sections total to fill ${pageCount} pages with appropriate depth.
+  Include clear instructions, a mix of question types (conceptual, calculation, critical thinking, matching, diagram prompts).
+  Vary the section types throughout to create engaging, multi-page educational material.
   
   For ${differentiation}, ensure:
   - ADHD: Clear headers, chunked information, visual cues, extra white space.
   - ESL: Simplified phrasing, focus on vocabulary, visual scaffolding.
   - Gifted: Higher complexity, open-ended inquiries, synthesis tasks.
+  
+  Generate substantial content that justifies ${pageCount} page${pageCount > 1 ? 's' : ''} of material.
   `;
 
   try {
@@ -168,6 +177,9 @@ export const generateSuite = async (
 
     const rawData = JSON.parse(response.text || '{}');
     
+    // Ensure we have enough sections
+    const sections = rawData.sections || [];
+    
     return {
       ...rawData,
       id: Math.random().toString(36).substr(2, 9),
@@ -179,6 +191,8 @@ export const generateSuite = async (
       differentiation: differentiation,
       aesthetic: aesthetic,
       doodleBase64: doodleBase64 || '',
+      sections: sections,
+      pageCount: pageCount,
     };
   } catch (error: any) {
     console.error('Gemini API Error Details:', {
