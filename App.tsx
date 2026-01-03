@@ -560,62 +560,8 @@ const App: React.FC = () => {
         </div>
 
         <div className="flex-1 p-6 space-y-8">
-          {/* Saved Drafts Section */}
-          {drafts.length > 0 && (
-            <section>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-3">Saved Drafts</label>
-              <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                {drafts.map(draft => (
-                  <div
-                    key={draft.id}
-                    onClick={() => setActiveSuite(draft)}
-                    className={`group relative w-full text-left p-3 rounded-xl border cursor-pointer transition-all ${
-                      activeSuite?.id === draft.id 
-                      ? 'border-blue-600 bg-blue-50 text-blue-900 ring-2 ring-blue-100' 
-                      : 'border-slate-100 bg-white hover:border-slate-300'
-                    }`}
-                  >
-                    <p className="text-xs font-bold line-clamp-1 pr-6">{draft.title}</p>
-                    <p className="text-[10px] text-slate-500 mt-1">{draft.outputType} • {draft.differentiation}</p>
-                    <button 
-                      onClick={(e) => handleDeleteDraft(e, draft.id)}
-                      className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-red-500 transition-opacity"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Saved Parsed Curriculums Section */}
-          {USE_SUPABASE && user && savedParsedCurriculums.length > 0 && (
-            <section>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-3">Saved Parsed Curriculums</label>
-              <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                {savedParsedCurriculums.map(saved => (
-                  <div
-                    key={saved.id}
-                    onClick={() => handleLoadSavedCurriculum(saved)}
-                    className="group relative w-full text-left p-3 rounded-xl border cursor-pointer transition-all border-slate-100 bg-white hover:border-blue-300 hover:bg-blue-50"
-                  >
-                    <p className="text-xs font-bold line-clamp-1 pr-6">{saved.name}</p>
-                    <p className="text-[10px] text-slate-500 mt-1">
-                      {saved.nodes.length} nodes • {saved.sourceType === 'file' && saved.fileName ? saved.fileName : 'Text'}
-                    </p>
-                    <button 
-                      onClick={(e) => handleDeleteSavedCurriculum(e, saved.id)}
-                      className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-red-500 transition-opacity"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
+          {/* Saved Parsed Curriculums Section - Moved to sidebar */}
+          
           {/* Intake Section */}
           <section className="space-y-4">
             <div>
