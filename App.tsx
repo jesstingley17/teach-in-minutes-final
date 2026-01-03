@@ -20,6 +20,7 @@ import EnhancedSuiteEditor from './components/EnhancedSuiteEditor';
 import AuthModal from './components/AuthModal';
 import GuidedWizard from './components/GuidedWizard';
 import SettingsModal from './components/SettingsModal';
+import ChatBot from './components/ChatBot';
 
 const STORAGE_KEY = 'blueprint_pro_drafts_v1';
 const USE_SUPABASE = !!(import.meta.env.SUPABASE_URL && import.meta.env.SUPABASE_ANON_KEY);
@@ -979,6 +980,15 @@ const App: React.FC = () => {
             />
           </div>
         </div>
+
+        {/* AI Chatbot Assistant */}
+        <div className="p-6 border-t-2 border-purple-200/60">
+          <ChatBot 
+            selectedNode={selectedNode}
+            genConfig={genConfig}
+            parseConfig={parseConfig}
+          />
+        </div>
       </aside>
 
       {/* Main Preview Area */}
@@ -1095,6 +1105,7 @@ const App: React.FC = () => {
           onCancel={() => setShowWizard(false)}
         />
       )}
+
     </div>
   );
 };
