@@ -226,7 +226,7 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
           )}
 
           {section.type === 'diagram_placeholder' && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {isEditing ? (
                 <textarea
                   ref={editInputRef}
@@ -238,21 +238,32 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
                   rows={2}
                 />
               ) : (
-                <p 
-                  className="text-sm italic text-slate-600 border-l-2 border-slate-200 pl-3 cursor-text hover:bg-blue-50 p-2 rounded"
-                  onClick={() => startEdit(section)}
-                >
-                  {renderMarkdown(section.content)}
-                </p>
+                <div className="space-y-3">
+                  <p 
+                    className="text-sm italic text-slate-600 border-l-2 border-slate-200 pl-3 cursor-text hover:bg-blue-50 p-2 rounded"
+                    onClick={() => startEdit(section)}
+                  >
+                    {renderMarkdown(section.content)}
+                  </p>
+                  {/* Example/Visual aid shown OUTSIDE the box */}
+                  {(section.imageUrl || section.imageBase64 || suite.doodleBase64) && (
+                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                      <p className="text-xs font-bold text-blue-800 mb-2">Example / Reference:</p>
+                      <img 
+                        src={section.imageUrl || section.imageBase64 || suite.doodleBase64} 
+                        alt="Example visualization" 
+                        className="max-w-full max-h-48 object-contain mx-auto" 
+                      />
+                    </div>
+                  )}
+                </div>
               )}
-              <div className="w-full h-80 border-2 border-dashed border-slate-400 bg-slate-50 rounded-lg flex flex-col items-center justify-center">
+              {/* Empty box for student work */}
+              <div className="w-full h-80 border-2 border-dashed border-slate-400 bg-white rounded-lg flex flex-col items-center justify-center">
                 <svg className="w-12 h-12 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
-                <p className="text-sm text-slate-500 italic">Drawing / Visualization Space</p>
-                {suite.doodleBase64 && (
-                  <img src={suite.doodleBase64} alt="Visual aid" className="mt-4 max-w-full max-h-64 object-contain" />
-                )}
+                <p className="text-sm text-slate-500 italic">Your Drawing / Visualization Space</p>
               </div>
             </div>
           )}
@@ -508,6 +519,65 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
                         </div>
                       ))}
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Answer Key Section */}
+              {currentPage.sections.some(s => s.correctAnswer !== undefined) && (
+                <div className="mt-6 pt-6 border-t border-blue-200">
+                  <h4 className="text-sm font-bold text-blue-800 mb-3">Answer Key</h4>
+                  <div className="space-y-4">
+                    {currentPage.sections
+                      .filter(s => s.correctAnswer !== undefined && (s.type === 'question' || s.type === 'matching'))
+                      .map((section) => (
+                        <div key={section.id} className="bg-white p-4 rounded border border-blue-200">
+                          <p className="font-bold text-sm text-blue-900 mb-2">{section.title}</p>
+                          {section.type === 'question' && section.options && (
+                            <p className="text-sm text-blue-700">
+                              <strong>Answer:</strong> {
+                                typeof section.correctAnswer === 'number' 
+                                  ? `${String.fromCharCode(65 + section.correctAnswer)}. ${section.options[section.correctAnswer] || 'N/A'}`
+                                  : section.correctAnswer
+                              }
+                            </p>
+                          )}
+                          {section.type === 'question' && !section.options && (
+                            <p className="text-sm text-blue-700">
+                              <strong>Answer:</strong> {section.correctAnswer}
+                            </p>
+                          )}
+                          {section.type === 'matching' && (
+                            <table className="w-full text-sm mt-2 border-collapse">
+                              <thead>
+                                <tr className="bg-blue-100">
+                                  <th className="border border-blue-300 px-2 py-1 text-left font-bold text-xs">Item</th>
+                                  <th className="border border-blue-300 px-2 py-1 text-left font-bold text-xs">Answer</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {section.content.split('\n').filter(l => l.trim()).map((line, i) => {
+                                  const answers = Array.isArray(section.correctAnswer) ? section.correctAnswer : [];
+                                  const matchIdx = answers[i];
+                                  const matchLetter = typeof matchIdx === 'number' ? String.fromCharCode(65 + matchIdx) : 
+                                                    typeof matchIdx === 'string' ? matchIdx : '';
+                                  const matchText = section.options && typeof matchIdx === 'number' && section.options[matchIdx] 
+                                                   ? section.options[matchIdx] 
+                                                   : '';
+                                  return (
+                                    <tr key={i} className="bg-white">
+                                      <td className="border border-blue-300 px-2 py-1 text-xs">{line.trim()}</td>
+                                      <td className="border border-blue-300 px-2 py-1 font-bold text-blue-700 text-xs">
+                                        {matchLetter}{matchText && ` - ${matchText}`}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          )}
+                        </div>
+                      ))}
                   </div>
                 </div>
               )}

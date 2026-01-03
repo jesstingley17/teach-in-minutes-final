@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
-import { BloomLevel, Differentiation, OutputType, AestheticStyle, InstructionalSuite, CurriculumNode, GradeLevel, EducationalStandard, Rubric } from "../types";
+import { BloomLevel, Differentiation, OutputType, AestheticStyle, InstructionalSuite, CurriculumNode, GradeLevel, EducationalStandard, Rubric, StandardsFramework } from "../types";
 
 // Note: API_KEY is handled externally via import.meta.env
 // We create the instance inside the functions to ensure it uses the latest key if refreshed
@@ -141,6 +141,10 @@ export const generateSuite = async (
 
   const gradeText = gradeLevel ? `\n  - Grade Level: ${gradeLevel}` : '';
 
+  const outputTypeInstructions = outputType === OutputType.GUIDED_NOTES 
+    ? `IMPORTANT: For GUIDED NOTES, you must create content that VERBATIM follows the structure and content of the original curriculum/document. Use fill-in-the-blank format, key terms with spaces, and structured outlines that match the source material exactly. This should help students take notes alongside the content, not create new questions.`
+    : `For WORKSHEET, create questions, exercises, and activities for students to complete.`;
+
   const prompt = `Act as a world-class Instructional Designer. Generate a professionally structured ${outputType} for the topic: "${node.title}".
   
   Details:
@@ -149,6 +153,8 @@ export const generateSuite = async (
   - Learning Objectives: ${node.learningObjectives.join(', ')}
   - Topic Description: ${node.description}
   - Target Pages: ${pageCount} pages (generate approximately ${totalSections} sections total, distributed across ${pageCount} pages)${standardsText}
+  
+  ${outputTypeInstructions}
   
   The output should be high-fidelity, pedagogically sound, and ready for classroom use. 
   Generate approximately ${totalSections} sections total to fill ${pageCount} pages with appropriate depth.
@@ -161,6 +167,8 @@ export const generateSuite = async (
   - Gifted: Higher complexity, open-ended inquiries, synthesis tasks.
   
   Generate substantial content that justifies ${pageCount} page${pageCount > 1 ? 's' : ''} of material.
+  
+  IMPORTANT: For all questions, matching exercises, and activities, you MUST include correct answers in the 'correctAnswer' field. For multiple choice, use the option index (0, 1, 2, etc.). For matching, provide an array of indices mapping items to options. For short answer questions, provide the expected answer text.
   `;
 
   try {
