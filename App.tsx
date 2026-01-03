@@ -155,16 +155,30 @@ const App: React.FC = () => {
       
       // Save parsed curriculum if user is signed in
       if (USE_SUPABASE && user && parsedNodes.length > 0) {
-        const name = `Parsed: ${parsedNodes[0]?.title || 'Curriculum'} (${new Date().toLocaleDateString()})`;
-        await SupabaseService.saveParsedCurriculum(
-          name,
-          parsedNodes,
-          'text',
-          rawCurriculum.substring(0, 500) // Store first 500 chars as reference
-        );
-        // Reload saved curriculums
-        const parsed = await SupabaseService.loadParsedCurriculums();
-        setSavedParsedCurriculums(parsed);
+        try {
+          const name = `Parsed: ${parsedNodes[0]?.title || 'Curriculum'} (${new Date().toLocaleDateString()})`;
+          console.log('Saving parsed curriculum:', name);
+          const saveResult = await SupabaseService.saveParsedCurriculum(
+            name,
+            parsedNodes,
+            'text',
+            rawCurriculum.substring(0, 500) // Store first 500 chars as reference
+          );
+          if (!saveResult.success) {
+            console.error('Failed to save parsed curriculum:', saveResult.error);
+            alert(`Warning: Failed to save parsed curriculum. ${saveResult.error || 'Unknown error'}`);
+          } else {
+            console.log('Successfully saved parsed curriculum:', saveResult.id);
+          }
+          // Reload saved curriculums
+          const parsed = await SupabaseService.loadParsedCurriculums();
+          console.log('Loaded parsed curriculums:', parsed.length);
+          setSavedParsedCurriculums(parsed);
+        } catch (error) {
+          console.error('Error in save parsed curriculum flow:', error);
+        }
+      } else {
+        console.log('Skipping save - USE_SUPABASE:', USE_SUPABASE, 'user:', !!user, 'nodes:', parsedNodes.length);
       }
     } catch (error) {
       console.error(error);
@@ -193,18 +207,32 @@ const App: React.FC = () => {
           
           // Save parsed curriculum if user is signed in
           if (USE_SUPABASE && user && parsedNodes.length > 0) {
-            const name = `Parsed: ${file.name} (${new Date().toLocaleDateString()})`;
-            await SupabaseService.saveParsedCurriculum(
-              name,
-              parsedNodes,
-              'file',
-              undefined,
-              file.name,
-              mimeType
-            );
-            // Reload saved curriculums
-            const parsed = await SupabaseService.loadParsedCurriculums();
-            setSavedParsedCurriculums(parsed);
+            try {
+              const name = `Parsed: ${file.name} (${new Date().toLocaleDateString()})`;
+              console.log('Saving parsed curriculum:', name);
+              const saveResult = await SupabaseService.saveParsedCurriculum(
+                name,
+                parsedNodes,
+                'file',
+                undefined,
+                file.name,
+                mimeType
+              );
+              if (!saveResult.success) {
+                console.error('Failed to save parsed curriculum:', saveResult.error);
+                alert(`Warning: Failed to save parsed curriculum. ${saveResult.error || 'Unknown error'}`);
+              } else {
+                console.log('Successfully saved parsed curriculum:', saveResult.id);
+              }
+              // Reload saved curriculums
+              const parsed = await SupabaseService.loadParsedCurriculums();
+              console.log('Loaded parsed curriculums:', parsed.length);
+              setSavedParsedCurriculums(parsed);
+            } catch (error) {
+              console.error('Error in save parsed curriculum flow:', error);
+            }
+          } else {
+            console.log('Skipping save - USE_SUPABASE:', USE_SUPABASE, 'user:', !!user, 'nodes:', parsedNodes.length);
           }
         } catch (error) {
           console.error(error);
