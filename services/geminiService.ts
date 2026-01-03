@@ -152,21 +152,28 @@ export const generateSuite = async (
   - Differentiation Strategy: ${differentiation}${gradeText}
   - Learning Objectives: ${node.learningObjectives.join(', ')}
   - Topic Description: ${node.description}
-  - Target Pages: ${pageCount} pages (generate approximately ${totalSections} sections total, distributed across ${pageCount} pages)${standardsText}
+  - Target Pages: ${pageCount} pages (MUST generate EXACTLY ${totalSections} sections minimum)${standardsText}
   
   ${outputTypeInstructions}
   
   The output should be high-fidelity, pedagogically sound, and ready for classroom use. 
-  Generate approximately ${totalSections} sections total to fill ${pageCount} pages with appropriate depth.
-  Include clear instructions, a mix of question types (conceptual, calculation, critical thinking, matching, diagram prompts).
-  Vary the section types throughout to create engaging, multi-page educational material.
+  
+  MANDATORY: You MUST generate AT LEAST ${totalSections} sections. This is a minimum requirement, not a suggestion. Each section should be substantial and meaningful.
+  
+  Include a diverse mix of:
+  - Text/instructional content sections (2-3 sections)
+  - Multiple choice questions (2-3 sections)
+  - Short answer questions (2-3 sections)
+  - Matching exercises (1-2 sections) - MUST include complete options array
+  - Diagram/visualization activities (1-2 sections)
+  - Application/practice problems (1-2 sections)
   
   For ${differentiation}, ensure:
   - ADHD: Clear headers, chunked information, visual cues, extra white space.
   - ESL: Simplified phrasing, focus on vocabulary, visual scaffolding.
   - Gifted: Higher complexity, open-ended inquiries, synthesis tasks.
   
-  Generate substantial content that justifies ${pageCount} page${pageCount > 1 ? 's' : ''} of material.
+  Generate comprehensive, substantial content that fully utilizes ${pageCount} page${pageCount > 1 ? 's' : ''} of material.
   
   CRITICAL REQUIREMENTS - READ CAREFULLY:
   
