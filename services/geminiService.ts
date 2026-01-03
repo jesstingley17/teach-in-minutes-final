@@ -22,7 +22,7 @@ export const analyzeCurriculum = async (
   
   const gradeContext = gradeLevel ? `\n\nGrade Level Context: ${gradeLevel}` : '';
   const standardsContext = standardsFramework ? `\n\nEducational Standards Framework: ${standardsFramework}. Consider relevant standards when decomposing the curriculum.` : '';
-
+  
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
@@ -131,7 +131,8 @@ export const generateSuite = async (
   
   const ai = new GoogleGenAI({ apiKey });
 
-  const sectionsPerPage = pageCount === 1 ? 8 : pageCount <= 3 ? 6 : 5;
+  // Increased sections per page to generate more comprehensive content
+  const sectionsPerPage = pageCount === 1 ? 12 : pageCount <= 3 ? 10 : 8;
   const totalSections = pageCount * sectionsPerPage;
   
   let standardsText = '';
@@ -283,27 +284,29 @@ export const generateSuite = async (
   
   ${outputTypeInstructions}
   
-  The output should be high-fidelity, pedagogically sound, professionally designed, and ready for immediate classroom use. Quality over quantity - every section must serve a clear learning purpose.
+  The output should be high-fidelity, pedagogically sound, professionally designed, and ready for immediate classroom use. Generate SUBSTANTIAL, COMPREHENSIVE content that fully utilizes all ${pageCount} page${pageCount > 1 ? 's' : ''}.
   
-  MANDATORY: You MUST generate AT LEAST ${totalSections} sections. This is a minimum requirement, not a suggestion. Each section should be substantial, meaningful, and professionally crafted.
+  ⚠️ CRITICAL: You MUST generate AT LEAST ${totalSections} sections. This is a MINIMUM requirement. You are STRONGLY encouraged to generate MORE sections if needed to create a complete, comprehensive learning experience. Each section must be substantial, meaningful, professionally crafted, and contain full, complete content (not brief summaries).
   
-  CONTENT MIX (Professional Distribution):
-  - Instructional content with worked examples (2-3 sections) - Include at least 1-2 complete worked examples
-  - Guided practice with sentence frames/scaffolding (2-3 sections)
-  - Diagram/visualization with explicit teacher directions (1-2 sections)
-  - Multiple choice questions (1-2 sections) - Use sparingly, focus on conceptual understanding
-  - Short answer with think-aloud prompts (2-3 sections)
-  - Matching exercises (1 section) - MUST include complete options array
-  - Independent practice problems (1-2 sections)
-  - Challenge extension (1 section, clearly marked) - Optional enrichment
+  CONTENT MIX (Professional Distribution - MINIMUM sections, generate MORE if needed):
+  - Instructional content with worked examples (3-4 sections MINIMUM) - Include 2-3 complete worked examples with full explanations
+  - Guided practice with sentence frames/scaffolding (3-4 sections MINIMUM) - Provide multiple practice opportunities
+  - Diagram/visualization with explicit teacher directions (2 sections MINIMUM) - Multiple visual learning opportunities
+  - Multiple choice questions (2-3 sections MINIMUM) - Use thoughtfully, focus on conceptual understanding
+  - Short answer with think-aloud prompts (3-4 sections MINIMUM) - Encourage deep thinking
+  - Matching exercises (1-2 sections MINIMUM) - MUST include complete options array with multiple items
+  - Independent practice problems (2-3 sections MINIMUM) - Substantial practice opportunities
+  - Challenge extension (1 section, clearly marked) - Optional enrichment for advanced learners
   - Remediation option (1 section, clearly marked) - Extra support for struggling learners
+  
+  Each section must contain COMPLETE, SUBSTANTIAL content. Do not create brief or minimal sections. Think of this as a comprehensive learning resource that students will work through thoroughly.
   
   For ${differentiation}, ensure:
   - ADHD: Clear headers, chunked information, visual cues, generous white space, visual anchors.
   - ESL: Simplified phrasing, vocabulary focus, visual scaffolding, sentence frames.
   - Gifted: Challenge extensions, higher complexity, open-ended inquiries, synthesis tasks.
   
-  Generate comprehensive, substantial content that fully utilizes ${pageCount} page${pageCount > 1 ? 's' : ''} of material while maintaining professional spacing and visual clarity.
+  Generate COMPREHENSIVE, SUBSTANTIAL content that FULLY utilizes all ${pageCount} page${pageCount > 1 ? 's' : ''} of material. This should be a COMPLETE learning resource with ample practice, examples, and activities. Do not create minimal or brief content - generate thorough, detailed sections that provide students with comprehensive learning opportunities. Each section should be well-developed with complete explanations, multiple examples, and substantial practice opportunities.
   
   CRITICAL REQUIREMENTS - READ CAREFULLY:
   

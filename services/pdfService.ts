@@ -1,6 +1,49 @@
 import jsPDF from 'jspdf';
 import { InstructionalSuite, Page, DocumentSection, Differentiation } from '../types';
 
+/**
+ * Decode HTML entities and clean text for PDF export
+ */
+const decodeHtmlEntities = (text: string): string => {
+  if (!text) return text;
+  
+  const entities: { [key: string]: string } = {
+    '&gt;': '>',
+    '&lt;': '<',
+    '&amp;': '&',
+    '&quot;': '"',
+    '&apos;': "'",
+    '&nbsp;': ' ',
+  };
+  
+  let decoded = text.replace(/&[a-z]+;/gi, (match) => entities[match.toLowerCase()] || match);
+  
+  // Remove encoding artifacts (like Ø=ÜK, Ø&gt;Ýà, etc.) - these look like markdown headers or encoding issues
+  decoded = decoded.replace(/Ø[=<>]?[ÜA-Za-z0-9]+/g, '');
+  
+  // Clean up any double spaces that might result
+  decoded = decoded.replace(/\s+/g, ' ').trim();
+  
+  return decoded;
+};
+
+/**
+ * Clean text for PDF: remove markdown and decode entities
+ */
+const cleanTextForPDF = (text: string): string => {
+  if (!text) return text;
+  
+  // Remove markdown formatting
+  let cleaned = text
+    .replace(/\*\*(.+?)\*\*/g, '$1')  // Bold
+    .replace(/\*(.+?)\*/g, '$1');      // Italic
+  
+  // Decode HTML entities
+  cleaned = decodeHtmlEntities(cleaned);
+  
+  return cleaned;
+};
+
 export class PDFService {
   /**
    * Export instructional suite to high-quality PDF
@@ -112,7 +155,8 @@ export class PDFService {
     // Section title
     pdf.setFontSize(12);
     pdf.setFont('helvetica', 'bold');
-    const titleLines = pdf.splitTextToSize(`${section.title}`, width - 20);
+    const cleanTitle = cleanTextForPDF(section.title);
+    const titleLines = pdf.splitTextToSize(cleanTitle, width - 20);
     pdf.text(titleLines, margin + 15, y);
     y += titleLines.length * 5 + 3;
 
@@ -122,8 +166,7 @@ export class PDFService {
 
     switch (section.type) {
       case 'text':
-        // Remove markdown formatting for PDF
-        const cleanText = section.content.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1');
+        const cleanText = cleanTextForPDF(section.content);
         const textLines = pdf.splitTextToSize(cleanText, width - 20);
         pdf.text(textLines, margin + 15, y);
         y += textLines.length * 5.5 + 5;
@@ -134,8 +177,7 @@ export class PDFService {
         break;
 
       case 'question':
-        // Remove markdown formatting
-        const cleanQuestion = section.content.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1');
+        const cleanQuestion = cleanTextForPDF(section.content);
         const questionLines = pdf.splitTextToSize(cleanQuestion, width - 20);
         pdf.text(questionLines, margin + 15, y);
         y += questionLines.length * 5.5 + 5;
@@ -151,7 +193,7 @@ export class PDFService {
               pdf.addPage();
               y = margin + 15;
             }
-            const cleanOpt = opt.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1');
+            const cleanOpt = cleanTextForPDF(opt);
             const optLines = pdf.splitTextToSize(`${String.fromCharCode(97 + i)}. ${cleanOpt}`, width - 25);
             pdf.text(optLines, margin + 25, y);
             y += optLines.length * 5.5 + 2;
@@ -173,7 +215,7 @@ export class PDFService {
 
       case 'instruction':
         pdf.setFont('helvetica', 'italic');
-        const cleanInstr = section.content.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1');
+        const cleanInstr = cleanTextForPDF(section.content);
         const instrLines = pdf.splitTextToSize(cleanInstr, width - 20);
         pdf.text(instrLines, margin + 15, y);
         y += instrLines.length * 5.5 + 5;
@@ -187,7 +229,8 @@ export class PDFService {
       case 'diagram_placeholder':
         pdf.setFont('helvetica', 'italic');
         pdf.setFontSize(9);
-        pdf.text(section.content, margin + 15, y);
+        const cleanDiagram = cleanTextForPDF(section.content);
+        pdf.text(cleanDiagram, margin + 15, y);
         y += 5;
         pdf.setLineWidth(0.5);
         pdf.rect(margin + 15, y, width - 30, 80);
@@ -200,19 +243,58 @@ export class PDFService {
         // Matching exercise layout
         const leftCol = margin + 15;
         const rightCol = margin + width / 2 + 10;
+        const colWidth = (width / 2) - 30;
+        
+        // Instructions
+        pdf.setFontSize(9);
+        pdf.setFont('helvetica', 'italic');
+        pdf.text('Write the letter of the correct match in each blank box.', margin + 15, y);
+        y += 8;
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(10);
         
         const items = section.content.split('\n').filter(l => l.trim());
+        const options = section.options || [];
+        
         items.forEach((item, i) => {
           if (y > pageHeight - 60) {
             pdf.addPage();
             y = margin + 15;
           }
-          const cleanItem = item.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1');
-          const itemLines = pdf.splitTextToSize(cleanItem, width / 2 - 30);
+          const cleanItem = cleanTextForPDF(item);
+          const itemLines = pdf.splitTextToSize(cleanItem, colWidth - 10);
           pdf.text(itemLines, leftCol, y);
+          
+          // Draw box for answer
           pdf.rect(rightCol - 30, y - 4, 25, 6);
+          
+          // Show option if available
+          if (options[i]) {
+            const cleanOpt = cleanTextForPDF(options[i]);
+            const optLines = pdf.splitTextToSize(`${String.fromCharCode(97 + i)}. ${cleanOpt}`, colWidth);
+            pdf.text(optLines, rightCol, y);
+          }
+          
           y += Math.max(itemLines.length * 5.5, 8);
         });
+        
+        // Word bank if options are separate
+        if (options.length > items.length) {
+          y += 5;
+          pdf.setFontSize(9);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text('Word Bank:', margin + 15, y);
+          y += 6;
+          pdf.setFont('helvetica', 'normal');
+          options.forEach((opt, i) => {
+            const cleanOpt = cleanTextForPDF(opt);
+            const optLines = pdf.splitTextToSize(`${String.fromCharCode(97 + i)}. ${cleanOpt}`, width - 30);
+            pdf.text(optLines, margin + 20, y);
+            y += optLines.length * 5 + 2;
+          });
+          pdf.setFontSize(10);
+        }
+        
         y += 5;
         break;
     }

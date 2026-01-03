@@ -7,9 +7,11 @@ import React from 'react';
 /**
  * Decode HTML entities to plain characters
  */
-const decodeHtmlEntities = (text: string): string => {
+export const decodeHtmlEntities = (text: string): string => {
+  if (!text) return text;
+  
   const entities: { [key: string]: string } = {
-    '&gt;': '→',
+    '&gt;': '>',
     '&lt;': '<',
     '&amp;': '&',
     '&quot;': '"',
@@ -17,7 +19,15 @@ const decodeHtmlEntities = (text: string): string => {
     '&nbsp;': ' ',
   };
   
-  return text.replace(/&[a-z]+;/gi, (match) => entities[match.toLowerCase()] || match);
+  let decoded = text.replace(/&[a-z]+;/gi, (match) => entities[match.toLowerCase()] || match);
+  
+  // Remove encoding artifacts (like Ø=ÜK, Ø&gt;Ýà, etc.)
+  decoded = decoded.replace(/Ø[=<>]?[ÜA-Za-z0-9]+/g, '');
+  
+  // Clean up any double spaces that might result
+  decoded = decoded.replace(/\s+/g, ' ').trim();
+  
+  return decoded;
 };
 
 export const renderMarkdown = (text: string): React.ReactNode => {

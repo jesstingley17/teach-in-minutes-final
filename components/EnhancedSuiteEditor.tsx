@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { InstructionalSuite, AestheticStyle, Differentiation, DocumentSection, Page } from '../types';
 import { StandardsService } from '../services/standardsService';
-import { renderMarkdown } from '../utils/markdownRenderer';
+import { renderMarkdown, decodeHtmlEntities } from '../utils/markdownRenderer';
 
 interface EnhancedSuiteEditorProps {
   suite: InstructionalSuite;
@@ -132,7 +132,7 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
                 }
               }}
             >
-              {section.title}
+              {decodeHtmlEntities(section.title)}
             </span>
           </h3>
           {section.points && (
@@ -538,7 +538,7 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
                       .filter(s => s.correctAnswer !== undefined && (s.type === 'question' || s.type === 'matching'))
                       .map((section) => (
                         <div key={section.id} className="bg-white p-4 rounded border border-blue-200">
-                          <p className="font-bold text-sm text-blue-900 mb-2">{section.title}</p>
+                          <p className="font-bold text-sm text-blue-900 mb-2">{decodeHtmlEntities(section.title)}</p>
                           {section.type === 'question' && section.options && (
                             <p className="text-sm">
                               <strong>Answer:</strong>{' '}
