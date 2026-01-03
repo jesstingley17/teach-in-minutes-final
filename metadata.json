@@ -1,0 +1,7 @@
+{
+  "name": "Blueprint Pro: Pedagogical Architect",
+  "description": "A high-fidelity engine that converts raw curriculum into professionally structured, multi-page instructional suites using Gemini 3 Pro reasoning.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
