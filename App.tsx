@@ -50,11 +50,18 @@ const App: React.FC = () => {
     }
 
     const checkKey = async () => {
-      if (typeof (window as any).aistudio?.hasSelectedApiKey === 'function') {
-        const hasKey = await (window as any).aistudio.hasSelectedApiKey();
-        setApiKeySelected(hasKey);
-      } else {
-        setApiKeySelected(!!import.meta.env.GEMINI_API_KEY);
+      try {
+        if (typeof (window as any).aistudio?.hasSelectedApiKey === 'function') {
+          const hasKey = await (window as any).aistudio.hasSelectedApiKey();
+          setApiKeySelected(hasKey);
+        } else {
+          const apiKey = import.meta.env.GEMINI_API_KEY;
+          console.log('API Key present:', !!apiKey);
+          setApiKeySelected(!!apiKey);
+        }
+      } catch (error) {
+        console.error('Error checking API key:', error);
+        setApiKeySelected(false);
       }
     };
     checkKey();
