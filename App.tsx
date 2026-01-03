@@ -32,6 +32,14 @@ const App: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<CurriculumNode | null>(null);
   const [activeSuite, setActiveSuite] = useState<InstructionalSuite | null>(null);
   const [drafts, setDrafts] = useState<InstructionalSuite[]>([]);
+  const [savedParsedCurriculums, setSavedParsedCurriculums] = useState<Array<{
+    id: string;
+    name: string;
+    nodes: CurriculumNode[];
+    sourceType: string;
+    fileName?: string;
+    createdAt: string;
+  }>>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -49,13 +57,19 @@ const App: React.FC = () => {
     pageCount: 1
   });
 
-  // Load drafts and check API Key on mount
+  // Load drafts, parsed curriculums, and check API Key on mount
   useEffect(() => {
     const loadDrafts = async () => {
       if (USE_SUPABASE) {
         // Load from Supabase
         const suites = await SupabaseService.loadSuites();
         setDrafts(suites);
+        
+        // Load saved parsed curriculums if user is signed in
+        if (user) {
+          const parsed = await SupabaseService.loadParsedCurriculums();
+          setSavedParsedCurriculums(parsed);
+        }
         
         // Auto-migrate from localStorage if data exists
         const localData = localStorage.getItem(STORAGE_KEY);
@@ -103,7 +117,7 @@ const App: React.FC = () => {
       }
     };
     checkKey();
-  }, []);
+  }, [user]);
 
   const handleOpenSelectKey = async () => {
     if (typeof (window as any).aistudio?.openSelectKey === 'function') {
@@ -119,6 +133,20 @@ const App: React.FC = () => {
       const parsedNodes = await analyzeCurriculum(rawCurriculum);
       setNodes(parsedNodes);
       if (parsedNodes.length > 0) setSelectedNode(parsedNodes[0]);
+      
+      // Save parsed curriculum if user is signed in
+      if (USE_SUPABASE && user && parsedNodes.length > 0) {
+        const name = `Parsed: ${parsedNodes[0]?.title || 'Curriculum'} (${new Date().toLocaleDateString()})`;
+        await SupabaseService.saveParsedCurriculum(
+          name,
+          parsedNodes,
+          'text',
+          rawCurriculum.substring(0, 500) // Store first 500 chars as reference
+        );
+        // Reload saved curriculums
+        const parsed = await SupabaseService.loadParsedCurriculums();
+        setSavedParsedCurriculums(parsed);
+      }
     } catch (error) {
       console.error(error);
       alert('Failed to analyze curriculum. Please check your API key and connection.');
@@ -143,6 +171,22 @@ const App: React.FC = () => {
           const parsedNodes = await analyzeDocument(base64Data, mimeType);
           setNodes(parsedNodes);
           if (parsedNodes.length > 0) setSelectedNode(parsedNodes[0]);
+          
+          // Save parsed curriculum if user is signed in
+          if (USE_SUPABASE && user && parsedNodes.length > 0) {
+            const name = `Parsed: ${file.name} (${new Date().toLocaleDateString()})`;
+            await SupabaseService.saveParsedCurriculum(
+              name,
+              parsedNodes,
+              'file',
+              undefined,
+              file.name,
+              mimeType
+            );
+            // Reload saved curriculums
+            const parsed = await SupabaseService.loadParsedCurriculums();
+            setSavedParsedCurriculums(parsed);
+          }
         } catch (error) {
           console.error(error);
           alert('Failed to parse document. Ensure it is a valid PDF or Image and your API key is correct.');
@@ -155,6 +199,26 @@ const App: React.FC = () => {
       console.error(error);
       setIsAnalyzing(false);
       alert('Error reading file.');
+    }
+  };
+
+  const handleLoadSavedCurriculum = (savedCurriculum: typeof savedParsedCurriculums[0]) => {
+    setNodes(savedCurriculum.nodes);
+    if (savedCurriculum.nodes.length > 0) setSelectedNode(savedCurriculum.nodes[0]);
+    setRawCurriculum(''); // Clear text input
+  };
+
+  const handleDeleteSavedCurriculum = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    const confirmed = window.confirm("Are you sure you want to delete this saved curriculum?");
+    if (!confirmed) return;
+    
+    const result = await SupabaseService.deleteParsedCurriculum(id);
+    if (result.success) {
+      const parsed = await SupabaseService.loadParsedCurriculums();
+      setSavedParsedCurriculums(parsed);
+    } else {
+      alert(`Failed to delete: ${result.error}`);
     }
   };
 
@@ -446,6 +510,33 @@ const App: React.FC = () => {
                     <p className="text-[10px] text-slate-500 mt-1">{draft.outputType} • {draft.differentiation}</p>
                     <button 
                       onClick={(e) => handleDeleteDraft(e, draft.id)}
+                      className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-red-500 transition-opacity"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Saved Parsed Curriculums Section */}
+          {USE_SUPABASE && user && savedParsedCurriculums.length > 0 && (
+            <section>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-3">Saved Parsed Curriculums</label>
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                {savedParsedCurriculums.map(saved => (
+                  <div
+                    key={saved.id}
+                    onClick={() => handleLoadSavedCurriculum(saved)}
+                    className="group relative w-full text-left p-3 rounded-xl border cursor-pointer transition-all border-slate-100 bg-white hover:border-blue-300 hover:bg-blue-50"
+                  >
+                    <p className="text-xs font-bold line-clamp-1 pr-6">{saved.name}</p>
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      {saved.nodes.length} nodes • {saved.sourceType === 'file' && saved.fileName ? saved.fileName : 'Text'}
+                    </p>
+                    <button 
+                      onClick={(e) => handleDeleteSavedCurriculum(e, saved.id)}
                       className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-red-500 transition-opacity"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>

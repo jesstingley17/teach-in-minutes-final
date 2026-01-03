@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { InstructionalSuite } from '../types';
+import { InstructionalSuite, CurriculumNode } from '../types';
 
 export class SupabaseService {
   
@@ -138,6 +138,101 @@ export class SupabaseService {
     } catch (error) {
       console.error('Error migrating from localStorage:', error);
       return 0;
+    }
+  }
+
+  /**
+   * Save a parsed curriculum
+   */
+  static async saveParsedCurriculum(
+    name: string,
+    nodes: CurriculumNode[],
+    sourceType: 'text' | 'file',
+    sourceData?: string,
+    fileName?: string,
+    fileType?: string
+  ): Promise<{ success: boolean; error?: string; id?: string }> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { success: false, error: 'User not authenticated' };
+      }
+
+      const id = `parsed-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+      const { error } = await supabase
+        .from('parsed_curriculums')
+        .insert({
+          id,
+          user_id: user.id,
+          name,
+          source_type: sourceType,
+          source_data: sourceData || null,
+          nodes,
+          file_name: fileName || null,
+          file_type: fileType || null,
+        });
+
+      if (error) throw error;
+      return { success: true, id };
+    } catch (error: any) {
+      console.error('Error saving parsed curriculum:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Load all parsed curriculums for the current user
+   */
+  static async loadParsedCurriculums(): Promise<Array<{
+    id: string;
+    name: string;
+    nodes: CurriculumNode[];
+    sourceType: string;
+    fileName?: string;
+    createdAt: string;
+  }>> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from('parsed_curriculums')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return (data || []).map(row => ({
+        id: row.id,
+        name: row.name,
+        nodes: row.nodes,
+        sourceType: row.source_type,
+        fileName: row.file_name,
+        createdAt: row.created_at,
+      }));
+    } catch (error) {
+      console.error('Error loading parsed curriculums:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Delete a parsed curriculum
+   */
+  static async deleteParsedCurriculum(id: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { error } = await supabase
+        .from('parsed_curriculums')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      return { success: true };
+    } catch (error: any) {
+      console.error('Error deleting parsed curriculum:', error);
+      return { success: false, error: error.message };
     }
   }
 }
