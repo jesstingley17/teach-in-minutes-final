@@ -559,9 +559,43 @@ const App: React.FC = () => {
           )}
         </div>
 
+        {/* Saved Parsed Curriculums Section */}
+        {USE_SUPABASE && user && (
+          <div className="px-6 pb-4 border-b-2 border-purple-200/60">
+            <section>
+              <label className="block text-xs font-bold text-purple-700 uppercase mb-3">Saved Parsed Documents</label>
+              {savedParsedCurriculums.length > 0 ? (
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                  {savedParsedCurriculums.map(saved => (
+                    <div
+                      key={saved.id}
+                      onClick={() => handleLoadSavedCurriculum(saved)}
+                      className="group relative w-full text-left p-3 rounded-xl border-2 cursor-pointer transition-all border-purple-200 bg-white/80 hover:border-purple-400 hover:bg-purple-50/80 shadow-sm hover:shadow-md"
+                    >
+                      <p className="text-xs font-bold line-clamp-1 pr-6 text-slate-800">{saved.name}</p>
+                      <p className="text-[10px] text-slate-600 mt-1">
+                        {saved.nodes.length} nodes • {saved.sourceType === 'file' && saved.fileName ? saved.fileName : 'Text'}
+                      </p>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteSavedCurriculum(e, saved.id);
+                        }}
+                        className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-red-500 transition-opacity"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500 italic py-2">No saved documents yet. Upload or paste content to get started.</p>
+              )}
+            </section>
+          </div>
+        )}
+
         <div className="flex-1 p-6 space-y-8">
-          {/* Saved Parsed Curriculums Section - Moved to sidebar */}
-          
           {/* Intake Section */}
           <section className="space-y-4">
             <div>
