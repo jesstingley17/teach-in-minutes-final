@@ -28,16 +28,25 @@ const decodeHtmlEntities = (text: string): string => {
   return decoded;
 };
 
-/**
- * Clean text for PDF: remove markdown and decode entities
- */
+  /**
+   * Clean text for PDF: remove markdown and decode entities
+   */
 const cleanTextForPDF = (text: string): string => {
   if (!text) return text;
   
   // Remove markdown formatting
   let cleaned = text
     .replace(/\*\*(.+?)\*\*/g, '$1')  // Bold
-    .replace(/\*(.+?)\*/g, '$1');      // Italic
+    .replace(/\*(.+?)\*/g, '$1')      // Italic
+    .replace(/#{1,6}\s+(.+)/g, '$1')  // Headers
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // Links
+    .replace(/`([^`]+)`/g, '$1');     // Inline code
+  
+  // Fix math notation
+  cleaned = cleaned
+    .replace(/\$([^$]+)\$/g, '$1') // Remove $ markers
+    .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1/$2') // Convert \frac{a}{b} to a/b
+    .replace(/\{([^}]+)\}/g, '$1'); // Remove LaTeX braces
   
   // Decode HTML entities
   cleaned = decodeHtmlEntities(cleaned);
@@ -236,6 +245,105 @@ export class PDFService {
   }
 
   /**
+   * Helper to add image to PDF from base64
+   */
+  private static async addImageToPDF(
+    pdf: jsPDF,
+    base64: string,
+    x: number,
+    y: number,
+    maxWidth: number,
+    maxHeight: number
+  ): Promise<{ width: number; height: number }> {
+    try {
+      // Remove data URL prefix if present
+      const base64Data = base64.includes(',') ? base64.split(',')[1] : base64;
+      
+      // Determine image format
+      let format: 'JPEG' | 'PNG' = 'PNG';
+      if (base64Data.startsWith('/9j/') || base64Data.startsWith('iVBORw0KGgo')) {
+        format = base64Data.startsWith('/9j/') ? 'JPEG' : 'PNG';
+      }
+      
+      // Add image to PDF
+      pdf.addImage(base64Data, format, x, y, maxWidth, maxHeight, undefined, 'FAST');
+      
+      return { width: maxWidth, height: maxHeight };
+    } catch (error) {
+      console.error('Error adding image to PDF:', error);
+      // Return dimensions even if image fails to add
+      return { width: maxWidth, height: maxHeight };
+    }
+  }
+
+  /**
+   * Calculate estimated height for a section before rendering
+   */
+  private static estimateSectionHeight(
+    section: DocumentSection,
+    width: number,
+    pdf: jsPDF
+  ): number {
+    let height = 0;
+    
+    // Section title height
+    pdf.setFontSize(12);
+    const titleLines = pdf.splitTextToSize(section.title || '', width - 20);
+    height += titleLines.length * 5 + 3;
+    
+    // Content height based on type
+    pdf.setFontSize(10);
+    
+    switch (section.type) {
+      case 'text':
+        if (section.imageBase64) height += 40 + 5; // Image + spacing
+        const textLines = pdf.splitTextToSize(section.content || '', width - 20);
+        height += textLines.length * 5.5 + 5;
+        break;
+      case 'question':
+        const questionLines = pdf.splitTextToSize(section.content || '', width - 20);
+        height += questionLines.length * 5.5 + 5;
+        if (section.options && section.options.length > 0) {
+          section.options.forEach(opt => {
+            const optLines = pdf.splitTextToSize(opt, width - 25);
+            height += optLines.length * 5.5 + 2;
+          });
+        } else {
+          height += 18; // 3 answer lines
+        }
+        height += 5;
+        break;
+      case 'instruction':
+        const instrLines = pdf.splitTextToSize(section.content || '', width - 20);
+        height += instrLines.length * 5.5 + 5;
+        break;
+      case 'diagram_placeholder':
+        height += 5; // Instruction text
+        if (section.imageBase64) {
+          height += 60 + 5; // Diagram image
+        } else {
+          height += 60 + 5; // Empty box
+        }
+        break;
+      case 'matching':
+        height += 8; // Instructions
+        const items = section.content.split('\n').filter(l => l.trim());
+        items.forEach(() => height += 8);
+        if (section.options && section.options.length > items.length) {
+          height += 6; // Word bank header
+          section.options.forEach(() => height += 5);
+        }
+        height += 5;
+        break;
+      default:
+        const defaultLines = pdf.splitTextToSize(section.content || '', width - 20);
+        height += defaultLines.length * 5.5 + 5;
+    }
+    
+    return height;
+  }
+
+  /**
    * Export instructional suite to high-quality PDF
    */
   static async exportToPDF(suite: InstructionalSuite): Promise<void> {
@@ -249,12 +357,14 @@ export class PDFService {
     const pageWidth = 210; // A4 width in mm
     const pageHeight = 297; // A4 height in mm
     const margin = 20;
+    const footerHeight = 20; // Reserve space for footer
     const contentWidth = pageWidth - (margin * 2);
-    let yPosition = margin;
+    const maxContentHeight = pageHeight - margin - footerHeight; // Available content area
     
     // Get font based on aesthetic style
     const pdfFont = this.getPDFFont(suite.aesthetic);
     console.log(`PDF Export: Using font '${pdfFont}' for aesthetic '${suite.aesthetic}'`);
+    console.log(`PDF Export: Doodle available: ${!!suite.doodleBase64}`);
 
     // Determine pages to render - use proper pagination
     const pages = suite.pages || this.sectionsToPages(suite.sections, suite.pageCount);
@@ -265,29 +375,59 @@ export class PDFService {
       console.log(`  Page ${idx + 1}: ${page.sections.length} sections`);
     });
     
-    pages.forEach((page, pageIndex) => {
+    // Render each page with proper breaks
+    for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
+      const page = pages[pageIndex];
+      
       if (pageIndex > 0) {
         pdf.addPage();
-        yPosition = margin;
       }
 
-      // Header
+      let yPosition = margin;
+
+      // Header (always at top of page)
       yPosition = this.renderHeader(pdf, suite, margin, yPosition, contentWidth);
       
-      // Render sections
-      page.sections.forEach((section) => {
-        yPosition = this.renderSection(pdf, section, suite, margin, yPosition, contentWidth, pageHeight);
+      // Add doodle image on first page if available
+      if (pageIndex === 0 && suite.doodleBase64) {
+        try {
+          const doodleHeight = 30;
+          const doodleWidth = contentWidth * 0.4;
+          const doodleX = margin + contentWidth - doodleWidth;
+          
+          // Check if doodle fits
+          if (yPosition + doodleHeight <= maxContentHeight) {
+            await this.addImageToPDF(pdf, suite.doodleBase64, doodleX, yPosition, doodleWidth, doodleHeight);
+            yPosition += doodleHeight + 5;
+          }
+        } catch (error) {
+          console.error('Error adding doodle to PDF:', error);
+        }
+      }
+      
+      // Render sections for this page
+      for (const section of page.sections) {
+        // Estimate if section will fit on current page
+        const estimatedHeight = this.estimateSectionHeight(section, contentWidth, pdf);
         
-        // Check if we need a new page
-        if (yPosition > pageHeight - 40) {
+        // If section won't fit, start new page (but only if we're not at the start of a page)
+        if (yPosition > margin && yPosition + estimatedHeight > maxContentHeight) {
           pdf.addPage();
           yPosition = margin;
+          // Re-render header on new page
+          yPosition = this.renderHeader(pdf, suite, margin, yPosition, contentWidth);
         }
-      });
+        
+        // Render the section
+        yPosition = await this.renderSection(pdf, section, suite, margin, yPosition, contentWidth, maxContentHeight, footerHeight);
+        
+        // Add spacing between sections
+        yPosition += 3;
+      }
 
-      // Footer
+      // Footer (always at bottom)
       this.renderFooter(pdf, suite, pageIndex + 1, pages.length, margin, pageHeight);
-    });
+    }
 
     // Save PDF
     pdf.save(`${suite.title.replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.pdf`);
@@ -356,15 +496,16 @@ export class PDFService {
     return y;
   }
 
-  private static renderSection(
+  private static async renderSection(
     pdf: jsPDF,
     section: DocumentSection,
     suite: InstructionalSuite,
     margin: number,
     yPos: number,
     width: number,
-    pageHeight: number
-  ): number {
+    maxContentHeight: number,
+    footerHeight: number
+  ): Promise<number> {
     let y = yPos;
     const pdfFont = this.getPDFFont(suite.aesthetic);
 
@@ -382,45 +523,88 @@ export class PDFService {
 
     switch (section.type) {
       case 'text':
-        const cleanText = cleanTextForPDF(section.content);
-        const textLines = pdf.splitTextToSize(cleanText, width - 20);
-        pdf.text(textLines, margin + 15, y);
-        y += textLines.length * 5.5 + 5;
-        if (y > pageHeight - 40) {
-          pdf.addPage();
-          y = margin + 15;
+        // Check if section has an embedded image
+        if (section.imageBase64) {
+          try {
+            const imageHeight = 40; // 40mm height for inline images
+            const imageWidth = width - 30;
+            await this.addImageToPDF(pdf, section.imageBase64, margin + 15, y, imageWidth, imageHeight);
+            y += imageHeight + 5;
+          } catch (error) {
+            console.error('Error adding section image:', error);
+          }
         }
+        
+        const cleanText = cleanTextForPDF(section.content);
+        // Fix math notation: convert $...$ to proper format
+        const textWithFixedMath = cleanText
+          .replace(/\$([^$]+)\$/g, '$1') // Remove $ markers, keep content
+          .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1/$2') // Convert \frac{a}{b} to a/b
+          .replace(/\{([^}]+)\}/g, '$1'); // Remove LaTeX braces
+        
+        const textLines = pdf.splitTextToSize(textWithFixedMath, width - 20);
+        
+        // Handle text that spans multiple pages
+        let currentY = y;
+        for (let i = 0; i < textLines.length; i++) {
+          // Check if we need a new page
+          if (currentY > maxContentHeight - 10) {
+            pdf.addPage();
+            currentY = margin + 15;
+            // Re-render header
+            currentY = this.renderHeader(pdf, suite, margin, currentY, width);
+          }
+          pdf.text(textLines[i], margin + 15, currentY);
+          currentY += 5.5;
+        }
+        y = currentY + 5;
         break;
 
       case 'question':
         const cleanQuestion = cleanTextForPDF(section.content);
         const questionLines = pdf.splitTextToSize(cleanQuestion, width - 20);
-        pdf.text(questionLines, margin + 15, y);
-        y += questionLines.length * 5.5 + 5;
-        if (y > pageHeight - 60) {
-          pdf.addPage();
-          y = margin + 15;
+        
+        // Render question text with page break handling
+        for (let i = 0; i < questionLines.length; i++) {
+          if (y > maxContentHeight - 10) {
+            pdf.addPage();
+            y = margin + 15;
+            y = this.renderHeader(pdf, suite, margin, y, width);
+          }
+          pdf.text(questionLines[i], margin + 15, y);
+          y += 5.5;
         }
+        y += 5;
         
         if (section.options && section.options.length > 0) {
           // Multiple choice options
           section.options.forEach((opt, i) => {
-            if (y > pageHeight - 40) {
+            if (y > maxContentHeight - 10) {
               pdf.addPage();
               y = margin + 15;
+              y = this.renderHeader(pdf, suite, margin, y, width);
             }
             const cleanOpt = cleanTextForPDF(opt);
             const optLines = pdf.splitTextToSize(`${String.fromCharCode(97 + i)}. ${cleanOpt}`, width - 25);
-            pdf.text(optLines, margin + 25, y);
-            y += optLines.length * 5.5 + 2;
+            optLines.forEach(line => {
+              if (y > maxContentHeight - 10) {
+                pdf.addPage();
+                y = margin + 15;
+                y = this.renderHeader(pdf, suite, margin, y, width);
+              }
+              pdf.text(line, margin + 25, y);
+              y += 5.5;
+            });
+            y += 2;
           });
         } else {
           // Answer lines
           const lineCount = suite.differentiation === Differentiation.GIFTED ? 5 : 3;
           for (let i = 0; i < lineCount; i++) {
-            if (y > pageHeight - 40) {
+            if (y > maxContentHeight - 10) {
               pdf.addPage();
               y = margin + 15;
+              y = this.renderHeader(pdf, suite, margin, y, width);
             }
             pdf.line(margin + 15, y, margin + width - 5, y);
             y += 6;
@@ -433,24 +617,54 @@ export class PDFService {
         pdf.setFont(pdfFont, 'italic');
         const cleanInstr = cleanTextForPDF(section.content);
         const instrLines = pdf.splitTextToSize(cleanInstr, width - 20);
-        pdf.text(instrLines, margin + 15, y);
-        y += instrLines.length * 5.5 + 5;
-        if (y > pageHeight - 40) {
-          pdf.addPage();
-          y = margin + 15;
-        }
+        instrLines.forEach(line => {
+          if (y > maxContentHeight - 10) {
+            pdf.addPage();
+            y = margin + 15;
+            y = this.renderHeader(pdf, suite, margin, y, width);
+          }
+          pdf.text(line, margin + 15, y);
+          y += 5.5;
+        });
+        y += 5;
         pdf.setFont(pdfFont, 'normal');
         break;
 
       case 'diagram_placeholder':
+        // Check if diagram fits on current page
+        const diagramHeight = 60;
+        if (y + 5 + diagramHeight > maxContentHeight) {
+          pdf.addPage();
+          y = margin + 15;
+          y = this.renderHeader(pdf, suite, margin, y, width);
+        }
+        
         pdf.setFont(pdfFont, 'italic');
         pdf.setFontSize(9);
         const cleanDiagram = cleanTextForPDF(section.content);
         pdf.text(cleanDiagram, margin + 15, y);
         y += 5;
-        pdf.setLineWidth(0.5);
-        pdf.rect(margin + 15, y, width - 30, 80);
-        y += 85;
+        
+        // Check if section has an image (diagram or doodle)
+        if (section.imageBase64) {
+          try {
+            const diagramWidth = width - 30;
+            await this.addImageToPDF(pdf, section.imageBase64, margin + 15, y, diagramWidth, diagramHeight);
+            y += diagramHeight + 5;
+          } catch (error) {
+            console.error('Error adding diagram image:', error);
+            // Fallback to empty box
+            pdf.setLineWidth(0.5);
+            pdf.rect(margin + 15, y, width - 30, diagramHeight);
+            y += diagramHeight + 5;
+          }
+        } else {
+          // Empty diagram box
+          pdf.setLineWidth(0.5);
+          pdf.rect(margin + 15, y, width - 30, diagramHeight);
+          y += diagramHeight + 5;
+        }
+        
         pdf.setFont(pdfFont, 'normal');
         pdf.setFontSize(10);
         break;
@@ -462,6 +676,11 @@ export class PDFService {
         const colWidth = (width / 2) - 30;
         
         // Instructions
+        if (y > maxContentHeight - 10) {
+          pdf.addPage();
+          y = margin + 15;
+          y = this.renderHeader(pdf, suite, margin, y, width);
+        }
         pdf.setFontSize(9);
         pdf.setFont(pdfFont, 'italic');
         pdf.text('Write the letter of the correct match in each blank box.', margin + 15, y);
@@ -473,29 +692,51 @@ export class PDFService {
         const options = section.options || [];
         
         items.forEach((item, i) => {
-          if (y > pageHeight - 60) {
+          if (y > maxContentHeight - 10) {
             pdf.addPage();
             y = margin + 15;
+            y = this.renderHeader(pdf, suite, margin, y, width);
           }
           const cleanItem = cleanTextForPDF(item);
           const itemLines = pdf.splitTextToSize(cleanItem, colWidth - 10);
-          pdf.text(itemLines, leftCol, y);
+          itemLines.forEach(line => {
+            if (y > maxContentHeight - 10) {
+              pdf.addPage();
+              y = margin + 15;
+              y = this.renderHeader(pdf, suite, margin, y, width);
+            }
+            pdf.text(line, leftCol, y);
+            y += 5.5;
+          });
           
           // Draw box for answer
-          pdf.rect(rightCol - 30, y - 4, 25, 6);
+          pdf.rect(rightCol - 30, y - 9, 25, 6);
           
           // Show option if available
           if (options[i]) {
             const cleanOpt = cleanTextForPDF(options[i]);
             const optLines = pdf.splitTextToSize(`${String.fromCharCode(97 + i)}. ${cleanOpt}`, colWidth);
-            pdf.text(optLines, rightCol, y);
+            optLines.forEach(line => {
+              if (y > maxContentHeight - 10) {
+                pdf.addPage();
+                y = margin + 15;
+                y = this.renderHeader(pdf, suite, margin, y, width);
+              }
+              pdf.text(line, rightCol, y);
+              y += 5.5;
+            });
+          } else {
+            y += 2;
           }
-          
-          y += Math.max(itemLines.length * 5.5, 8);
         });
         
         // Word bank if options are separate
         if (options.length > items.length) {
+          if (y > maxContentHeight - 20) {
+            pdf.addPage();
+            y = margin + 15;
+            y = this.renderHeader(pdf, suite, margin, y, width);
+          }
           y += 5;
           pdf.setFontSize(9);
           pdf.setFont(pdfFont, 'bold');
@@ -505,8 +746,16 @@ export class PDFService {
           options.forEach((opt, i) => {
             const cleanOpt = cleanTextForPDF(opt);
             const optLines = pdf.splitTextToSize(`${String.fromCharCode(97 + i)}. ${cleanOpt}`, width - 30);
-            pdf.text(optLines, margin + 20, y);
-            y += optLines.length * 5 + 2;
+            optLines.forEach(line => {
+              if (y > maxContentHeight - 10) {
+                pdf.addPage();
+                y = margin + 15;
+                y = this.renderHeader(pdf, suite, margin, y, width);
+              }
+              pdf.text(line, margin + 20, y);
+              y += 5;
+            });
+            y += 2;
           });
           pdf.setFontSize(10);
         }
@@ -520,8 +769,16 @@ export class PDFService {
         pdf.setFont(pdfFont, 'normal');
         const cleanDefault = cleanTextForPDF(section.content || section.title || '');
         const defaultLines = pdf.splitTextToSize(cleanDefault, width - 20);
-        pdf.text(defaultLines, margin + 15, y);
-        y += defaultLines.length * 5.5 + 5;
+        defaultLines.forEach(line => {
+          if (y > maxContentHeight - 10) {
+            pdf.addPage();
+            y = margin + 15;
+            y = this.renderHeader(pdf, suite, margin, y, width);
+          }
+          pdf.text(line, margin + 15, y);
+          y += 5.5;
+        });
+        y += 5;
         break;
     }
 

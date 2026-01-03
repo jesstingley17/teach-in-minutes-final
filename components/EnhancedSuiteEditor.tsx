@@ -412,7 +412,12 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
                   }
                 } catch (error: any) {
                   console.error('Gamma enhancement error:', error);
-                  alert(`Gamma enhancement failed: ${error.message || 'Unknown error'}. Make sure GAMMA_API_KEY is configured.`);
+                  const errorMessage = error.message || 'Unknown error';
+                  if (errorMessage.includes('Network error') || errorMessage.includes('Failed to fetch')) {
+                    alert(`Gamma enhancement failed: ${errorMessage}\n\nMake sure:\n1. GAMMA_API_KEY is set in Vercel environment variables\n2. The API route (/api/gamma/enhance) is deployed\n3. You're not blocking the API route`);
+                  } else {
+                    alert(`Gamma enhancement failed: ${errorMessage}`);
+                  }
                 } finally {
                   setIsEnhancingWithGamma(false);
                 }

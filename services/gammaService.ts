@@ -29,12 +29,16 @@ export interface GammaGenerationResult {
 
 /**
  * Get Gamma API client configuration
+ * Note: API key is now handled server-side via Vercel API route
+ * This function is kept for backward compatibility but not used in the new implementation
  */
 const getGammaApiKey = (): string => {
   const apiKey = import.meta.env.GAMMA_API_KEY;
   
   if (!apiKey) {
-    throw new Error('GAMMA_API_KEY is not configured. Gamma design enhancement requires an API key.');
+    // Don't throw error here - the API route will handle it
+    // This allows the UI to show the button even if key isn't in client env
+    return '';
   }
   
   return apiKey;
@@ -43,6 +47,7 @@ const getGammaApiKey = (): string => {
 /**
  * Enhance educational material design using Gamma API
  * This generates a presentation or document with enhanced visual design
+ * Uses Vercel serverless function to proxy requests and avoid CORS issues
  */
 export const enhanceDesignWithGamma = async (
   content: string,
@@ -50,65 +55,45 @@ export const enhanceDesignWithGamma = async (
   format: 'presentation' | 'document' = 'presentation',
   options: GammaDesignOptions = {}
 ): Promise<GammaGenerationResult> => {
-  const apiKey = getGammaApiKey();
-  const apiUrl = 'https://public-api.gamma.app/v1.0/generations';
-  
-  const {
-    tone = 'educational',
-    audience = 'students',
-    amount = 'standard',
-    language = 'en',
-    themeId,
-    numCards = 10,
-    cardSplit = 'auto',
-    additionalInstructions,
-    imageSource = 'aiGenerated'
-  } = options;
+  // Use Vercel API route to proxy the request (avoids CORS and keeps API key server-side)
+  const apiUrl = '/api/gamma/enhance';
   
   try {
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
-        'X-API-KEY': apiKey,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        inputText: content,
-        textMode: 'useExisting', // Use the provided content
-        format: format,
-        title: title,
-        themeId: themeId,
-        numCards: numCards,
-        cardSplit: cardSplit,
-        additionalInstructions: additionalInstructions || `Create an engaging ${format} for educational use. Make it visually appealing and student-friendly.`,
-        textOptions: {
-          amount: amount,
-          tone: tone,
-          audience: audience,
-          language: language
-        },
-        imageOptions: {
-          source: imageSource
-        }
+        content,
+        title,
+        format,
+        options
       })
     });
     
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: response.statusText }));
-      throw new Error(`Gamma API error: ${errorData.message || response.statusText} (${response.status})`);
+      const errorData = await response.json().catch(() => ({ 
+        error: response.statusText 
+      }));
+      throw new Error(errorData.error || `Gamma API error: ${response.statusText} (${response.status})`);
     }
     
     const result = await response.json();
     
     return {
-      documentId: result.id || result.documentId || result.generationId,
-      url: result.url || result.previewUrl || result.link,
+      documentId: result.documentId,
+      url: result.url,
       status: result.status || 'success',
       message: result.message,
-      generationId: result.generationId || result.id
+      generationId: result.generationId
     };
   } catch (error: any) {
     console.error('Gamma API error:', error);
+    // Check if it's a network/CORS error
+    if (error.message === 'Failed to fetch' || error.name === 'TypeError') {
+      throw new Error('Gamma design enhancement failed: Network error. Please check your connection and ensure the API route is deployed.');
+    }
     throw new Error(`Gamma design enhancement failed: ${error.message || 'Unknown error'}`);
   }
 };

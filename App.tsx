@@ -427,11 +427,11 @@ const App: React.FC = () => {
           institution: wizardData.institution,
           instructor: wizardData.instructor
         },
-        doodleData, // doodleBase64
         wizardData.pageCount,
         wizardData.gradeLevel,
         standards,
-        genConfig.visualType // visualType
+        genConfig.provider, // preferredProvider
+        doodleData // doodleBase64
       );
       setActiveSuite(suite);
       // Update branding state
@@ -596,9 +596,9 @@ const App: React.FC = () => {
     <div className="min-h-screen flex flex-col md:flex-row" style={{ background: 'linear-gradient(to bottom, #fef3c7 0%, #ffffff 100%)' }}>
       
       {/* Sidebar: Curriculum Intake & Control */}
-      <aside className="w-full md:w-80 lg:w-96 bg-gradient-to-b from-pink-50 via-purple-50 to-blue-50 border-r-2 border-purple-300 flex flex-col h-screen no-print shrink-0 shadow-2xl" style={{ borderColor: '#c084fc' }}>
+      <aside className="w-full md:w-[420px] lg:w-[480px] bg-gradient-to-b from-pink-50 via-purple-50 to-blue-50 border-r-2 border-purple-300 flex flex-col h-screen no-print shrink-0 shadow-2xl" style={{ borderColor: '#c084fc' }}>
         {/* Header - Fixed */}
-        <div className="p-6 border-b-2 border-purple-200/60 flex-shrink-0">
+        <div className="p-8 border-b-2 border-purple-200/60 flex-shrink-0">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-3">
               {/* Logo Image */}
@@ -630,7 +630,7 @@ const App: React.FC = () => {
             </div>
           </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 bg-clip-text text-transparent" style={{
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 bg-clip-text text-transparent" style={{
                   fontFamily: "'Dancing Script', cursive",
                   backgroundImage: 'linear-gradient(90deg, #ff6b9d 0%, #a855f7 50%, #3b82f6 100%)',
                   WebkitBackgroundClip: 'text',
@@ -638,34 +638,34 @@ const App: React.FC = () => {
                 }}>
                   ReclaimEdU
                 </h1>
-                <p className="text-[10px] text-slate-500 font-medium">Educational Materials Generator</p>
+                <p className="text-xs text-slate-500 font-medium">Educational Materials Generator</p>
               </div>
             </div>
           </div>
           
           {/* User Profile Section */}
           {USE_SUPABASE && (
-            <div className="mt-4 p-3 bg-slate-50 rounded-xl">
+            <div className="mt-6 p-4 bg-slate-50 rounded-xl">
               {user ? (
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-slate-900 truncate">{user.email}</p>
-                      <p className="text-[10px] text-slate-500">Signed In</p>
+                      <p className="text-sm font-bold text-slate-900 truncate">{user.email}</p>
+                      <p className="text-xs text-slate-500">Signed In</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => setShowSettings(true)}
-                      className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex items-center space-x-1.5"
+                      className="px-4 py-2 text-sm font-bold text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex items-center space-x-2"
                       title="Settings"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
@@ -673,7 +673,7 @@ const App: React.FC = () => {
                     </button>
                   <button
                     onClick={signOut}
-                    className="text-xs text-slate-400 hover:text-slate-600 font-medium"
+                    className="text-sm text-slate-400 hover:text-slate-600 font-medium px-2 py-1"
                   >
                     Sign Out
                   </button>
@@ -682,9 +682,9 @@ const App: React.FC = () => {
               ) : (
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 hover:from-pink-600 hover:via-purple-700 hover:to-blue-700 text-white rounded-xl text-xs font-bold btn-modern shadow-lg hover:shadow-xl hover-glow"
+                  className="w-full flex items-center justify-center space-x-2 py-3 px-5 bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 hover:from-pink-600 hover:via-purple-700 hover:to-blue-700 text-white rounded-xl text-sm font-bold btn-modern shadow-lg hover:shadow-xl hover-glow"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                   </svg>
                   <span>Sign In / Sign Up</span>
@@ -694,15 +694,17 @@ const App: React.FC = () => {
           )}
         </div>
 
+        {/* Scrollable Content Area */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          <div className="p-8 space-y-6">
           {/* Saved Drafts Section */}
-        <div className="px-6 pb-6 border-b-2 border-purple-200/60">
-            <section>
+          <section className="border-b-2 border-purple-200/60 pb-6">
             <button
               onClick={() => setSectionsExpanded({...sectionsExpanded, drafts: !sectionsExpanded.drafts})}
-              className="sticky-section-header w-full flex items-center justify-between text-xs font-bold text-purple-700 uppercase mb-3 hover:text-purple-800 transition-colors group"
+              className="w-full flex items-center justify-between text-sm font-bold text-purple-700 uppercase mb-4 hover:text-purple-800 transition-colors group py-2"
             >
               <span className="flex items-center space-x-2">
-                <svg className="w-4 h-4 transition-transform" style={{ transform: sectionsExpanded.drafts ? 'rotate(90deg)' : 'rotate(0deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 transition-transform" style={{ transform: sectionsExpanded.drafts ? 'rotate(90deg)' : 'rotate(0deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                 </svg>
                 <span>Saved Drafts ({drafts.length})</span>
@@ -711,7 +713,7 @@ const App: React.FC = () => {
             {sectionsExpanded.drafts && (
               <>
                 {drafts.length > 0 ? (
-              <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-3">
                     {drafts.map((draft, index) => (
                   <div
                     key={draft.id}
@@ -722,12 +724,12 @@ const App: React.FC = () => {
                         instructor: draft.instructorName || ''
                       });
                     }}
-                    className={`stagger-item group relative w-full text-left p-4 rounded-xl border-2 cursor-pointer card-interactive glass border-purple-200 bg-white/90 hover:border-purple-400 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 shadow-sm hover:shadow-lg ${
+                    className={`stagger-item group relative w-full text-left p-5 rounded-xl border-2 cursor-pointer card-interactive glass border-purple-200 bg-white/90 hover:border-purple-400 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 shadow-sm hover:shadow-lg ${
                       activeSuite?.id === draft.id ? 'border-purple-500 bg-gradient-to-r from-purple-50 to-pink-50' : ''
                     }`}
                   >
-                    <p className="text-xs font-bold line-clamp-1 pr-6 text-slate-800">{draft.title}</p>
-                    <p className="text-[10px] text-slate-600 mt-1">
+                    <p className="text-sm font-bold line-clamp-1 pr-8 text-slate-800">{draft.title}</p>
+                    <p className="text-xs text-slate-600 mt-2">
                       {draft.outputType} • {draft.sections.length} sections
                     </p>
                     <button 
@@ -735,31 +737,29 @@ const App: React.FC = () => {
                         e.stopPropagation();
                         handleDeleteDraft(e, draft.id);
                       }}
-                      className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-red-500 transition-opacity"
+                      className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-red-500 transition-opacity rounded-lg hover:bg-red-50"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                     </button>
                   </div>
                 ))}
               </div>
                 ) : (
-                  <p className="text-xs text-slate-500 italic py-2">No saved drafts yet. Create or generate materials to save drafts.</p>
+                  <p className="text-sm text-slate-500 italic py-3">No saved drafts yet. Create or generate materials to save drafts.</p>
                 )}
               </>
             )}
-            </section>
-        </div>
+          </section>
 
-        {/* Saved Parsed Curriculums Section */}
-        {USE_SUPABASE && user && (
-          <div className="px-6 pb-6 border-b-2 border-purple-200/60">
-            <section>
+          {/* Saved Parsed Curriculums Section */}
+          {USE_SUPABASE && user && (
+            <section className="border-b-2 border-purple-200/60 pb-6">
               <button
                 onClick={() => setSectionsExpanded({...sectionsExpanded, parsedDocuments: !sectionsExpanded.parsedDocuments})}
-                className="sticky-section-header w-full flex items-center justify-between text-xs font-bold text-purple-700 uppercase mb-3 hover:text-purple-800 transition-colors group"
+                className="w-full flex items-center justify-between text-sm font-bold text-purple-700 uppercase mb-4 hover:text-purple-800 transition-colors group py-2"
               >
                 <span className="flex items-center space-x-2">
-                  <svg className="w-4 h-4 transition-transform" style={{ transform: sectionsExpanded.parsedDocuments ? 'rotate(90deg)' : 'rotate(0deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 transition-transform" style={{ transform: sectionsExpanded.parsedDocuments ? 'rotate(90deg)' : 'rotate(0deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                   </svg>
                   <span>Saved Parsed Documents ({savedParsedCurriculums.length})</span>
@@ -768,15 +768,15 @@ const App: React.FC = () => {
               {sectionsExpanded.parsedDocuments && (
                 <>
                   {savedParsedCurriculums.length > 0 ? (
-                    <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                    <div className="space-y-3">
                       {savedParsedCurriculums.map((saved, index) => (
                     <div
                       key={saved.id}
                       onClick={() => handleLoadSavedCurriculum(saved)}
-                      className={`stagger-item group relative w-full text-left p-4 rounded-xl border-2 cursor-pointer card-interactive glass border-purple-200 bg-white/90 hover:border-purple-400 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 shadow-sm hover:shadow-lg`}
+                      className={`stagger-item group relative w-full text-left p-5 rounded-xl border-2 cursor-pointer card-interactive glass border-purple-200 bg-white/90 hover:border-purple-400 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 shadow-sm hover:shadow-lg`}
                     >
-                      <p className="text-xs font-bold line-clamp-1 pr-6 text-slate-800">{saved.name}</p>
-                      <p className="text-[10px] text-slate-600 mt-1">
+                      <p className="text-sm font-bold line-clamp-1 pr-8 text-slate-800">{saved.name}</p>
+                      <p className="text-xs text-slate-600 mt-2">
                         {saved.nodes.length} nodes • {saved.sourceType === 'file' && saved.fileName ? saved.fileName : 'Text'}
                       </p>
                       <button 
@@ -784,32 +784,30 @@ const App: React.FC = () => {
                           e.stopPropagation();
                           handleDeleteSavedCurriculum(e, saved.id);
                         }}
-                        className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-red-500 transition-opacity"
+                        className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-red-500 transition-opacity rounded-lg hover:bg-red-50"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                       </button>
                       </div>
                     ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-slate-500 italic py-2">No saved documents yet. Upload or paste content to get started.</p>
+                    <p className="text-sm text-slate-500 italic py-3">No saved documents yet. Upload or paste content to get started.</p>
                   )}
                 </>
               )}
             </section>
-          </div>
-        )}
+          )}
 
-        <div className="flex-1 p-6 space-y-8 overflow-y-auto custom-scrollbar">
           {/* Intake Section */}
-          <section className="space-y-5">
+          <section className="space-y-6 border-b-2 border-purple-200/60 pb-6">
             <div>
               <button
                 onClick={() => setSectionsExpanded({...sectionsExpanded, createMaterials: !sectionsExpanded.createMaterials})}
-                className="w-full flex items-center justify-between text-xs font-bold text-slate-500 uppercase mb-4 hover:text-slate-600 transition-colors group"
+                className="w-full flex items-center justify-between text-sm font-bold text-slate-500 uppercase mb-5 hover:text-slate-600 transition-colors group py-2"
               >
                 <span className="flex items-center space-x-2">
-                  <svg className="w-4 h-4 transition-transform" style={{ transform: sectionsExpanded.createMaterials ? 'rotate(90deg)' : 'rotate(0deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 transition-transform" style={{ transform: sectionsExpanded.createMaterials ? 'rotate(90deg)' : 'rotate(0deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                   </svg>
                   <span>Create Materials</span>
@@ -821,9 +819,9 @@ const App: React.FC = () => {
               {/* Create from Scratch Button */}
               <button
                 onClick={() => setShowWizard(true)}
-                className="w-full mb-4 p-4 bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 hover:from-pink-600 hover:via-purple-700 hover:to-blue-700 text-white rounded-xl font-bold btn-modern shadow-lg hover:shadow-2xl hover-glow flex items-center justify-center space-x-2 animate-scale-in"
+                className="w-full mb-5 p-5 bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 hover:from-pink-600 hover:via-purple-700 hover:to-blue-700 text-white rounded-xl text-base font-bold btn-modern shadow-lg hover:shadow-2xl hover-glow flex items-center justify-center space-x-3 animate-scale-in"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                 </svg>
                 <span>Create from Scratch</span>
@@ -840,46 +838,46 @@ const App: React.FC = () => {
             
             {/* Parsing Context Section */}
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-3">Parsing Context (Optional)</label>
-              <div className="space-y-2 mb-4">
+              <label className="block text-sm font-bold text-slate-500 uppercase mb-4">Parsing Context (Optional)</label>
+              <div className="space-y-4 mb-5">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Grade Level</label>
+                  <label className="text-xs font-bold text-slate-400 uppercase">Grade Level</label>
                   <select 
                     value={parseConfig.gradeLevel}
                     onChange={(e) => setParseConfig({...parseConfig, gradeLevel: e.target.value as GradeLevel})}
-                    className="w-full mt-1 p-2.5 text-sm glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
+                    className="w-full mt-2 p-3 text-base glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
                   >
                     {Object.values(GradeLevel).map(grade => <option key={grade} value={grade}>{grade}</option>)}
                   </select>
-                  <p className="text-[9px] text-slate-400 mt-0.5">Helps AI parse content appropriately for grade level</p>
+                  <p className="text-xs text-slate-400 mt-1.5">Helps AI parse content appropriately for grade level</p>
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Standards Framework</label>
+                  <label className="text-xs font-bold text-slate-400 uppercase">Standards Framework</label>
                   <select 
                     value={parseConfig.standardsFramework}
                     onChange={(e) => setParseConfig({...parseConfig, standardsFramework: e.target.value as StandardsFramework})}
-                    className="w-full mt-1 p-2.5 text-sm glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
+                    className="w-full mt-2 p-3 text-base glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
                   >
                     {Object.values(StandardsFramework).map(framework => <option key={framework} value={framework}>{framework}</option>)}
                   </select>
-                  <p className="text-[9px] text-slate-400 mt-0.5">Helps AI align parsed content with standards</p>
+                  <p className="text-xs text-slate-400 mt-1.5">Helps AI align parsed content with standards</p>
                 </div>
               </div>
             </div>
             
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-3">AI Curriculum Parser</label>
+              <label className="block text-sm font-bold text-slate-500 uppercase mb-4">AI Curriculum Parser</label>
               <div 
                 onClick={() => fileInputRef.current?.click()}
-                className="group card-interactive glass border-2 border-dashed border-purple-200 rounded-xl p-6 text-center cursor-pointer hover:border-purple-400 hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50 transition-all animate-fade-in"
+                className="group card-interactive glass border-2 border-dashed border-purple-200 rounded-xl p-8 text-center cursor-pointer hover:border-purple-400 hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50 transition-all animate-fade-in"
               >
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 group-hover:from-purple-200 group-hover:to-pink-200 rounded-full flex items-center justify-center mx-auto mb-3 transition-all animate-float">
-                  <svg className="w-6 h-6 text-purple-600 group-hover:text-purple-700 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 group-hover:from-purple-200 group-hover:to-pink-200 rounded-full flex items-center justify-center mx-auto mb-4 transition-all animate-float">
+                  <svg className="w-8 h-8 text-purple-600 group-hover:text-purple-700 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                   </svg>
                 </div>
-                <p className="text-sm font-bold text-slate-800 group-hover:text-purple-700 transition-colors">Upload Syllabus (PDF/JPG)</p>
-                <p className="text-[10px] text-slate-500 mt-1">Gemini 3 Pro multimodal parsing</p>
+                <p className="text-base font-bold text-slate-800 group-hover:text-purple-700 transition-colors">Upload Syllabus (PDF/JPG)</p>
+                <p className="text-xs text-slate-500 mt-2">Gemini 3 Pro multimodal parsing</p>
                 <input 
                   type="file" 
                   ref={fileInputRef} 
@@ -904,12 +902,12 @@ const App: React.FC = () => {
                 value={rawCurriculum}
                 onChange={(e) => setRawCurriculum(e.target.value)}
                 placeholder="Paste syllabus text here..."
-                className="w-full h-32 p-4 text-sm glass border-2 border-purple-100 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-300 transition-all outline-none resize-none hover:border-purple-200"
+                className="w-full h-40 p-5 text-base glass border-2 border-purple-100 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-300 transition-all outline-none resize-none hover:border-purple-200"
               />
               <button 
                 onClick={handleAnalyze}
                 disabled={isAnalyzing || !rawCurriculum.trim()}
-                className="w-full mt-2 bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-900 hover:to-black text-white py-3 px-4 rounded-xl text-sm font-bold btn-modern shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full mt-3 bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-900 hover:to-black text-white py-4 px-5 rounded-xl text-base font-bold btn-modern shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isAnalyzing ? (
                   <span className="flex items-center justify-center space-x-2">
@@ -929,32 +927,32 @@ const App: React.FC = () => {
 
           {/* Nodes Tree */}
           {nodes.length > 0 && (
-            <section className="space-y-4">
+            <section className="space-y-5">
               <button
                 onClick={() => setSectionsExpanded({...sectionsExpanded, nodes: !sectionsExpanded.nodes})}
-                className="w-full flex items-center justify-between text-xs font-bold text-slate-500 uppercase mb-3 hover:text-slate-600 transition-colors group"
+                className="w-full flex items-center justify-between text-sm font-bold text-slate-500 uppercase mb-4 hover:text-slate-600 transition-colors group py-2"
               >
                 <span className="flex items-center space-x-2">
-                  <svg className="w-4 h-4 transition-transform" style={{ transform: sectionsExpanded.nodes ? 'rotate(90deg)' : 'rotate(0deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 transition-transform" style={{ transform: sectionsExpanded.nodes ? 'rotate(90deg)' : 'rotate(0deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                   </svg>
                   <span>Instructional Nodes ({nodes.length})</span>
                 </span>
               </button>
               {sectionsExpanded.nodes && (
-              <div className="space-y-2 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-3">
                   {nodes.map((node, index) => (
                   <button
                     key={node.id}
                     onClick={() => setSelectedNode(node)}
-                    className={`stagger-item w-full text-left p-3 rounded-xl border-2 transition-all card-interactive ${
+                    className={`stagger-item w-full text-left p-4 rounded-xl border-2 transition-all card-interactive ${
                       selectedNode?.id === node.id 
                       ? 'border-purple-500 bg-gradient-to-r from-purple-50 to-pink-50 text-purple-900 shadow-lg' 
                       : 'border-slate-200 bg-white hover:border-purple-300 hover:bg-purple-50/50 hover:shadow-md'
                     }`}
                   >
-                    <p className="text-xs font-bold line-clamp-1">{node.title}</p>
-                    <p className="text-[10px] text-slate-500 mt-1 line-clamp-1">{node.description}</p>
+                    <p className="text-sm font-bold line-clamp-1">{node.title}</p>
+                    <p className="text-xs text-slate-500 mt-2 line-clamp-1">{node.description}</p>
                   </button>
                 ))}
               </div>
@@ -964,119 +962,119 @@ const App: React.FC = () => {
 
           {/* Configuration Section */}
           {selectedNode && (
-            <section className="space-y-5 animate-in fade-in slide-in-from-bottom-4">
+            <section className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
               <button
                 onClick={() => setSectionsExpanded({...sectionsExpanded, generationSettings: !sectionsExpanded.generationSettings})}
-                className="w-full flex items-center justify-between text-xs font-bold text-slate-500 uppercase mb-1 hover:text-slate-600 transition-colors group"
+                className="w-full flex items-center justify-between text-sm font-bold text-slate-500 uppercase mb-4 hover:text-slate-600 transition-colors group py-2"
               >
                 <span className="flex items-center space-x-2">
-                  <svg className="w-4 h-4 transition-transform" style={{ transform: sectionsExpanded.generationSettings ? 'rotate(90deg)' : 'rotate(0deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 transition-transform" style={{ transform: sectionsExpanded.generationSettings ? 'rotate(90deg)' : 'rotate(0deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                   </svg>
                   <span>Generation Settings</span>
                 </span>
               </button>
               {sectionsExpanded.generationSettings && (
-              <div className="space-y-5">
+              <div className="space-y-6">
               
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Output Type</label>
+                  <label className="text-xs font-bold text-slate-400 uppercase">Output Type</label>
                   <select 
                     value={genConfig.outputType}
                     onChange={(e) => setGenConfig({...genConfig, outputType: e.target.value as OutputType})}
-                    className="w-full mt-1 p-2.5 text-sm glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
+                    className="w-full mt-2 p-3 text-base glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
                   >
                     {Object.values(OutputType).map(val => <option key={val} value={val}>{val}</option>)}
                   </select>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Learning Level</label>
+                  <label className="text-xs font-bold text-slate-400 uppercase">Learning Level</label>
                   <select 
                     value={genConfig.bloomLevel}
                     onChange={(e) => setGenConfig({...genConfig, bloomLevel: e.target.value as BloomLevel})}
-                    className="w-full mt-1 p-2.5 text-sm glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
+                    className="w-full mt-2 p-3 text-base glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
                   >
                     {Object.values(BloomLevel).map(val => <option key={val} value={val}>{val}</option>)}
                   </select>
-                  <p className="text-[9px] text-slate-500 mt-1 italic">
+                  <p className="text-xs text-slate-500 mt-2 italic">
                     Select based on how complex you want the questions and tasks to be
                   </p>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Differentiation</label>
+                  <label className="text-xs font-bold text-slate-400 uppercase">Differentiation</label>
                   <select 
                     value={genConfig.differentiation}
                     onChange={(e) => setGenConfig({...genConfig, differentiation: e.target.value as Differentiation})}
-                    className="w-full mt-1 p-2.5 text-sm glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
+                    className="w-full mt-2 p-3 text-base glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
                   >
                     {Object.values(Differentiation).map(val => <option key={val} value={val}>{val}</option>)}
                   </select>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Visual Aesthetic</label>
+                  <label className="text-xs font-bold text-slate-400 uppercase">Visual Aesthetic</label>
                   <select 
                     value={genConfig.aesthetic}
                     onChange={(e) => setGenConfig({...genConfig, aesthetic: e.target.value as AestheticStyle})}
-                    className="w-full mt-1 p-2.5 text-sm glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
+                    className="w-full mt-2 p-3 text-base glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
                   >
                     {Object.values(AestheticStyle).map(val => <option key={val} value={val}>{val}</option>)}
                   </select>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Number of Pages (1-10)</label>
+                  <label className="text-xs font-bold text-slate-400 uppercase">Number of Pages (1-10)</label>
                   <input 
                     type="number"
                     min="1"
                     max="10"
                     value={genConfig.pageCount}
                     onChange={(e) => setGenConfig({...genConfig, pageCount: Math.max(1, Math.min(10, parseInt(e.target.value) || 1))})}
-                    className="w-full mt-1 p-2.5 text-sm glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
+                    className="w-full mt-2 p-3 text-base glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">AI Provider</label>
+                  <label className="text-xs font-bold text-slate-400 uppercase">AI Provider</label>
                   <select 
                     value={genConfig.provider}
                     onChange={(e) => setGenConfig({...genConfig, provider: e.target.value as AIProvider})}
-                    className="w-full mt-1 p-2.5 text-sm glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
+                    className="w-full mt-2 p-3 text-base glass border-2 border-purple-100 rounded-xl hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
                   >
                     {getAvailableProviders().map(provider => (
                       <option key={provider} value={provider}>{provider}</option>
                     ))}
                   </select>
-                  <p className="text-[9px] text-slate-500 mt-1 italic">
+                  <p className="text-xs text-slate-500 mt-2 italic">
                     Auto-fallback to other providers if selected one fails
                   </p>
                 </div>
 
-                <div className="pt-2 border-t border-purple-200">
-                  <label className="text-[10px] font-bold text-purple-600 uppercase mb-2 flex items-center space-x-1">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="pt-4 border-t border-purple-200">
+                  <label className="text-xs font-bold text-purple-600 uppercase mb-3 flex items-center space-x-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     <span>Visual Elements</span>
                   </label>
-                  <div className="space-y-2">
-                    <label className="flex items-center space-x-2 cursor-pointer">
+                  <div className="space-y-3">
+                    <label className="flex items-center space-x-3 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={genConfig.includeVisuals}
                         onChange={(e) => setGenConfig({...genConfig, includeVisuals: e.target.checked})}
-                        className="w-4 h-4 text-purple-600 border-purple-300 rounded focus:ring-purple-500"
+                        className="w-5 h-5 text-purple-600 border-purple-300 rounded focus:ring-purple-500"
                       />
-                      <span className="text-xs text-slate-700">Include visuals in materials</span>
+                      <span className="text-sm text-slate-700">Include visuals in materials</span>
                     </label>
                     {genConfig.includeVisuals && (
                       <select
                         value={genConfig.visualType}
                         onChange={(e) => setGenConfig({...genConfig, visualType: e.target.value as 'doodles' | 'diagrams' | 'both'})}
-                        className="w-full p-2 text-xs bg-white border border-purple-200 rounded-lg text-slate-700"
+                        className="w-full p-3 text-base bg-white border-2 border-purple-200 rounded-lg text-slate-700"
                       >
                         <option value="doodles">Fun Doodles (playful, light)</option>
                         <option value="diagrams">Educational Diagrams (informative)</option>
@@ -1086,33 +1084,33 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-pink-200">
-                  <label className="text-[10px] font-bold text-pink-600 uppercase mb-2 flex items-center space-x-1">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="pt-4 border-t border-pink-200">
+                  <label className="text-xs font-bold text-pink-600 uppercase mb-3 flex items-center space-x-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     <span>Inspiration (Optional)</span>
                   </label>
-                  <div className="space-y-2">
-                    <label className="flex items-center space-x-2 cursor-pointer">
+                  <div className="space-y-3">
+                    <label className="flex items-center space-x-3 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={inspirationConfig.enabled}
                         onChange={(e) => setInspirationConfig({...inspirationConfig, enabled: e.target.checked})}
-                        className="w-4 h-4 text-pink-600 border-pink-300 rounded focus:ring-pink-500"
+                        className="w-5 h-5 text-pink-600 border-pink-300 rounded focus:ring-pink-500"
                       />
-                      <span className="text-xs text-slate-700">Copy layout/design from inspiration</span>
+                      <span className="text-sm text-slate-700">Copy layout/design from inspiration</span>
                     </label>
                     {inspirationConfig.enabled && (
                       <>
                         <div
                           onClick={() => inspirationFileRef.current?.click()}
-                          className="border-2 border-dashed border-pink-300 rounded-lg p-3 text-center cursor-pointer hover:border-pink-500 hover:bg-pink-50/50 transition-all"
+                          className="border-2 border-dashed border-pink-300 rounded-lg p-4 text-center cursor-pointer hover:border-pink-500 hover:bg-pink-50/50 transition-all"
                         >
-                          <p className="text-xs font-bold text-pink-700">
+                          <p className="text-sm font-bold text-pink-700">
                             {inspirationConfig.file ? inspirationConfig.file.name : 'Upload PDF/Photo'}
                           </p>
-                          <p className="text-[10px] text-pink-500 mt-1">Click to upload inspiration</p>
+                          <p className="text-xs text-pink-500 mt-2">Click to upload inspiration</p>
                         </div>
                         <input
                           type="file"
@@ -1124,24 +1122,24 @@ const App: React.FC = () => {
                           accept="application/pdf,image/*"
                           className="hidden"
                         />
-                        <div className="space-y-1.5 pt-1">
-                          <label className="flex items-center space-x-2 cursor-pointer">
+                        <div className="space-y-2 pt-2">
+                          <label className="flex items-center space-x-3 cursor-pointer">
                             <input
                               type="checkbox"
                               checked={inspirationConfig.copyLayout}
                               onChange={(e) => setInspirationConfig({...inspirationConfig, copyLayout: e.target.checked})}
-                              className="w-3.5 h-3.5 text-pink-600 border-pink-300 rounded focus:ring-pink-500"
+                              className="w-4 h-4 text-pink-600 border-pink-300 rounded focus:ring-pink-500"
                             />
-                            <span className="text-[10px] text-slate-600">Copy Layout</span>
+                            <span className="text-sm text-slate-600">Copy Layout</span>
                           </label>
-                          <label className="flex items-center space-x-2 cursor-pointer">
+                          <label className="flex items-center space-x-3 cursor-pointer">
                             <input
                               type="checkbox"
                               checked={inspirationConfig.copyDesign}
                               onChange={(e) => setInspirationConfig({...inspirationConfig, copyDesign: e.target.checked})}
-                              className="w-3.5 h-3.5 text-pink-600 border-pink-300 rounded focus:ring-pink-500"
+                              className="w-4 h-4 text-pink-600 border-pink-300 rounded focus:ring-pink-500"
                             />
-                            <span className="text-[10px] text-slate-600">Copy Design</span>
+                            <span className="text-sm text-slate-600">Copy Design</span>
                           </label>
                         </div>
                       </>
@@ -1153,7 +1151,7 @@ const App: React.FC = () => {
               <button 
                 onClick={handleGenerate}
                 disabled={isGenerating}
-                className="w-full bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 hover:from-pink-600 hover:via-purple-700 hover:to-blue-700 text-white py-4 px-4 rounded-xl text-sm font-bold btn-modern shadow-lg hover:shadow-2xl hover-glow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                className="w-full bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 hover:from-pink-600 hover:via-purple-700 hover:to-blue-700 text-white py-5 px-5 rounded-xl text-base font-bold btn-modern shadow-lg hover:shadow-2xl hover-glow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3"
               >
                 {isGenerating ? (
                   <>
@@ -1171,36 +1169,37 @@ const App: React.FC = () => {
               )}
             </section>
           )}
-        </div>
 
-        {/* Institutional Branding Portal */}
-        <div className="p-6 glass border-t-2 border-purple-200/60 space-y-4">
-          <label className="block text-xs font-bold text-purple-700 uppercase">Institutional Branding</label>
-          <div className="space-y-3">
-            <input 
-              type="text" 
-              placeholder="Institution Name (Optional)"
-              value={branding.institution}
-              onChange={(e) => setBranding({...branding, institution: e.target.value})}
-              className="w-full p-2.5 text-xs border-2 border-purple-100 rounded-xl bg-white/80 hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
+          {/* Institutional Branding Portal */}
+          <section className="border-t-2 border-purple-200/60 pt-6 space-y-5">
+            <label className="block text-sm font-bold text-purple-700 uppercase">Institutional Branding</label>
+            <div className="space-y-4">
+              <input 
+                type="text" 
+                placeholder="Institution Name (Optional)"
+                value={branding.institution}
+                onChange={(e) => setBranding({...branding, institution: e.target.value})}
+                className="w-full p-4 text-base border-2 border-purple-100 rounded-xl bg-white/80 hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
+              />
+              <input 
+                type="text" 
+                placeholder="Instructor Name (Optional)"
+                value={branding.instructor}
+                onChange={(e) => setBranding({...branding, instructor: e.target.value})}
+                className="w-full p-4 text-base border-2 border-purple-100 rounded-xl bg-white/80 hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
+              />
+            </div>
+          </section>
+
+          {/* AI Chatbot Assistant */}
+          <section className="border-t-2 border-purple-200/60 pt-6">
+            <ChatBot 
+              selectedNode={selectedNode}
+              genConfig={genConfig}
+              parseConfig={parseConfig}
             />
-            <input 
-              type="text" 
-              placeholder="Instructor Name (Optional)"
-              value={branding.instructor}
-              onChange={(e) => setBranding({...branding, instructor: e.target.value})}
-              className="w-full p-2.5 text-xs border-2 border-purple-100 rounded-xl bg-white/80 hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
-            />
+          </section>
           </div>
-        </div>
-
-        {/* AI Chatbot Assistant */}
-        <div className="p-6 border-t-2 border-purple-200/60">
-          <ChatBot 
-            selectedNode={selectedNode}
-            genConfig={genConfig}
-            parseConfig={parseConfig}
-          />
         </div>
       </aside>
 

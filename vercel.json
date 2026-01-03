@@ -1,0 +1,8 @@
+{
+  "functions": {
+    "api/gamma/enhance.ts": {
+      "runtime": "nodejs20.x"
+    }
+  }
+}
+
