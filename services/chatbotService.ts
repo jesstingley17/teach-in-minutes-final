@@ -34,7 +34,7 @@ export const getChatbotResponse = async (
   const ai = new GoogleGenAI({ apiKey });
 
   // Build context string
-  let contextString = "You are a helpful educational assistant for the 'Hidden Minutes' educational materials generator. Your role is to help teachers understand how to best configure settings and make choices about generating educational materials.\n\n";
+  let contextString = "You are a helpful educational assistant for the 'ReclaimEdU' educational materials generator. Your role is to help teachers understand how to best configure settings and make choices about generating educational materials.\n\n";
   
   if (context.selectedNode) {
     contextString += `Current Topic: ${context.selectedNode.title}\n`;

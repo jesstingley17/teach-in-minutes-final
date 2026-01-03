@@ -480,7 +480,7 @@ const App: React.FC = () => {
   const handlePrint = () => {
     if (!activeSuite) return;
     const originalTitle = document.title;
-    document.title = `${activeSuite.title}_TeachInMinutes`;
+    document.title = `${activeSuite.title}_ReclaimEdU`;
     window.print();
     document.title = originalTitle;
   };
@@ -516,7 +516,7 @@ const App: React.FC = () => {
             {apiKeySelected === null ? 'Loading...' : 'API Authentication Required'}
           </h1>
           <p className="text-slate-600 mb-8">
-            Teach in Minutes utilizes Gemini 3 Pro for advanced content generation. 
+            ReclaimEdU utilizes Gemini 3 Pro for advanced content generation. 
             You must configure your Gemini API key in the environment variables.
           </p>
           {apiKeySelected === false && (
@@ -545,10 +545,33 @@ const App: React.FC = () => {
         <div className="p-6 border-b-2 border-purple-200/60">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl rainbow-gradient flex items-center justify-center text-white font-black text-lg shadow-lg" style={{
-                background: 'linear-gradient(135deg, #ff6b9d 0%, #a855f7 25%, #3b82f6 50%, #06b6d4 75%, #10b981 100%)'
-              }}>
-                ⏰
+              {/* Logo Image */}
+              <div className="flex-shrink-0 relative">
+                <img 
+                  src="/assets/logo.png?v=1" 
+                  alt="ReclaimEdU Logo" 
+                  className="h-14 w-auto object-contain max-w-[200px]"
+                  onError={(e) => {
+                    // Fallback to emoji if image doesn't load
+                    console.error('Logo image failed to load, using fallback');
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const fallback = document.getElementById('logo-fallback');
+                    if (fallback) fallback.style.display = 'flex';
+                  }}
+                  onLoad={() => {
+                    console.log('Logo image loaded successfully');
+                  }}
+                />
+                <div 
+                  id="logo-fallback"
+                  className="w-10 h-10 rounded-xl rainbow-gradient flex items-center justify-center text-white font-black text-lg shadow-lg hidden" 
+                  style={{
+                    background: 'linear-gradient(135deg, #ff6b9d 0%, #a855f7 25%, #3b82f6 50%, #06b6d4 75%, #10b981 100%)'
+                  }}
+                >
+                  ⏰
+                </div>
               </div>
               <div>
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 bg-clip-text text-transparent" style={{
@@ -557,7 +580,7 @@ const App: React.FC = () => {
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent'
                 }}>
-                  Hidden Minutes
+                  ReclaimEdU
                 </h1>
                 <p className="text-[10px] text-slate-500 font-medium">Educational Materials Generator</p>
               </div>
