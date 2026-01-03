@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { InstructionalSuite, AestheticStyle, Differentiation, DocumentSection, Page } from '../types';
+import { enhanceDesignWithGamma } from '../services/gammaService';
 import { StandardsService } from '../services/standardsService';
 import { renderMarkdown, decodeHtmlEntities } from '../utils/markdownRenderer';
 
@@ -15,6 +16,7 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [showTeacherKey, setShowTeacherKey] = useState(false);
   const [colorMode, setColorMode] = useState<'default' | 'colorful' | 'pastel'>('default');
+  const [isEnhancingWithGamma, setIsEnhancingWithGamma] = useState(false);
   const editInputRef = useRef<HTMLTextAreaElement>(null);
 
   // Convert sections to pages if not already paginated
@@ -23,19 +25,32 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
     const sectionsPerPage = Math.ceil(suite.sections.length / pageCount);
     const pages: Page[] = [];
     
+    console.log(`Editor: Creating ${pageCount} pages from ${suite.sections.length} sections (${sectionsPerPage} per page)`);
+    
     for (let i = 0; i < pageCount; i++) {
       const startIdx = i * sectionsPerPage;
       const endIdx = Math.min(startIdx + sectionsPerPage, suite.sections.length);
+      const pageSections = suite.sections.slice(startIdx, endIdx);
+      
+      console.log(`  Page ${i + 1}: sections ${startIdx} to ${endIdx - 1} (${pageSections.length} sections)`);
+      
       pages.push({
         id: `page-${i + 1}`,
         pageNumber: i + 1,
-        sections: suite.sections.slice(startIdx, endIdx).map((s, idx) => ({
+        sections: pageSections.map((s, idx) => ({
           ...s,
           pageNumber: i + 1,
           order: startIdx + idx
         }))
       });
     }
+    
+    // Verify all sections are included
+    const totalSectionsInPages = pages.reduce((sum, p) => sum + p.sections.length, 0);
+    if (totalSectionsInPages !== suite.sections.length) {
+      console.warn(`⚠️ Section count mismatch: ${totalSectionsInPages} in pages vs ${suite.sections.length} total sections`);
+    }
+    
     return pages;
   })();
 
@@ -358,6 +373,61 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
               <span>Teacher Key</span>
+            </button>
+          )}
+          {/* Gamma Enhancement Button */}
+          {import.meta.env.GAMMA_API_KEY && (
+            <button
+              onClick={async () => {
+                setIsEnhancingWithGamma(true);
+                try {
+                  // Convert suite content to text for Gamma
+                  const content = suite.sections
+                    .map(s => {
+                      let sectionText = `${s.title}\n${s.content}`;
+                      if (s.options && s.options.length > 0) {
+                        sectionText += `\nOptions: ${s.options.join(', ')}`;
+                      }
+                      return sectionText;
+                    })
+                    .join('\n\n');
+                  
+                  const result = await enhanceDesignWithGamma(
+                    content,
+                    suite.title,
+                    'presentation',
+                    {
+                      tone: 'educational',
+                      audience: 'students',
+                      amount: 'standard',
+                      imageSource: 'aiGenerated'
+                    }
+                  );
+                  
+                  if (result.url) {
+                    window.open(result.url, '_blank');
+                    alert('Gamma enhancement created! Opening in new tab...');
+                  } else {
+                    alert('Gamma enhancement started. Check your Gamma dashboard for the result.');
+                  }
+                } catch (error: any) {
+                  console.error('Gamma enhancement error:', error);
+                  alert(`Gamma enhancement failed: ${error.message || 'Unknown error'}. Make sure GAMMA_API_KEY is configured.`);
+                } finally {
+                  setIsEnhancingWithGamma(false);
+                }
+              }}
+              disabled={isEnhancingWithGamma}
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors flex items-center space-x-2 ${
+                isEnhancingWithGamma
+                  ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                  : 'bg-purple-600 text-white hover:bg-purple-700'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+              </svg>
+              <span>{isEnhancingWithGamma ? 'Enhancing...' : 'Gamma Enhancement'}</span>
             </button>
           )}
         </div>

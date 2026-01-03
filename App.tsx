@@ -343,8 +343,8 @@ const App: React.FC = () => {
           genConfig.differentiation,
           genConfig.aesthetic,
           {
-            institution: branding.institution || '',
-            instructor: branding.instructor || ''
+            institution: branding?.institution || '',
+            instructor: branding?.instructor || ''
           },
           genConfig.pageCount,
           parseConfig.gradeLevel,
@@ -357,6 +357,9 @@ const App: React.FC = () => {
       // Add doodle to suite if it was generated
       if (doodleData && suite) {
         suite.doodleBase64 = doodleData;
+        console.log('Doodle added to suite:', !!doodleData);
+      } else {
+        console.warn('No doodle data generated. includeVisuals:', genConfig.includeVisuals, 'doodleData:', !!doodleData);
       }
       console.log('Suite generated successfully:', suite.title, suite.sections.length, 'sections');
       setActiveSuite(suite);

@@ -150,9 +150,28 @@ export const generateSuite = async (
   
   const ai = new GoogleGenAI({ apiKey });
 
-  // Increased sections per page to generate more comprehensive content
-  const sectionsPerPage = pageCount === 1 ? 12 : pageCount <= 3 ? 10 : 8;
+  // Calculate sections per page - ensure adequate content density
+  // For guided notes, we want more sections per page to ensure rich content
+  const sectionsPerPage = pageCount === 1 ? 12 
+    : pageCount <= 3 ? 10 
+    : pageCount <= 5 ? 9 
+    : pageCount <= 10 ? 10  // Increase for 6-10 pages to ensure good coverage
+    : 8; // For very long documents, slightly less per page
   const totalSections = pageCount * sectionsPerPage;
+  
+  // Scale content mix requirements based on total sections needed
+  const scaleFactor = Math.max(1, Math.ceil(totalSections / 25)); // Base is ~25 sections
+  const instructionalSections = Math.max(3, Math.ceil(4 * scaleFactor));
+  const guidedPracticeSections = Math.max(3, Math.ceil(4 * scaleFactor));
+  const diagramSections = Math.max(2, Math.ceil(2 * scaleFactor));
+  const multipleChoiceSections = Math.max(2, Math.ceil(3 * scaleFactor));
+  const shortAnswerSections = Math.max(3, Math.ceil(4 * scaleFactor));
+  const matchingSections = Math.max(1, Math.ceil(2 * scaleFactor));
+  const independentPracticeSections = Math.max(2, Math.ceil(3 * scaleFactor));
+  
+  // Log the section requirements for debugging
+  console.log(`Generating ${pageCount} pages: ${totalSections} total sections (${sectionsPerPage} per page)`);
+  console.log(`Content mix: ${instructionalSections} instructional, ${guidedPracticeSections} guided practice, ${diagramSections} diagrams, ${multipleChoiceSections} multiple choice, ${shortAnswerSections} short answer, ${matchingSections} matching, ${independentPracticeSections} independent practice`);
   
   let standardsText = '';
   if (standards && standards.length > 0) {
@@ -305,18 +324,20 @@ export const generateSuite = async (
   
   The output should be high-fidelity, pedagogically sound, professionally designed, and ready for immediate classroom use. Generate SUBSTANTIAL, COMPREHENSIVE content that fully utilizes all ${pageCount} page${pageCount > 1 ? 's' : ''}.
   
-  ⚠️ CRITICAL: You MUST generate AT LEAST ${totalSections} sections. This is a MINIMUM requirement. You are STRONGLY encouraged to generate MORE sections if needed to create a complete, comprehensive learning experience. Each section must be substantial, meaningful, professionally crafted, and contain full, complete content (not brief summaries).
+  ⚠️ CRITICAL: You MUST generate EXACTLY ${totalSections} sections (${sectionsPerPage} sections per page × ${pageCount} pages). This is NOT optional - you MUST reach this exact count. Each section must be substantial, meaningful, professionally crafted, and contain full, complete content (not brief summaries).
   
-  CONTENT MIX (Professional Distribution - MINIMUM sections, generate MORE if needed):
-  - Instructional content with worked examples (3-4 sections MINIMUM) - Include 2-3 complete worked examples with full explanations
-  - Guided practice with sentence frames/scaffolding (3-4 sections MINIMUM) - Provide multiple practice opportunities
-  - Diagram/visualization with explicit teacher directions (2 sections MINIMUM) - Multiple visual learning opportunities
-  - Multiple choice questions (2-3 sections MINIMUM) - Use thoughtfully, focus on conceptual understanding
-  - Short answer with think-aloud prompts (3-4 sections MINIMUM) - Encourage deep thinking
-  - Matching exercises (1-2 sections MINIMUM) - MUST include complete options array with multiple items
-  - Independent practice problems (2-3 sections MINIMUM) - Substantial practice opportunities
-  - Challenge extension (1 section, clearly marked) - Optional enrichment for advanced learners
-  - Remediation option (1 section, clearly marked) - Extra support for struggling learners
+  CONTENT MIX (Scaled for ${pageCount} pages - MUST total ${totalSections} sections):
+  - Instructional content with worked examples: ${instructionalSections} sections MINIMUM - Include multiple complete worked examples with full explanations. For ${pageCount} pages, distribute these across all pages.
+  - Guided practice with sentence frames/scaffolding: ${guidedPracticeSections} sections MINIMUM - Provide extensive practice opportunities distributed across pages
+  - Diagram/visualization with explicit teacher directions: ${diagramSections} sections MINIMUM (type: 'diagram_placeholder') - ⚠️ REQUIRED: You MUST create exactly ${diagramSections} sections with type 'diagram_placeholder'. These are visual learning opportunities where students draw diagrams. Spread across pages.
+  - Multiple choice questions: ${multipleChoiceSections} sections MINIMUM - Use thoughtfully, focus on conceptual understanding, distribute across pages
+  - Short answer with think-aloud prompts: ${shortAnswerSections} sections MINIMUM - Encourage deep thinking, spread across all pages
+  - Matching exercises: ${matchingSections} sections MINIMUM - MUST include complete options array with multiple items, distribute across pages
+  - Independent practice problems: ${independentPracticeSections} sections MINIMUM - Substantial practice opportunities on every page
+  - Challenge extension: ${Math.ceil(scaleFactor)} section(s), clearly marked - Optional enrichment for advanced learners
+  - Remediation option: ${Math.ceil(scaleFactor)} section(s), clearly marked - Extra support for struggling learners
+  
+  REMEMBER: The total MUST equal ${totalSections} sections. If the minimums above don't add up to ${totalSections}, you MUST add more sections of any type to reach the exact count. Distribute content evenly across all ${pageCount} pages.
   
   Each section must contain COMPLETE, SUBSTANTIAL content. Do not create brief or minimal sections. Think of this as a comprehensive learning resource that students will work through thoroughly.
   
@@ -348,6 +369,7 @@ export const generateSuite = async (
      - 'content' must contain COMPLETE, clear instructions for what students should draw
      - Instructions must be full sentences with proper endings
      - Example: "Draw a circle divided into 8 equal slices. Shade 4 of them to represent 4/8." (NOT: "Draw a circle divided into 8 equal slices. Shade 4")
+     - CRITICAL: You MUST include diagram_placeholder sections as specified in the content mix. These are REQUIRED, not optional.
   
   4. TEXT FORMATTING: Use plain text only. NO HTML entities (no &gt;, &lt;, &amp;, etc.). Use proper characters instead (use → not &gt;, use < not &lt;, etc.)
   
@@ -459,12 +481,12 @@ export const generateSuite = async (
     // Rubric will be added later if needed, but doesn't block suite return
     generateRubric(suite, node, bloomLevel, gradeLevel, standards)
       .then(rubric => {
-        suite.rubric = rubric;
+      suite.rubric = rubric;
         console.log('Rubric generated and added to suite');
       })
       .catch(error => {
         console.warn('Failed to generate rubric (non-blocking):', error);
-        // Continue without rubric if generation fails
+      // Continue without rubric if generation fails
       });
     
     return suite;
@@ -615,26 +637,48 @@ export const generateDoodle = async (node: CurriculumNode, aesthetic: AestheticS
   const ai = new GoogleGenAI({ apiKey });
   
   try {
+    console.log('Generating doodle for:', node.title);
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
-      contents: {
-        parts: [
-          { text: `Create a single, clean, minimalistic black and white line-art doodle or icon representing: ${node.title}. The background must be pure white. No shading, just outlines. Suitable for a professional academic worksheet.` }
-        ]
-      },
+      model: 'gemini-2.0-flash-exp', // Use available model
+      contents: [
+        { text: `Create a single, clean, minimalistic black and white line-art doodle or icon representing: ${node.title}. The background must be pure white. No shading, just outlines. Suitable for a professional academic worksheet.` }
+      ],
       config: {
-        imageConfig: { aspectRatio: "1:1" }
+        responseMimeType: "image/png"
       }
     });
-
-    for (const part of response.candidates[0].content.parts) {
-      if (part.inlineData) {
-        return `data:image/png;base64,${part.inlineData.data}`;
+    
+    console.log('Doodle generation response received');
+    
+    // Check for image data in response
+    if (response.candidates && response.candidates[0] && response.candidates[0].content) {
+      for (const part of response.candidates[0].content.parts) {
+        if (part.inlineData && part.inlineData.data) {
+          console.log('Doodle generated successfully');
+          return `data:image/png;base64,${part.inlineData.data}`;
+        }
       }
     }
+    
+    // Alternative: check if response.text contains base64 image data
+    if (response.text) {
+      // Try to extract base64 image from response
+      const base64Match = response.text.match(/data:image\/[^;]+;base64,([A-Za-z0-9+/=]+)/);
+      if (base64Match) {
+        console.log('Doodle extracted from text response');
+        return base64Match[0];
+      }
+    }
+    
+    console.warn('No image data found in doodle response');
     return '';
   } catch (error: any) {
-    console.error('Doodle generation failed:', error.message);
+    console.error('Doodle generation failed:', error);
+    console.error('Error details:', {
+      message: error.message,
+      status: error.status,
+      details: error.details
+    });
     // Non-critical, just return empty string
     return '';
   }

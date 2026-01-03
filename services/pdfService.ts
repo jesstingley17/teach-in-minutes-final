@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import { InstructionalSuite, Page, DocumentSection, Differentiation } from '../types';
+import { InstructionalSuite, Page, DocumentSection, Differentiation, AestheticStyle } from '../types';
 
 /**
  * Decode HTML entities and clean text for PDF export
@@ -46,6 +46,23 @@ const cleanTextForPDF = (text: string): string => {
 
 export class PDFService {
   /**
+   * Get PDF font based on aesthetic style
+   * jsPDF has limited fonts, so we map to closest available
+   */
+  private static getPDFFont(style: AestheticStyle): 'helvetica' | 'times' | 'courier' {
+    switch (style) {
+      case AestheticStyle.ACADEMIC:
+        return 'times'; // Serif font, closest to Playfair Display
+      case AestheticStyle.CLASSIC:
+      case AestheticStyle.CREATIVE:
+        return 'courier'; // Monospace, closest we can get to handwriting style
+      case AestheticStyle.MODERN:
+      default:
+        return 'helvetica'; // Sans-serif, closest to Inter
+    }
+  }
+
+  /**
    * Export instructional suite to high-quality PDF
    */
   static async exportToPDF(suite: InstructionalSuite): Promise<void> {
@@ -61,9 +78,19 @@ export class PDFService {
     const margin = 20;
     const contentWidth = pageWidth - (margin * 2);
     let yPosition = margin;
+    
+    // Get font based on aesthetic style
+    const pdfFont = this.getPDFFont(suite.aesthetic);
+    console.log(`PDF Export: Using font '${pdfFont}' for aesthetic '${suite.aesthetic}'`);
 
-    // Determine pages to render
-    const pages = suite.pages || this.sectionsToPages(suite.sections);
+    // Determine pages to render - use proper pagination
+    const pages = suite.pages || this.sectionsToPages(suite.sections, suite.pageCount);
+    
+    // Log for debugging
+    console.log(`PDF Export: Rendering ${pages.length} pages with ${suite.sections.length} total sections`);
+    pages.forEach((page, idx) => {
+      console.log(`  Page ${idx + 1}: ${page.sections.length} sections`);
+    });
     
     pages.forEach((page, pageIndex) => {
       if (pageIndex > 0) {
@@ -93,13 +120,27 @@ export class PDFService {
     pdf.save(`${suite.title.replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.pdf`);
   }
 
-  private static sectionsToPages(sections: DocumentSection[]): Page[] {
-    // Simple conversion: all sections on one page for backward compatibility
-    return [{
-      id: 'page-1',
-      pageNumber: 1,
-      sections: sections.map((s, i) => ({ ...s, pageNumber: 1, order: i }))
-    }];
+  private static sectionsToPages(sections: DocumentSection[], pageCount?: number): Page[] {
+    // Use proper pagination matching the editor logic
+    const totalPages = pageCount || 1;
+    const sectionsPerPage = Math.ceil(sections.length / totalPages);
+    const pages: Page[] = [];
+    
+    for (let i = 0; i < totalPages; i++) {
+      const startIdx = i * sectionsPerPage;
+      const endIdx = Math.min(startIdx + sectionsPerPage, sections.length);
+      pages.push({
+        id: `page-${i + 1}`,
+        pageNumber: i + 1,
+        sections: sections.slice(startIdx, endIdx).map((s, idx) => ({
+          ...s,
+          pageNumber: i + 1,
+          order: startIdx + idx
+        }))
+      });
+    }
+    
+    return pages;
   }
 
   private static renderHeader(
@@ -110,25 +151,26 @@ export class PDFService {
     width: number
   ): number {
     let y = yPos;
+    const pdfFont = this.getPDFFont(suite.aesthetic);
 
     // Institution name
     if (suite.institutionName) {
       pdf.setFontSize(18);
-      pdf.setFont('helvetica', 'bold');
+      pdf.setFont(pdfFont, 'bold');
       pdf.text(suite.institutionName.toUpperCase(), margin, y);
       y += 8;
     }
 
     // Title
     pdf.setFontSize(16);
-    pdf.setFont('helvetica', 'bold');
+    pdf.setFont(pdfFont, 'bold');
     const titleLines = pdf.splitTextToSize(suite.title, width);
     pdf.text(titleLines, margin, y);
     y += titleLines.length * 6 + 5;
 
     // Metadata line
     pdf.setFontSize(10);
-    pdf.setFont('helvetica', 'normal');
+    pdf.setFont(pdfFont, 'normal');
     const metaText = `Name: _________________ Date: _________________ Instructor: ${suite.instructorName || '______________'}`;
     pdf.text(metaText, margin, y);
     y += 8;
@@ -151,10 +193,11 @@ export class PDFService {
     pageHeight: number
   ): number {
     let y = yPos;
+    const pdfFont = this.getPDFFont(suite.aesthetic);
 
     // Section title
     pdf.setFontSize(12);
-    pdf.setFont('helvetica', 'bold');
+    pdf.setFont(pdfFont, 'bold');
     const cleanTitle = cleanTextForPDF(section.title);
     const titleLines = pdf.splitTextToSize(cleanTitle, width - 20);
     pdf.text(titleLines, margin + 15, y);
@@ -162,7 +205,7 @@ export class PDFService {
 
     // Section content based on type
     pdf.setFontSize(10);
-    pdf.setFont('helvetica', 'normal');
+    pdf.setFont(pdfFont, 'normal');
 
     switch (section.type) {
       case 'text':
@@ -214,7 +257,7 @@ export class PDFService {
         break;
 
       case 'instruction':
-        pdf.setFont('helvetica', 'italic');
+        pdf.setFont(pdfFont, 'italic');
         const cleanInstr = cleanTextForPDF(section.content);
         const instrLines = pdf.splitTextToSize(cleanInstr, width - 20);
         pdf.text(instrLines, margin + 15, y);
@@ -223,11 +266,11 @@ export class PDFService {
           pdf.addPage();
           y = margin + 15;
         }
-        pdf.setFont('helvetica', 'normal');
+        pdf.setFont(pdfFont, 'normal');
         break;
 
       case 'diagram_placeholder':
-        pdf.setFont('helvetica', 'italic');
+        pdf.setFont(pdfFont, 'italic');
         pdf.setFontSize(9);
         const cleanDiagram = cleanTextForPDF(section.content);
         pdf.text(cleanDiagram, margin + 15, y);
@@ -235,7 +278,7 @@ export class PDFService {
         pdf.setLineWidth(0.5);
         pdf.rect(margin + 15, y, width - 30, 80);
         y += 85;
-        pdf.setFont('helvetica', 'normal');
+        pdf.setFont(pdfFont, 'normal');
         pdf.setFontSize(10);
         break;
 
@@ -247,10 +290,10 @@ export class PDFService {
         
         // Instructions
         pdf.setFontSize(9);
-        pdf.setFont('helvetica', 'italic');
+        pdf.setFont(pdfFont, 'italic');
         pdf.text('Write the letter of the correct match in each blank box.', margin + 15, y);
         y += 8;
-        pdf.setFont('helvetica', 'normal');
+        pdf.setFont(pdfFont, 'normal');
         pdf.setFontSize(10);
         
         const items = section.content.split('\n').filter(l => l.trim());
@@ -282,10 +325,10 @@ export class PDFService {
         if (options.length > items.length) {
           y += 5;
           pdf.setFontSize(9);
-          pdf.setFont('helvetica', 'bold');
+          pdf.setFont(pdfFont, 'bold');
           pdf.text('Word Bank:', margin + 15, y);
           y += 6;
-          pdf.setFont('helvetica', 'normal');
+          pdf.setFont(pdfFont, 'normal');
           options.forEach((opt, i) => {
             const cleanOpt = cleanTextForPDF(opt);
             const optLines = pdf.splitTextToSize(`${String.fromCharCode(97 + i)}. ${cleanOpt}`, width - 30);
@@ -296,6 +339,16 @@ export class PDFService {
         }
         
         y += 5;
+        break;
+
+      default:
+        // Fallback for any unknown section types - render as text
+        console.warn(`Unknown section type: ${section.type}, rendering as text`);
+        pdf.setFont(pdfFont, 'normal');
+        const cleanDefault = cleanTextForPDF(section.content || section.title || '');
+        const defaultLines = pdf.splitTextToSize(cleanDefault, width - 20);
+        pdf.text(defaultLines, margin + 15, y);
+        y += defaultLines.length * 5.5 + 5;
         break;
     }
 
@@ -311,9 +364,10 @@ export class PDFService {
     pageHeight: number
   ): void {
     const y = pageHeight - 15;
+    const pdfFont = this.getPDFFont(suite.aesthetic);
     
     pdf.setFontSize(8);
-    pdf.setFont('helvetica', 'normal');
+    pdf.setFont(pdfFont, 'normal');
     
     const leftText = `© ${suite.institutionName || 'Educational Material'}`;
     pdf.text(leftText, margin, y);
