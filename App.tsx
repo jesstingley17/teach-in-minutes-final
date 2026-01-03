@@ -15,7 +15,7 @@ import SuitePreview from './components/SuitePreview';
 const STORAGE_KEY = 'blueprint_pro_drafts_v1';
 
 const App: React.FC = () => {
-  const [apiKeySelected, setApiKeySelected] = useState(false);
+  const [apiKeySelected, setApiKeySelected] = useState<boolean | null>(null);
   const [rawCurriculum, setRawCurriculum] = useState('');
   const [nodes, setNodes] = useState<CurriculumNode[]>([]);
   const [selectedNode, setSelectedNode] = useState<CurriculumNode | null>(null);
@@ -204,20 +204,26 @@ const App: React.FC = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold mb-4">API Authentication Required</h1>
+          <h1 className="text-2xl font-bold mb-4">
+            {apiKeySelected === null ? 'Loading...' : 'API Authentication Required'}
+          </h1>
           <p className="text-slate-600 mb-8">
             Blueprint Pro utilizes Gemini 3 Pro for advanced pedagogical reasoning. 
             You must select an API key from a billing-enabled Google Cloud project.
           </p>
-          <button 
-            onClick={handleOpenSelectKey}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-xl active:scale-95"
-          >
-            Select API Key
-          </button>
-          <p className="mt-4 text-xs text-slate-400">
-            Learn more at <a href="https://ai.google.dev/gemini-api/docs/billing" className="underline">ai.google.dev/gemini-api/docs/billing</a>
-          </p>
+          {apiKeySelected === false && (
+            <>
+              <button 
+                onClick={handleOpenSelectKey}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-xl active:scale-95"
+              >
+                Select API Key
+              </button>
+              <p className="mt-4 text-xs text-slate-400">
+                Learn more at <a href="https://ai.google.dev/gemini-api/docs/billing" className="underline">ai.google.dev/gemini-api/docs/billing</a>
+              </p>
+            </>
+          )}
         </div>
       </div>
     );
