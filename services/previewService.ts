@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { CurriculumNode, OutputType, BloomLevel, Differentiation, AestheticStyle } from '../types';
+import { QUICK_PREVIEW, buildPrompt } from './promptTemplates';
 
 /**
  * Preview Service - Fast preview generation using cheaper OpenAI models
@@ -33,24 +34,15 @@ export const generateQuickPreview = async (
 }> => {
   const client = getOpenAIClient();
   
-  const prompt = `Generate a quick preview for a ${outputType} on: "${node.title}"
-
-Context:
-- Learning Objectives: ${node.learningObjectives.join(', ')}
-- Bloom Level: ${bloomLevel}
-- Differentiation: ${differentiation}
-
-Provide a JSON object with:
-{
-  "title": "Worksheet title",
-  "overview": "Brief overview (2-3 sentences)",
-  "estimatedSections": number,
-  "sampleSections": [
-    {"type": "warmup|practice|assessment", "title": "Section title", "preview": "Brief preview of content"}
-  ]
-}
-
-Return ONLY valid JSON.`;
+  // Use improved prompt template
+  const { system, user } = buildPrompt(
+    QUICK_PREVIEW.system,
+    QUICK_PREVIEW.user({
+      grade: 'General', // Could extract from node if available
+      topic: node.title,
+      pageCount: 1
+    })
+  );
 
   try {
     const response = await client.chat.completions.create({
@@ -58,15 +50,15 @@ Return ONLY valid JSON.`;
       messages: [
         {
           role: 'system',
-          content: 'You are an educational content preview generator. Return ONLY valid JSON, no commentary.'
+          content: system
         },
         {
           role: 'user',
-          content: prompt
+          content: user
         }
       ],
       response_format: { type: 'json_object' },
-      temperature: 0.4,
+      temperature: QUICK_PREVIEW.temperature,
       max_tokens: 1000
     });
 

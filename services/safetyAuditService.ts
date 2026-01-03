@@ -58,13 +58,12 @@ ${s.options ? `Options: ${s.options.join(', ')}` : ''}
 `).join('\n')}
 `.trim();
 
-  const systemPrompt = `You are a safety & pedagogy auditor. Evaluate content for: accuracy, safety (no harmful/offensive content), bias, age-appropriateness for the target grade, and pedagogical clarity. Return JSON: {issues:[{type,severity,reason}], recommendations:[{change,explanation}], safe:true|false}.`;
-
-  const userPrompt = `Audit the following teacher-facing educational content. Target grade: ${gradeLevel || 'Unknown'}.
-
-${contentText}
-
-Return only valid JSON with the audit results.`;
+  // Use improved prompt template from AI_PROMPTS.md
+  const { system: systemPrompt, user: userPrompt } = buildPrompt(
+    SAFETY_AUDIT.system,
+    SAFETY_AUDIT.user(contentText, gradeLevel || 'Unknown'),
+    SAFETY_AUDIT.fewShot
+  );
 
   try {
     const message = await client.messages.create({

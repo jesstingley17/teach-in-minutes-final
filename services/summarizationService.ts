@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { CurriculumNode } from '../types';
+import { DOCUMENT_SUMMARIZATION, buildPrompt } from './promptTemplates';
 
 /**
  * Summarization Service using Claude
@@ -40,11 +41,11 @@ export const condenseCurriculum = async (
 ): Promise<SummarizationResult> => {
   const client = getClaudeClient();
   
-  const systemPrompt = `You are a precise summarizer. Condense the input document into N teaching-ready sections. Output JSON using schema: {sections:[{title,summary(<=60 words),keyPoints:[],activities:[]}],metadata:{originalLengthWords,condensedLengthWords}}. Return only valid JSON. Be conservative: do not invent facts; if something isn't present, say it is 'not stated' in the summary fields.`;
-
-  const userPrompt = `Summarize this curriculum into ${numSections} sections: Learning Goal, Key Concepts, Activities (3), Assessment Ideas (2), Differentiation (2). Ensure each summary is ≤60 words.
-
-Text: ${text.substring(0, 100000)}`; // Claude can handle long context
+  // Use improved prompt template
+  const { system: systemPrompt, user: userPrompt } = buildPrompt(
+    DOCUMENT_SUMMARIZATION.system,
+    DOCUMENT_SUMMARIZATION.user(text, numSections)
+  );
 
   try {
     const message = await client.messages.create({
