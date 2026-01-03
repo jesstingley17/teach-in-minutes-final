@@ -10,12 +10,16 @@ import {
 } from './types';
 import { analyzeCurriculum, analyzeDocument, generateSuite, generateDoodle } from './services/geminiService';
 import { SupabaseService } from './services/supabaseService';
+import { useAuth } from './contexts/AuthContext';
 import SuitePreview from './components/SuitePreview';
+import AuthModal from './components/AuthModal';
 
 const STORAGE_KEY = 'blueprint_pro_drafts_v1';
 const USE_SUPABASE = !!(import.meta.env.SUPABASE_URL && import.meta.env.SUPABASE_ANON_KEY);
 
 const App: React.FC = () => {
+  const { user, signOut } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [apiKeySelected, setApiKeySelected] = useState<boolean | null>(null);
   const [rawCurriculum, setRawCurriculum] = useState('');
   const [nodes, setNodes] = useState<CurriculumNode[]>([]);
@@ -288,11 +292,50 @@ const App: React.FC = () => {
       {/* Sidebar: Curriculum Intake & Control */}
       <aside className="w-full md:w-80 lg:w-96 bg-white border-r border-slate-200 flex flex-col h-screen no-print overflow-y-auto shrink-0 custom-scrollbar">
         <div className="p-6 border-b border-slate-100">
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black">B</div>
-            <h1 className="text-xl font-black tracking-tight text-slate-900">BLUEPRINT PRO</h1>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black">B</div>
+              <h1 className="text-xl font-black tracking-tight text-slate-900">BLUEPRINT PRO</h1>
+            </div>
           </div>
           <p className="text-xs text-slate-400 font-medium uppercase tracking-widest">Pedagogical Architect Engine</p>
+          
+          {/* User Profile Section */}
+          {USE_SUPABASE && (
+            <div className="mt-4 p-3 bg-slate-50 rounded-xl">
+              {user ? (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-slate-900 truncate">{user.email}</p>
+                      <p className="text-[10px] text-slate-500">Signed In</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={signOut}
+                    className="text-xs text-slate-400 hover:text-slate-600 font-medium"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="w-full flex items-center justify-center space-x-2 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                  </svg>
+                  <span>Sign In / Sign Up</span>
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex-1 p-6 space-y-8">
@@ -565,6 +608,9 @@ const App: React.FC = () => {
         </div>
 
       </main>
+
+      {/* Auth Modal */}
+      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
     </div>
   );
 };
