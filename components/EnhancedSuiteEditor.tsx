@@ -3,6 +3,7 @@ import { InstructionalSuite, AestheticStyle, Differentiation, DocumentSection, P
 import { enhanceDesignWithGamma } from '../services/gammaService';
 import { StandardsService } from '../services/standardsService';
 import { renderMarkdown, decodeHtmlEntities } from '../utils/markdownRenderer';
+import { generateAnswers } from '../services/geminiService';
 
 interface EnhancedSuiteEditorProps {
   suite: InstructionalSuite;
@@ -17,6 +18,7 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
   const [showTeacherKey, setShowTeacherKey] = useState(false);
   const [colorMode, setColorMode] = useState<'default' | 'colorful' | 'pastel'>('default');
   const [isEnhancingWithGamma, setIsEnhancingWithGamma] = useState(false);
+  const [isGeneratingAnswers, setIsGeneratingAnswers] = useState(false);
   const editInputRef = useRef<HTMLTextAreaElement>(null);
 
   // Convert sections to pages if not already paginated
@@ -360,19 +362,51 @@ const EnhancedSuiteEditor: React.FC<EnhancedSuiteEditorProps> = ({ suite, onEdit
             </select>
           </div>
           {/* Teacher Key Toggle */}
-          {(suite.standards || suite.rubric || suite.sections.some(s => s.correctAnswer !== undefined)) && (
+          {(suite.standards || suite.rubric || suite.sections.some(s => s.type === 'question' || s.type === 'matching')) && (
             <button
-              onClick={() => setShowTeacherKey(!showTeacherKey)}
+              onClick={async () => {
+                if (!showTeacherKey) {
+                  // When enabling teacher key, generate answers if needed
+                  const questionsNeedingAnswers = suite.sections.filter(s => 
+                    (s.type === 'question' || s.type === 'matching') && 
+                    s.correctAnswer === undefined
+                  );
+                  
+                  if (questionsNeedingAnswers.length > 0) {
+                    setIsGeneratingAnswers(true);
+                    try {
+                      const updatedSections = await generateAnswers(
+                        suite.sections,
+                        suite.title,
+                        undefined, // gradeLevel not stored in suite
+                        suite.bloomLevel
+                      );
+                      onUpdateSuite({ ...suite, sections: updatedSections });
+                      setShowTeacherKey(true);
+                    } catch (error: any) {
+                      console.error('Error generating answers:', error);
+                      alert(`Failed to generate answers: ${error.message || 'Unknown error'}`);
+                    } finally {
+                      setIsGeneratingAnswers(false);
+                    }
+                  } else {
+                    setShowTeacherKey(true);
+                  }
+                } else {
+                  setShowTeacherKey(false);
+                }
+              }}
+              disabled={isGeneratingAnswers}
               className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors flex items-center space-x-2 ${
                 showTeacherKey 
                   ? 'bg-blue-600 text-white hover:bg-blue-700' 
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
+              } ${isGeneratingAnswers ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
-              <span>Teacher Key</span>
+              <span>{isGeneratingAnswers ? 'Generating Answers...' : 'Teacher Key'}</span>
             </button>
           )}
           {/* Gamma Enhancement Button */}

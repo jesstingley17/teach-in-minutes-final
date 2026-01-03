@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
-import { BloomLevel, Differentiation, OutputType, AestheticStyle, InstructionalSuite, CurriculumNode, GradeLevel, EducationalStandard, Rubric, StandardsFramework } from "../types";
+import { BloomLevel, Differentiation, OutputType, AestheticStyle, InstructionalSuite, CurriculumNode, GradeLevel, EducationalStandard, Rubric, StandardsFramework, DocumentSection } from "../types";
 import { parseJSON } from "../utils/jsonValidator";
 
 // Note: API_KEY is handled externally via import.meta.env
@@ -517,6 +517,101 @@ export const generateSuite = async (
     }
     
     throw new Error(errorMessage);
+  }
+};
+
+/**
+ * Generate answers for questions that don't have correctAnswer set
+ */
+export const generateAnswers = async (
+  sections: DocumentSection[],
+  topic: string,
+  gradeLevel?: GradeLevel,
+  bloomLevel?: BloomLevel
+): Promise<DocumentSection[]> => {
+  const apiKey = import.meta.env.GEMINI_API_KEY;
+  
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY is not configured. Please check your environment variables.');
+  }
+  
+  const ai = new GoogleGenAI({ apiKey });
+  
+  // Filter sections that need answers
+  const questionsNeedingAnswers = sections.filter(s => 
+    (s.type === 'question' || s.type === 'matching') && 
+    s.correctAnswer === undefined
+  );
+  
+  if (questionsNeedingAnswers.length === 0) {
+    return sections; // No answers needed
+  }
+  
+  try {
+    const prompt = `You are an expert teacher creating answer keys. Generate correct answers for the following questions from an educational material about "${topic}".
+
+${gradeLevel ? `Grade Level: ${gradeLevel}` : ''}
+${bloomLevel ? `Bloom's Taxonomy Level: ${bloomLevel}` : ''}
+
+For each question, provide the correct answer in the appropriate format:
+- Multiple choice questions: Return the INDEX (0, 1, 2, etc.) of the correct option
+- Short answer questions: Return the answer as a STRING
+- Matching exercises: Return an ARRAY of indices like [0, 1, 2] mapping each item to its matching option
+
+Return a JSON object where each key is the section ID and the value is the correct answer.
+
+Questions:
+${questionsNeedingAnswers.map((s, idx) => {
+  let questionText = `${idx + 1}. [ID: ${s.id}] ${s.title}\n${s.content}`;
+  if (s.options && s.options.length > 0) {
+    questionText += `\nOptions:\n${s.options.map((opt, i) => `  ${String.fromCharCode(65 + i)}. ${opt}`).join('\n')}`;
+  }
+  if (s.type === 'matching' && s.content) {
+    questionText += `\nItems to match:\n${s.content.split('\n').filter(l => l.trim()).map((l, i) => `  ${i + 1}. ${l.trim()}`).join('\n')}`;
+    if (s.options) {
+      questionText += `\nWord Bank:\n${s.options.map((opt, i) => `  ${String.fromCharCode(65 + i)}. ${opt}`).join('\n')}`;
+    }
+  }
+  return questionText;
+}).join('\n\n')}
+
+Return ONLY a JSON object in this format:
+{
+  "section-id-1": <answer>,
+  "section-id-2": <answer>,
+  ...
+}`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.0-flash-exp',
+      contents: [{ text: prompt }],
+      config: {
+        responseMimeType: "application/json"
+      }
+    });
+
+    const responseText = response.response.text();
+    const answers = parseJSON(responseText);
+
+    if (!answers || typeof answers !== 'object') {
+      throw new Error('Invalid response format from AI');
+    }
+
+    // Update sections with generated answers
+    const updatedSections = sections.map(section => {
+      if (section.correctAnswer === undefined && answers[section.id] !== undefined) {
+        return {
+          ...section,
+          correctAnswer: answers[section.id]
+        };
+      }
+      return section;
+    });
+
+    return updatedSections;
+  } catch (error: any) {
+    console.error('Error generating answers:', error);
+    throw new Error(`Failed to generate answers: ${error.message || 'Unknown error'}`);
   }
 };
 
