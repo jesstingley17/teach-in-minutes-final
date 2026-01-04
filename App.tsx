@@ -362,7 +362,7 @@ const App: React.FC = () => {
       const [doodleData, suite] = await Promise.all([
         genConfig.includeVisuals && (genConfig.visualType === 'doodles' || genConfig.visualType === 'both')
           ? (async () => {
-              setGenerationStatus('Generating content and visual elements...');
+              console.log('Generating doodle for:', selectedNode.title);
               return generateDoodle(selectedNode, genConfig.aesthetic).catch(err => {
                 console.warn('Doodle generation failed, continuing without it:', err);
                 return undefined;
@@ -390,9 +390,9 @@ const App: React.FC = () => {
       // Add doodle to suite if it was generated
       if (doodleData && suite) {
         suite.doodleBase64 = doodleData;
-        console.log('Doodle added to suite:', !!doodleData);
-      } else {
-        console.warn('No doodle data generated. includeVisuals:', genConfig.includeVisuals, 'doodleData:', !!doodleData);
+        console.log('✓ Doodle added to suite successfully');
+      } else if (genConfig.includeVisuals && (genConfig.visualType === 'doodles' || genConfig.visualType === 'both')) {
+        console.warn('✗ Doodle generation was requested but failed. includeVisuals:', genConfig.includeVisuals, 'visualType:', genConfig.visualType, 'doodleData:', !!doodleData);
       }
       
       // Generate diagrams if visual type includes diagrams
@@ -403,14 +403,26 @@ const App: React.FC = () => {
           const sectionsWithDiagrams = await generateDiagrams(suite.sections, suite.title);
           suite.sections = sectionsWithDiagrams;
           const diagramCount = sectionsWithDiagrams.filter(s => s.imageBase64).length;
-          console.log(`Diagrams generated: ${diagramCount} sections now have images`);
+          const diagramPlaceholderCount = suite.sections.filter(s => s.type === 'diagram_placeholder').length;
+          console.log(`✓ Diagrams generated: ${diagramCount} of ${diagramPlaceholderCount} diagram sections now have images`);
+          if (diagramCount === 0 && diagramPlaceholderCount > 0) {
+            console.warn(`✗ Failed to generate diagrams for ${diagramPlaceholderCount} placeholders. Check API connectivity and service availability.`);
+          }
         } catch (error) {
-          console.warn('Diagram generation failed, continuing without diagrams:', error);
+          console.warn('✗ Diagram generation failed, continuing without diagrams:', error);
         }
       }
       
       setGenerationStatus('Finalizing materials...');
       console.log('Suite generated successfully:', suite.title, suite.sections.length, 'sections');
+      
+      // Log teacher key status
+      if (suite.teacherKey && suite.teacherKey.length > 0) {
+        console.log(`✓ Teacher key generated with ${suite.teacherKey.length} answers`);
+      } else {
+        console.warn('✗ Warning: No teacher key generated. This may indicate questions are missing correctAnswer fields.');
+      }
+      
       setActiveSuite(suite);
     } catch (error: any) {
       console.error('Generation error:', error);
