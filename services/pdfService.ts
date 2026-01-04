@@ -271,12 +271,12 @@ export class PDFService {
         <p style="font-size: 9pt; color: #15803d; font-weight: bold; margin: 0 0 5px 0;">CORRECT ANSWER:</p>
         <div style="font-size: 10pt; color: #111;">`;
         
-        if (section?.type === 'question' && section?.options && typeof entry.answer === 'number') {
+        if (section?.type === 'question' && section?.options && typeof entry.answer === 'number' && entry.answer < section.options.length) {
           html += `<strong>${String.fromCharCode(65 + entry.answer)}. ${section.options[entry.answer]}</strong>`;
         } else if (section?.type === 'matching' && Array.isArray(entry.answer)) {
           const items = section.content.split('\n').filter(l => l.trim());
           entry.answer.forEach((answerIdx, i) => {
-            if (typeof answerIdx === 'number' && section.options?.[answerIdx]) {
+            if (i < items.length && typeof answerIdx === 'number' && section.options && answerIdx < section.options.length) {
               html += `<div style="font-size: 9pt; margin-bottom: 3px;"><strong>${items[i]}</strong> → ${String.fromCharCode(65 + answerIdx)}. ${section.options[answerIdx]}</div>`;
             }
           });
@@ -588,7 +588,7 @@ export class PDFService {
         pdf.setFont(pdfFont, 'normal');
         
         // Format answer based on type
-        if (section?.type === 'question' && section?.options && typeof entry.answer === 'number') {
+        if (section?.type === 'question' && section?.options && typeof entry.answer === 'number' && entry.answer < section.options.length) {
           const answerText = `${String.fromCharCode(65 + entry.answer)}. ${section.options[entry.answer]}`;
           const answerLines = pdf.splitTextToSize(answerText, contentWidth - 25);
           pdf.text(answerLines, margin + 15, yPosition);
@@ -596,7 +596,7 @@ export class PDFService {
         } else if (section?.type === 'matching' && Array.isArray(entry.answer)) {
           const items = section.content.split('\n').filter(l => l.trim());
           entry.answer.forEach((answerIdx, i) => {
-            if (typeof answerIdx === 'number' && section.options?.[answerIdx]) {
+            if (i < items.length && typeof answerIdx === 'number' && section.options && answerIdx < section.options.length) {
               const matchText = `${items[i]} → ${String.fromCharCode(65 + answerIdx)}. ${section.options[answerIdx]}`;
               const matchLines = pdf.splitTextToSize(matchText, contentWidth - 25);
               pdf.text(matchLines, margin + 15, yPosition);

@@ -235,8 +235,8 @@ const SuitePreview: React.FC<SuitePreviewProps> = ({ suite, onEditSection }) => 
                                 // Multiple choice - show the option
                                 <div>
                                   <span className="font-bold">
-                                    {typeof entry.answer === 'number' 
-                                      ? `${String.fromCharCode(65 + entry.answer)}. ${section.options[entry.answer as number]}`
+                                    {typeof entry.answer === 'number' && entry.answer < section.options.length
+                                      ? `${String.fromCharCode(65 + entry.answer)}. ${section.options[entry.answer]}`
                                       : entry.answer}
                                   </span>
                                 </div>
@@ -246,12 +246,13 @@ const SuitePreview: React.FC<SuitePreviewProps> = ({ suite, onEditSection }) => 
                                   {Array.isArray(entry.answer) ? (
                                     entry.answer.map((answerIdx, i) => {
                                       const items = section.content.split('\n').filter(l => l.trim());
+                                      if (i >= items.length) return null;
                                       return (
                                         <div key={i} className="text-xs">
                                           <span className="font-semibold">{items[i]}</span> → 
                                           <span className="ml-1">
-                                            {typeof answerIdx === 'number' && section.options?.[answerIdx] 
-                                              ? `${String.fromCharCode(65 + answerIdx)}. ${section.options[answerIdx]}`
+                                            {typeof answerIdx === 'number' && answerIdx < (section.options?.length || 0)
+                                              ? `${String.fromCharCode(65 + answerIdx)}. ${section.options![answerIdx]}`
                                               : answerIdx}
                                           </span>
                                         </div>
