@@ -1,6 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { EducationalStandard, StandardsFramework, GradeLevel, CurriculumNode } from "../../src/types";
-import { parseJSON } from "../utils/jsonValidator";
+import { parseJSON } from "../../utils/jsonValidator";
 
 export class StandardsService {
   /**

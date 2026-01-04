@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import { InstructionalSuite, Page, DocumentSection, Differentiation, AestheticStyle } from '../types';
-import { createPDFFromHTML, compressPDF, AdobePDFOptions, isAdobeConfigured, getAdobeConfigStatus } from './adobeService';
+import { createPDFFromHTML, compressPDF, AdobePDFOptions, isAdobeConfigured, getAdobeConfigStatus } from './integrations/adobeService';
 
 /**
  * Decode HTML entities and clean text for PDF export
