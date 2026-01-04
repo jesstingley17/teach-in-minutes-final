@@ -591,7 +591,13 @@ Return ONLY a JSON object in this format:
     });
 
     const responseText = response.response.text();
-    const answers = parseJSON(responseText);
+    const parseResult = parseJSON(responseText);
+
+    if (!parseResult.valid || !parseResult.data) {
+      throw new Error(`Invalid response format from AI: ${parseResult.error || 'Failed to parse JSON'}`);
+    }
+
+    const answers = parseResult.data;
 
     if (!answers || typeof answers !== 'object') {
       throw new Error('Invalid response format from AI');

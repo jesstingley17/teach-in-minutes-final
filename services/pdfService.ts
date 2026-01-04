@@ -152,10 +152,23 @@ export class PDFService {
       font-weight: bold;
       margin-bottom: 10px;
     }
+    .doodle-image {
+      max-width: 150px;
+      max-height: 150px;
+      float: right;
+      margin: 0 0 10px 10px;
+    }
     .diagram-box {
       border: 2px dashed #ccc;
       min-height: 200px;
       margin: 10px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .diagram-image {
+      max-width: 100%;
+      max-height: 300px;
     }
     .footer {
       position: fixed;
@@ -178,6 +191,7 @@ export class PDFService {
       <div class="title">${suite.title}</div>
       <div>Name: _________________ Date: _________________ Instructor: ${suite.instructorName || '______________'}</div>
     </div>
+    ${pageIndex === 0 && suite.doodleBase64 ? `<img src="data:image/png;base64,${suite.doodleBase64}" class="doodle-image" alt="Doodle" />` : ''}
 `;
 
       page.sections.forEach(section => {
@@ -200,7 +214,13 @@ export class PDFService {
             }
             break;
           case 'diagram_placeholder':
-            html += `<p><em>${section.content}</em></p><div class="diagram-box"></div>`;
+            html += `<p><em>${section.content}</em></p>`;
+            // Check if section has an image
+            if (section.imageBase64) {
+              html += `<div class="diagram-box"><img src="data:image/png;base64,${section.imageBase64}" class="diagram-image" alt="Diagram" /></div>`;
+            } else {
+              html += '<div class="diagram-box">[Diagram Placeholder]</div>';
+            }
             break;
           case 'matching':
             html += `<p>${section.content.replace(/\n/g, '<br>')}</p>`;
