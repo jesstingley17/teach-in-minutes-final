@@ -24,3 +24,7 @@ dist-ssr
 *.sw?
 teach-in-minutes-final/
 .env
+
+# Dockerfile for Zeabur (upload manually, don't commit)
+Dockerfile
+.dockerignore
