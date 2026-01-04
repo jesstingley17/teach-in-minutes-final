@@ -28,6 +28,49 @@ import ChatBot from './components/ChatBot';
 const STORAGE_KEY = 'blueprint_pro_drafts_v1';
 const USE_SUPABASE = !!(import.meta.env.SUPABASE_URL && import.meta.env.SUPABASE_ANON_KEY);
 
+/**
+ * Call the parse-document API endpoint
+ * Falls back to direct service call if API endpoint fails
+ */
+const parseDocumentViaAPI = async (
+  base64Data: string,
+  mimeType: string,
+  gradeLevel?: GradeLevel,
+  standardsFramework?: StandardsFramework
+): Promise<CurriculumNode[]> => {
+  try {
+    const apiUrl = '/api/parse-document';
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        base64Data,
+        mimeType,
+        gradeLevel,
+        standardsFramework
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(errorData.error || `API request failed with status ${response.status}`);
+    }
+
+    const result = await response.json();
+    if (result.success && result.nodes) {
+      return result.nodes;
+    } else {
+      throw new Error(result.error || 'Invalid response from API');
+    }
+  } catch (error: any) {
+    console.warn('API endpoint failed, falling back to direct service call:', error.message);
+    // Fallback to direct service call
+    return await analyzeDocument(base64Data, mimeType, gradeLevel, standardsFramework);
+  }
+};
+
 const App: React.FC = () => {
   const { user, signOut } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -246,7 +289,7 @@ const App: React.FC = () => {
         const mimeType = file.type;
         
         try {
-          const parsedNodes = await analyzeDocument(base64Data, mimeType, parseConfig.gradeLevel, parseConfig.standardsFramework);
+          const parsedNodes = await parseDocumentViaAPI(base64Data, mimeType, parseConfig.gradeLevel, parseConfig.standardsFramework);
           setNodes(parsedNodes);
           if (parsedNodes.length > 0) setSelectedNode(parsedNodes[0]);
           
