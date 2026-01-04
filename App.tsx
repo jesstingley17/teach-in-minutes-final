@@ -1126,15 +1126,22 @@ const App: React.FC = () => {
                       <span className="text-sm text-slate-700">Include visuals in materials</span>
                     </label>
                     {genConfig.includeVisuals && (
-                      <select
-                        value={genConfig.visualType}
-                        onChange={(e) => setGenConfig({...genConfig, visualType: e.target.value as 'doodles' | 'diagrams' | 'both'})}
-                        className="w-full p-3 text-base bg-white border-2 border-purple-200 rounded-lg text-slate-700"
-                      >
-                        <option value="doodles">Fun Doodles (playful, light)</option>
-                        <option value="diagrams">Educational Diagrams (informative)</option>
-                        <option value="both">Both (doodles + diagrams)</option>
-                      </select>
+                      <>
+                        <select
+                          value={genConfig.visualType}
+                          onChange={(e) => setGenConfig({...genConfig, visualType: e.target.value as 'doodles' | 'diagrams' | 'both'})}
+                          className="w-full p-3 text-base bg-white border-2 border-purple-200 rounded-lg text-slate-700"
+                        >
+                          <option value="doodles">🎨 Doodles - Decorative corner graphics</option>
+                          <option value="diagrams">📊 Diagrams - Student drawing spaces with instructions</option>
+                          <option value="both">✨ Both - Doodles + diagram drawing spaces</option>
+                        </select>
+                        <p className="text-xs text-slate-500 italic">
+                          {genConfig.visualType === 'doodles' && 'Adds a decorative doodle in the top corner of the worksheet'}
+                          {genConfig.visualType === 'diagrams' && 'Includes sections with instructions for students to draw diagrams'}
+                          {genConfig.visualType === 'both' && 'Combines decorative doodles with diagram drawing spaces'}
+                        </p>
+                      </>
                     )}
                   </div>
                 </div>

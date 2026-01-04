@@ -82,8 +82,17 @@
             .print-page:last-child {
                 page-break-after: auto;
             }
+            /* Teacher key always prints on new page and can be hidden */
             .teacher-key-section {
                 page-break-before: always;
+            }
+            /* Prevent orphaned section headers at page breaks */
+            h2, h3, .section-header {
+                page-break-after: avoid;
+            }
+            /* Keep section content together when possible */
+            .group {
+                page-break-inside: avoid;
             }
         }
 
