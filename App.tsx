@@ -13,6 +13,7 @@ import {
   EducationalStandard
 } from './types';
 import { analyzeCurriculum, analyzeDocument, generateSuite, getAvailableProviders, getDefaultProvider } from './services/aiService';
+import { parseDocument } from './services/documentParseService';
 import { generateDoodle, generateDiagrams } from './services/geminiService';
 import { SupabaseService } from './services/supabaseService';
 import { StandardsService } from './services/standardsService';
@@ -239,33 +240,31 @@ const App: React.FC = () => {
 
     setIsAnalyzing(true);
     try {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const result = e.target?.result as string;
-        const base64Data = result.split(',')[1];
-        const mimeType = file.type;
-        
+      // Parse document (extract text from PDF/DOCX/Image via serverless function)
+      const extractedText = await parseDocument(file);
+      
+      // Analyze the extracted text as curriculum
+      const parsedNodes = await analyzeCurriculum(extractedText, parseConfig.gradeLevel, parseConfig.standardsFramework);
+      
+      setNodes(parsedNodes);
+      if (parsedNodes.length > 0) setSelectedNode(parsedNodes[0]);
+      
+      // Save parsed curriculum if user is signed in
+      if (USE_SUPABASE && user && parsedNodes.length > 0) {
         try {
-          const parsedNodes = await analyzeDocument(base64Data, mimeType, parseConfig.gradeLevel, parseConfig.standardsFramework);
-          setNodes(parsedNodes);
-          if (parsedNodes.length > 0) setSelectedNode(parsedNodes[0]);
-          
-          // Save parsed curriculum if user is signed in
-          if (USE_SUPABASE && user && parsedNodes.length > 0) {
-            try {
-              const name = `Parsed: ${file.name} (${new Date().toLocaleDateString()})`;
-              console.log('Saving parsed curriculum:', name);
-              const saveResult = await SupabaseService.saveParsedCurriculum(
-                name,
-                parsedNodes,
-                'file',
-                undefined,
-                file.name,
-                mimeType
-              );
+          const name = `Parsed: ${file.name} (${new Date().toLocaleDateString()})`;
+          console.log('Saving parsed curriculum:', name);
+          const saveResult = await SupabaseService.saveParsedCurriculum(
+            name,
+            parsedNodes,
+            'file',
+            extractedText.substring(0, 500), // Store first 500 chars as reference
+            file.name,
+            file.type
+          );
               if (!saveResult.success) {
                 console.error('Failed to save parsed curriculum:', saveResult.error);
-                // Non-blocking warning - parsing succeeded but save failed
+            // Non-blocking warning - parsing succeeded but save failed
               } else {
                 console.log('Successfully saved parsed curriculum:', saveResult.id);
                 // Optimize: Add new item to state instead of reloading everything
@@ -285,18 +284,15 @@ const App: React.FC = () => {
           } else {
             console.log('Skipping save - USE_SUPABASE:', USE_SUPABASE, 'user:', !!user, 'nodes:', parsedNodes.length);
           }
-        } catch (error: any) {
+    } catch (error: any) {
           console.error(error);
-          alert(`Failed to parse document: ${error?.message || 'Please ensure the file is a valid PDF or image and try again.'}`);
+      alert(`Failed to parse document: ${error?.message || 'Please ensure the file is a valid PDF, DOCX, or image and try again.'}`);
         } finally {
           setIsAnalyzing(false);
-        }
-      };
-      reader.readAsDataURL(file);
-    } catch (error) {
-      console.error(error);
-      setIsAnalyzing(false);
-      alert('Error reading file.');
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -364,8 +360,8 @@ const App: React.FC = () => {
           ? (async () => {
               console.log('Generating doodle for:', selectedNode.title);
               return generateDoodle(selectedNode, genConfig.aesthetic).catch(err => {
-                console.warn('Doodle generation failed, continuing without it:', err);
-                return undefined;
+              console.warn('Doodle generation failed, continuing without it:', err);
+              return undefined;
               });
             })()
           : Promise.resolve(undefined),
@@ -686,8 +682,8 @@ const App: React.FC = () => {
                   }}
                 >
                   ⏰
-                </div>
-              </div>
+            </div>
+          </div>
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 bg-clip-text text-transparent" style={{
                   fontFamily: "'Dancing Script', cursive",
@@ -808,10 +804,10 @@ const App: React.FC = () => {
                 )}
               </>
             )}
-          </section>
+            </section>
 
-          {/* Saved Parsed Curriculums Section */}
-          {USE_SUPABASE && user && (
+        {/* Saved Parsed Curriculums Section */}
+        {USE_SUPABASE && user && (
             <section className="border-b-2 border-purple-200/60 pb-6">
               <button
                 onClick={() => setSectionsExpanded({...sectionsExpanded, parsedDocuments: !sectionsExpanded.parsedDocuments})}
@@ -856,7 +852,7 @@ const App: React.FC = () => {
                 </>
               )}
             </section>
-          )}
+        )}
 
           {/* Intake Section */}
           <section className="space-y-6 border-b-2 border-purple-200/60 pb-6">
@@ -935,13 +931,13 @@ const App: React.FC = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                   </svg>
                 </div>
-                <p className="text-base font-bold text-slate-800 group-hover:text-purple-700 transition-colors">Upload Syllabus (PDF/JPG)</p>
-                <p className="text-xs text-slate-500 mt-2">Gemini 3 Pro multimodal parsing</p>
+                <p className="text-base font-bold text-slate-800 group-hover:text-purple-700 transition-colors">Upload Syllabus (PDF/DOCX/Image)</p>
+                <p className="text-xs text-slate-500 mt-2">Automatic text extraction + AI analysis</p>
                 <input 
                   type="file" 
                   ref={fileInputRef} 
                   onChange={handleFileUpload}
-                  accept="application/pdf,image/*" 
+                  accept="application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*" 
                   className="hidden" 
                 />
               </div>
@@ -1229,36 +1225,36 @@ const App: React.FC = () => {
             </section>
           )}
 
-          {/* Institutional Branding Portal */}
+        {/* Institutional Branding Portal */}
           {!(userSettings?.hideBrandingSection) && (
             <section className="border-t-2 border-purple-200/60 pt-6 space-y-5">
               <label className="block text-sm font-bold text-purple-700 uppercase">Institutional Branding</label>
               <div className="space-y-4">
-                <input 
-                  type="text" 
-                  placeholder="Institution Name (Optional)"
-                  value={branding.institution}
-                  onChange={(e) => setBranding({...branding, institution: e.target.value})}
+            <input 
+              type="text" 
+              placeholder="Institution Name (Optional)"
+              value={branding.institution}
+              onChange={(e) => setBranding({...branding, institution: e.target.value})}
                   className="w-full p-4 text-base border-2 border-purple-100 rounded-xl bg-white/80 hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
-                />
-                <input 
-                  type="text" 
-                  placeholder="Instructor Name (Optional)"
-                  value={branding.instructor}
-                  onChange={(e) => setBranding({...branding, instructor: e.target.value})}
+            />
+            <input 
+              type="text" 
+              placeholder="Instructor Name (Optional)"
+              value={branding.instructor}
+              onChange={(e) => setBranding({...branding, instructor: e.target.value})}
                   className="w-full p-4 text-base border-2 border-purple-100 rounded-xl bg-white/80 hover:border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
-                />
-              </div>
+            />
+          </div>
             </section>
           )}
 
-          {/* AI Chatbot Assistant */}
+        {/* AI Chatbot Assistant */}
           <section className="border-t-2 border-purple-200/60 pt-6">
-            <ChatBot 
-              selectedNode={selectedNode}
-              genConfig={genConfig}
-              parseConfig={parseConfig}
-            />
+          <ChatBot 
+            selectedNode={selectedNode}
+            genConfig={genConfig}
+            parseConfig={parseConfig}
+          />
           </section>
           </div>
         </div>
