@@ -169,6 +169,7 @@ const App: React.FC = () => {
         setGenConfig(prev => ({ ...prev, provider: defaultProvider }));
       } catch (error) {
         console.warn('Could not set default provider:', error);
+        // Keep the default GEMINI provider, generation will fail with proper error message
       }
     }
   }, [apiKeySelected]);
