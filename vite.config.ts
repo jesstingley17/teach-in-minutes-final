@@ -9,6 +9,8 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY),
       'import.meta.env.SUPABASE_URL': JSON.stringify(env.SUPABASE_URL || env.VITE_SUPABASE_URL),
       'import.meta.env.SUPABASE_ANON_KEY': JSON.stringify(env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY),
+      // InsForge Backend API
+      'import.meta.env.INSFORGE_API_URL': JSON.stringify(env.INSFORGE_API_URL || env.VITE_INSFORGE_API_URL),
       // Adobe PDF Services API
       'import.meta.env.ADOBE_CLIENT_ID': JSON.stringify(env.ADOBE_CLIENT_ID || env.VITE_ADOBE_CLIENT_ID),
       'import.meta.env.ADOBE_CLIENT_SECRET': JSON.stringify(env.ADOBE_CLIENT_SECRET || env.VITE_ADOBE_CLIENT_SECRET),

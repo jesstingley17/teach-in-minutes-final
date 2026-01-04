@@ -1,9 +1,19 @@
 /**
  * API Route Constants
  * Centralized configuration for all API endpoints
+ * 
+ * Supports both Vercel serverless functions and InsForge backend
+ * Set VITE_INSFORGE_API_URL to use InsForge, otherwise uses Vercel API routes
  */
 
-const API_BASE = '/api';
+// InsForge API base URL (if configured)
+// For local development: http://localhost:7131/api
+// For production: use your InsForge deployment URL
+const INSFORGE_API_BASE = import.meta.env.VITE_INSFORGE_API_URL || 
+                          import.meta.env.INSFORGE_API_URL;
+
+// Use InsForge if configured, otherwise use Vercel API routes
+const API_BASE = INSFORGE_API_BASE || '/api';
 
 export const API_ROUTES = {
   // Curriculum Analysis
