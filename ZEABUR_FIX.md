@@ -7,100 +7,103 @@ Zeabur was trying to parse JavaScript/TypeScript files as a Dockerfile, causing 
 Syntax error - can't find = in "const". Must be of the form: name=value
 ```
 
-## Solution
+This happened because:
+1. The `zeabur.json` used uppercase "NIXPACKS" instead of lowercase "nixpacks"
+2. A Dockerfile was present, causing Zeabur to prioritize Docker mode
+3. Zeabur then tried to parse source files as Dockerfiles incorrectly
 
-I've created the necessary files to fix this:
+## Solution Applied
 
-1. **Dockerfile** - Proper Docker configuration for Vite React app
-2. **zeabur.json** - Explicit Zeabur configuration to use Nixpacks
-3. **.dockerignore** - Excludes unnecessary files from Docker build
+I've fixed the configuration:
 
-## What to Do Next
+1. **zeabur.json** - Corrected to use lowercase "nixpacks" builder
+2. **Dockerfile** - Removed (not needed for Nixpacks)
+3. **.dockerignore** - Can be kept but is not used by Nixpacks
 
-### Option 1: Use Nixpacks (Recommended - Easiest)
+## What Zeabur Will Do Now
 
-1. **In Zeabur Dashboard:**
-   - Go to your project → **Settings** → **Build Settings**
-   - Change builder from "Docker" to **"Nixpacks"** or **"Auto-detect"**
-   - Zeabur will automatically detect your Vite app
-
-2. **Zeabur will auto-detect:**
-   - Framework: Vite
-   - Build command: `npm run build`
-   - Output directory: `dist`
-   - No start command needed (static site)
-
-### Option 2: Use Dockerfile (If Docker is Required)
-
-If Zeabur requires Docker, the `Dockerfile` I created will work. It:
-- Builds your Vite app using Node.js
-- Serves it with nginx
-- Handles React Router (all routes → index.html)
-
-## Files Created
-
-### Dockerfile
-- Multi-stage build (builder + production)
-- Uses Node.js 18 Alpine for building
-- Uses nginx Alpine for serving
-- Handles SPA routing correctly
-
-### zeabur.json
-- Tells Zeabur to use Nixpacks builder
-- Specifies build command: `npm run build`
-- Specifies output: `dist` directory
-- Configures routes for React Router
-
-### .dockerignore
-- Excludes unnecessary files from Docker build
-- Reduces build time and image size
-- Excludes test files, scripts, documentation
+With Nixpacks enabled, Zeabur will automatically:
+- Detect your Vite/React app
+- Run `npm install` to install dependencies
+- Run `npm run build` to build your app
+- Serve the `dist` directory as a static site
+- Handle React Router routing correctly
 
 ## Deployment Steps
 
-1. **Commit and push the new files:**
+1. **Commit and push the fixed configuration:**
    ```bash
-   git add Dockerfile zeabur.json .dockerignore
-   git commit -m "Fix Zeabur deployment configuration"
+   git add zeabur.json
+   git rm Dockerfile
+   git commit -m "Fix Zeabur configuration - use Nixpacks with correct format"
    git push
    ```
 
-2. **In Zeabur Dashboard:**
-   - Go to **Settings** → **Build Settings**
-   - Select **"Nixpacks"** or **"Auto-detect"** (recommended)
-   - Or select **"Dockerfile"** if you want to use Docker
+2. **Zeabur will automatically redeploy** when you push to GitHub
 
-3. **Set Environment Variables:**
+3. **Set Environment Variables in Zeabur Dashboard:**
    - Go to **Settings** → **Environment Variables**
    - Add all your API keys (see `ZEABUR_ENV_VARS.md`)
+   - Required variables:
+     - `GEMINI_API_KEY`
+     - `SUPABASE_URL`
+     - `SUPABASE_ANON_KEY`
 
-4. **Redeploy:**
-   - Zeabur should automatically redeploy when you push
-   - Or manually trigger redeploy in dashboard
+4. **Monitor the build:**
+   - Check the build logs in Zeabur dashboard
+   - Should see "Using Nixpacks builder"
+   - Build should complete successfully
 
-## Recommended Approach
+## What Changed
 
-**Use Nixpacks (Option 1)** - It's simpler, faster, and Zeabur handles everything automatically for Vite/React apps. No Docker knowledge needed!
+### zeabur.json (Fixed)
+```json
+{
+  "build": {
+    "builder": "nixpacks"
+  }
+}
+```
 
-The Dockerfile is there as a backup if Zeabur requires it, but Nixpacks is the better choice for Vite apps.
+The minimal configuration is all Nixpacks needs. It will:
+- Auto-detect your package.json
+- Auto-detect your build script
+- Auto-detect your output directory (dist)
+- Handle everything automatically
+
+### Dockerfile (Removed)
+The Dockerfile has been removed because:
+- Nixpacks doesn't need it
+- Having it present caused Zeabur to try Docker mode
+- Nixpacks is simpler and better for Vite/React apps
 
 ## Troubleshooting
 
 If you still get errors:
 
-1. **Check Build Settings:**
-   - Ensure builder is set to "Nixpacks" not "Docker"
-   - Or if using Docker, ensure "Dockerfile" is selected
-
-2. **Check Build Logs:**
+1. **Check Build Logs:**
    - Look at the build logs in Zeabur dashboard
-   - The error message will tell you what's wrong
+   - Should see "Using Nixpacks builder"
+   - Should NOT see any Docker-related messages
 
-3. **Verify package.json:**
+2. **Verify package.json:**
    - Ensure `"build": "vite build"` script exists
    - Ensure all dependencies are listed
 
-4. **Check Environment Variables:**
+3. **Check Environment Variables:**
    - Make sure all required env vars are set in Zeabur
-   - See `ZEABUR_ENV_VARS.md` for the list
+   - See `ZEABUR_ENV_VARS.md` for the complete list
+
+4. **Manual Redeploy:**
+   - If auto-deploy doesn't trigger, manually redeploy in dashboard
+
+## Why Nixpacks?
+
+Nixpacks is the recommended approach for Vite/React apps because:
+- Automatically detects your framework
+- No Docker knowledge required
+- Faster builds
+- Better caching
+- Simpler configuration
+- Official Zeabur recommendation for Node.js apps
 
