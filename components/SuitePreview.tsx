@@ -197,7 +197,7 @@ const SuitePreview: React.FC<SuitePreviewProps> = ({ suite, onEditSection }) => 
 
         {/* Teacher Answer Key Section */}
         {showTeacherKey && suite.teacherKey && suite.teacherKey.length > 0 && (
-          <div className="mt-12 pt-8 border-t-4 border-blue-600 page-break-before">
+          <div className="mt-12 pt-8 border-t-4 border-blue-600 page-break-before teacher-key-section">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-blue-900 flex items-center">
                 <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

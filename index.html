@@ -69,6 +69,19 @@
             .preview-container {
                 background: white !important;
                 padding: 0 !important;
+                margin: 0 !important;
+            }
+            .a4-page {
+                width: 210mm !important;
+                min-height: 297mm !important;
+                margin: 0 !important;
+                padding: 20mm !important;
+                box-shadow: none !important;
+                page-break-after: always;
+                page-break-inside: avoid;
+            }
+            .a4-page:last-child {
+                page-break-after: auto;
             }
             .print-page {
                 page-break-after: always;
@@ -82,8 +95,26 @@
             .print-page:last-child {
                 page-break-after: auto;
             }
+            .page-break-before {
+                page-break-before: always !important;
+            }
+            /* Hide edit buttons and UI controls */
+            button { display: none !important; }
+            .group button { display: none !important; }
+            /* Ensure teacher key section has page break */
             .teacher-key-section {
-                page-break-before: always;
+                page-break-before: always !important;
+            }
+            /* Better orphan/widow control */
+            h2, h3 {
+                page-break-after: avoid !important;
+            }
+            section {
+                page-break-inside: avoid !important;
+            }
+            /* Adjust margins for print */
+            * {
+                box-shadow: none !important;
             }
         }
 
