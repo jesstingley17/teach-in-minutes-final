@@ -98,8 +98,9 @@
             .page-break-before {
                 page-break-before: always !important;
             }
-            /* Hide edit buttons and UI controls */
-            button { display: none !important; }
+            /* Hide edit buttons and UI controls in sidebar and preview */
+            .no-print, .no-print button { display: none !important; }
+            aside button { display: none !important; }
             /* Ensure teacher key section has page break */
             .teacher-key-section {
                 page-break-before: always !important;

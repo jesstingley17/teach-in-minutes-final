@@ -362,7 +362,7 @@ const App: React.FC = () => {
       const [doodleData, suite] = await Promise.all([
         genConfig.includeVisuals && (genConfig.visualType === 'doodles' || genConfig.visualType === 'both')
           ? (async () => {
-              console.log('Generating doodle...');
+              console.log('Generating doodle for:', selectedNode.title);
               return generateDoodle(selectedNode, genConfig.aesthetic).catch(err => {
                 console.warn('Doodle generation failed, continuing without it:', err);
                 return undefined;
@@ -406,7 +406,7 @@ const App: React.FC = () => {
           const diagramPlaceholderCount = suite.sections.filter(s => s.type === 'diagram_placeholder').length;
           console.log(`✓ Diagrams generated: ${diagramCount} of ${diagramPlaceholderCount} diagram sections now have images`);
           if (diagramCount === 0 && diagramPlaceholderCount > 0) {
-            console.warn('✗ Warning: No diagrams were generated despite having diagram placeholders');
+            console.warn('✗ Warning: No diagrams were generated despite having diagram placeholders. This may indicate an API issue, network problem, or the diagram generation service may be temporarily unavailable.');
           }
         } catch (error) {
           console.warn('✗ Diagram generation failed, continuing without diagrams:', error);
