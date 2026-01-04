@@ -406,7 +406,7 @@ const App: React.FC = () => {
           const diagramPlaceholderCount = suite.sections.filter(s => s.type === 'diagram_placeholder').length;
           console.log(`✓ Diagrams generated: ${diagramCount} of ${diagramPlaceholderCount} diagram sections now have images`);
           if (diagramCount === 0 && diagramPlaceholderCount > 0) {
-            console.warn('✗ Warning: No diagrams were generated despite having diagram placeholders. This may indicate an API issue, network problem, or the diagram generation service may be temporarily unavailable.');
+            console.warn(`✗ Failed to generate diagrams for ${diagramPlaceholderCount} placeholders. Check API connectivity and service availability.`);
           }
         } catch (error) {
           console.warn('✗ Diagram generation failed, continuing without diagrams:', error);
