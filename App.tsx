@@ -73,7 +73,7 @@ const App: React.FC = () => {
     pageCount: 1,
     includeVisuals: true,
     visualType: 'doodles' as 'doodles' | 'diagrams' | 'both',
-    provider: getDefaultProvider()
+    provider: AIProvider.GEMINI // Default, will be updated when available providers are checked
   });
 
   const [inspirationConfig, setInspirationConfig] = useState({
@@ -161,6 +161,18 @@ const App: React.FC = () => {
     checkKey();
   }, [user]);
 
+  // Set default provider when API keys are available
+  useEffect(() => {
+    if (apiKeySelected) {
+      try {
+        const defaultProvider = getDefaultProvider();
+        setGenConfig(prev => ({ ...prev, provider: defaultProvider }));
+      } catch (error) {
+        console.warn('Could not set default provider:', error);
+      }
+    }
+  }, [apiKeySelected]);
+
   const handleOpenSelectKey = async () => {
     if (typeof (window as any).aistudio?.openSelectKey === 'function') {
       await (window as any).aistudio.openSelectKey();
@@ -189,7 +201,7 @@ const App: React.FC = () => {
           );
           if (!saveResult.success) {
             console.error('Failed to save parsed curriculum:', saveResult.error);
-            alert(`Warning: Failed to save parsed curriculum. ${saveResult.error || 'Unknown error'}`);
+            // Non-blocking warning - parsing succeeded but save failed
           } else {
             console.log('Successfully saved parsed curriculum:', saveResult.id);
             // Optimize: Add new item to state instead of reloading everything
@@ -208,9 +220,9 @@ const App: React.FC = () => {
       } else {
         console.log('Skipping save - USE_SUPABASE:', USE_SUPABASE, 'user:', !!user, 'nodes:', parsedNodes.length);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert('Failed to analyze curriculum. Please check your API key and connection.');
+      alert(`Failed to analyze curriculum: ${error?.message || 'Please check your API configuration and try again.'}`);
     } finally {
       setIsAnalyzing(false);
     }
@@ -248,7 +260,7 @@ const App: React.FC = () => {
               );
               if (!saveResult.success) {
                 console.error('Failed to save parsed curriculum:', saveResult.error);
-                alert(`Warning: Failed to save parsed curriculum. ${saveResult.error || 'Unknown error'}`);
+                // Non-blocking warning - parsing succeeded but save failed
               } else {
                 console.log('Successfully saved parsed curriculum:', saveResult.id);
                 // Optimize: Add new item to state instead of reloading everything
@@ -268,9 +280,9 @@ const App: React.FC = () => {
           } else {
             console.log('Skipping save - USE_SUPABASE:', USE_SUPABASE, 'user:', !!user, 'nodes:', parsedNodes.length);
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error(error);
-          alert('Failed to parse document. Ensure it is a valid PDF or Image and your API key is correct.');
+          alert(`Failed to parse document: ${error?.message || 'Please ensure the file is a valid PDF or image and try again.'}`);
         } finally {
           setIsAnalyzing(false);
         }
@@ -445,9 +457,9 @@ const App: React.FC = () => {
         institution: wizardData.institution,
         instructor: wizardData.instructor
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert('Generation failed. Please check your API key and try again.');
+      alert(`Generation failed: ${error?.message || 'Please check your API configuration and try again.'}`);
     } finally {
       setIsGenerating(false);
     }
@@ -532,9 +544,10 @@ const App: React.FC = () => {
         console.log('Using standard jsPDF export...');
         await PDFService.exportToPDF(activeSuite);
       }
-    } catch (error) {
+      // Success - PDF download should have started
+    } catch (error: any) {
       console.error('PDF export failed:', error);
-      alert('PDF export failed. Please try again.');
+      alert(`PDF export failed: ${error?.message || 'Please try again or use the Print option instead.'}`);
     }
   };
 
@@ -633,8 +646,8 @@ const App: React.FC = () => {
                   }}
                 >
                   ⏰
-            </div>
-          </div>
+                </div>
+              </div>
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 bg-clip-text text-transparent" style={{
                   fontFamily: "'Dancing Script', cursive",
