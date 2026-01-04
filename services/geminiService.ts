@@ -813,3 +813,84 @@ export const generateDoodle = async (node: CurriculumNode, aesthetic: AestheticS
     return '';
   }
 };
+
+/**
+ * Generate diagrams for sections that have type 'diagram_placeholder'
+ * Returns updated sections with imageBase64 populated
+ */
+export const generateDiagrams = async (
+  sections: DocumentSection[],
+  topic: string
+): Promise<DocumentSection[]> => {
+  const apiKey = import.meta.env.GEMINI_API_KEY;
+  
+  if (!apiKey) {
+    console.warn('GEMINI_API_KEY not configured, skipping diagram generation');
+    return sections;
+  }
+  
+  const ai = new GoogleGenAI({ apiKey });
+  
+  // Find all diagram placeholder sections
+  const diagramSections = sections.filter(s => s.type === 'diagram_placeholder' && !s.imageBase64);
+  
+  if (diagramSections.length === 0) {
+    console.log('No diagram placeholders found or all already have images');
+    return sections;
+  }
+  
+  console.log(`Generating ${diagramSections.length} diagrams for topic: ${topic}`);
+  
+  // Generate diagrams for each section
+  const updatedSections = [...sections];
+  
+  for (const section of diagramSections) {
+    try {
+      console.log(`Generating diagram for: ${section.title}`);
+      
+      const prompt = `Create a clear, educational diagram illustrating: ${section.content}. 
+Topic context: ${topic}. 
+Requirements:
+- Simple, clean line art suitable for educational materials
+- Clear labels and annotations
+- Black lines on white background
+- Easy to understand for students
+- Professional academic style`;
+      
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.0-flash-exp',
+        contents: [{ text: prompt }],
+        config: {
+          responseMimeType: "image/png"
+        }
+      });
+      
+      // Extract image data
+      if (response.candidates && response.candidates[0] && response.candidates[0].content) {
+        for (const part of response.candidates[0].content.parts) {
+          if (part.inlineData && part.inlineData.data) {
+            const imageData = `data:image/png;base64,${part.inlineData.data}`;
+            
+            // Find and update the section
+            const sectionIndex = updatedSections.findIndex(s => s.id === section.id);
+            if (sectionIndex !== -1) {
+              updatedSections[sectionIndex] = {
+                ...updatedSections[sectionIndex],
+                imageBase64: imageData
+              };
+              console.log(`Diagram generated successfully for section: ${section.title}`);
+            }
+            break;
+          }
+        }
+      } else {
+        console.warn(`No diagram generated for section: ${section.title}`);
+      }
+    } catch (error: any) {
+      console.error(`Failed to generate diagram for section ${section.title}:`, error);
+      // Continue with other diagrams even if one fails
+    }
+  }
+  
+  return updatedSections;
+};

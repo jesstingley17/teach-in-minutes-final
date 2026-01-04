@@ -13,7 +13,7 @@ import {
   EducationalStandard
 } from './types';
 import { analyzeCurriculum, analyzeDocument, generateSuite, getAvailableProviders, getDefaultProvider } from './services/aiService';
-import { generateDoodle } from './services/geminiService';
+import { generateDoodle, generateDiagrams } from './services/geminiService';
 import { SupabaseService } from './services/supabaseService';
 import { StandardsService } from './services/standardsService';
 import { PDFService } from './services/pdfService';
@@ -50,6 +50,7 @@ const App: React.FC = () => {
   }>>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationStatus, setGenerationStatus] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [branding, setBranding] = useState<BrandingConfig>({
@@ -324,11 +325,13 @@ const App: React.FC = () => {
     }
     console.log('Starting generation with node:', selectedNode.title);
     setIsGenerating(true);
+    setGenerationStatus('Preparing to generate materials...');
     try {
       // Analyze inspiration if enabled
       let inspirationAnalysis = null;
       if (inspirationConfig.enabled && inspirationConfig.file) {
         try {
+          setGenerationStatus('Analyzing inspiration document...');
           console.log('Analyzing inspiration file...');
           const reader = new FileReader();
           const fileData = await new Promise<string>((resolve, reject) => {
@@ -351,13 +354,17 @@ const App: React.FC = () => {
       }
 
       // Generate doodle and suite in parallel for better performance
+      setGenerationStatus('Generating educational content...');
       console.log('Starting generation (suite + doodle in parallel)...');
       const [doodleData, suite] = await Promise.all([
         genConfig.includeVisuals && (genConfig.visualType === 'doodles' || genConfig.visualType === 'both')
-          ? generateDoodle(selectedNode, genConfig.aesthetic).catch(err => {
-              console.warn('Doodle generation failed, continuing without it:', err);
-              return undefined;
-            })
+          ? (async () => {
+              setGenerationStatus('Generating content and visual elements...');
+              return generateDoodle(selectedNode, genConfig.aesthetic).catch(err => {
+                console.warn('Doodle generation failed, continuing without it:', err);
+                return undefined;
+              });
+            })()
           : Promise.resolve(undefined),
         generateSuite(
           selectedNode, 
@@ -384,6 +391,22 @@ const App: React.FC = () => {
       } else {
         console.warn('No doodle data generated. includeVisuals:', genConfig.includeVisuals, 'doodleData:', !!doodleData);
       }
+      
+      // Generate diagrams if visual type includes diagrams
+      if (genConfig.includeVisuals && (genConfig.visualType === 'diagrams' || genConfig.visualType === 'both') && suite) {
+        try {
+          setGenerationStatus('Generating educational diagrams...');
+          console.log('Generating diagrams for suite sections...');
+          const sectionsWithDiagrams = await generateDiagrams(suite.sections, suite.title);
+          suite.sections = sectionsWithDiagrams;
+          const diagramCount = sectionsWithDiagrams.filter(s => s.imageBase64).length;
+          console.log(`Diagrams generated: ${diagramCount} sections now have images`);
+        } catch (error) {
+          console.warn('Diagram generation failed, continuing without diagrams:', error);
+        }
+      }
+      
+      setGenerationStatus('Finalizing materials...');
       console.log('Suite generated successfully:', suite.title, suite.sections.length, 'sections');
       setActiveSuite(suite);
     } catch (error: any) {
@@ -396,6 +419,7 @@ const App: React.FC = () => {
       alert(`Generation failed: ${error?.message || 'Unknown error'}. Check browser console for details.`);
     } finally {
       setIsGenerating(false);
+      setGenerationStatus('');
     }
   };
 
@@ -1179,7 +1203,7 @@ const App: React.FC = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span>Synthesizing...</span>
+                    <span>{generationStatus || 'Synthesizing...'}</span>
                   </>
                 ) : (
                   <span>Build Instruction Suite</span>
