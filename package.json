@@ -16,12 +16,15 @@
     "@types/react-dnd": "^2.0.36",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.4",
+    "jszip": "^3.10.1",
     "openai": "^6.15.0",
+    "pdfjs-dist": "^5.4.530",
     "react": "^19.2.3",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^19.2.3",
-    "react-markdown": "^10.1.0"
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^7.11.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
