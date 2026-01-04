@@ -12,14 +12,43 @@ View your app in AI Studio: https://ai.studio/apps/drive/1smb3LjYfxEFYK_JIiHHLLZ
 
 **Prerequisites:**  Node.js
 
+### Quick Start
 
 1. Install dependencies:
-   `npm install`
-2. Set API keys in `.env.local`:
-   - `GEMINI_API_KEY` (Recommended - Required for image generation)
-   - `OPENAI_API_KEY` (Optional - for GPT-4o)
-   - `ANTHROPIC_API_KEY` (Optional - for Claude)
+   ```bash
+   npm install
+   ```
+
+2. Configure API keys:
+   ```bash
+   cp .env.example .env.local
+   ```
    
-   See [MULTI_PROVIDER_SETUP.md](MULTI_PROVIDER_SETUP.md) for detailed setup instructions.
+   **Minimum setup (free):**
+   - `GEMINI_API_KEY` - Required for core functionality and image generation
+   - `SUPABASE_URL` + `SUPABASE_ANON_KEY` - Optional, for cloud storage
+   
+   **Recommended for production:**
+   - `GEMINI_API_KEY` - Primary content generation
+   - `OPENAI_API_KEY` - Fallback and reliability
+   - `ANTHROPIC_API_KEY` - Safety audits and quality enhancement
+   - `SUPABASE_URL` + `SUPABASE_ANON_KEY` - Cloud storage and authentication
+   
+   **Optional enhancements:**
+   - `GAMMA_API_KEY` - AI-powered presentations
+   - `ADOBE_CLIENT_ID` + other Adobe credentials - Professional PDF services
+   
+   **Need help choosing?** See [API_SELECTION_GUIDE.md](API_SELECTION_GUIDE.md) for detailed recommendations.
+
 3. Run the app:
-   `npm run dev`
+   ```bash
+   npm run dev
+   ```
+
+### Setup Guides
+
+- 📘 [API Selection Guide](API_SELECTION_GUIDE.md) - **Start here!** Choose which APIs to use
+- 🔧 [Multi-Provider Setup](MULTI_PROVIDER_SETUP.md) - Configure Gemini, OpenAI, Claude, Gamma
+- 💾 [Supabase Setup](SUPABASE_SETUP.md) - Cloud storage and authentication
+- 📄 [Adobe PDF Services Setup](ADOBE_SETUP.md) - Professional PDF features
+- 🎨 [Gamma Design Enhancement Setup](GAMMA_SETUP.md) - Presentation generation

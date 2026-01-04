@@ -65,6 +65,9 @@ export default async function handler(
 
     const apiUrl = 'https://public-api.gamma.app/v1.0/generations';
 
+    // Combine title with content for inputText (Gamma API v1.0 doesn't have a separate title field)
+    const fullContent = `# ${title}\n\n${content}`;
+
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -72,10 +75,9 @@ export default async function handler(
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        inputText: content,
+        inputText: fullContent,
         textMode: 'preserve', // Valid values: generate, condense, preserve (use preserve since we're providing existing content)
         format: format,
-        title: title,
         themeId: themeId,
         numCards: numCards,
         cardSplit: cardSplit,

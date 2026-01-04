@@ -49,8 +49,8 @@ export const analyzeCurriculum = async (
       }
     });
 
-    // Handle case where response.text might already be an object
-    const responseData = response.text || '[]';
+    // Get response text from Gemini API
+    const responseData = response.response.text() || '[]';
     const parseResult = parseJSON(responseData);
     
     if (!parseResult.valid) {
@@ -112,8 +112,8 @@ export const analyzeDocument = async (
       }
     });
 
-    // Handle case where response.text might already be an object
-    const responseData = response.text || '[]';
+    // Get response text from Gemini API
+    const responseData = response.response.text() || '[]';
     const parseResult = parseJSON(responseData);
     
     if (!parseResult.valid) {
@@ -422,8 +422,8 @@ export const generateSuite = async (
     });
 
     // Use JSON validator to handle malformed JSON gracefully
-    // Handle case where response.text might already be an object
-    const responseData = response.text || '{}';
+    // Get response text from Gemini API
+    const responseData = response.response.text() || '{}';
     const parseResult = parseJSON(responseData);
     
     if (!parseResult.valid) {
@@ -705,8 +705,8 @@ Return the rubric in the requested JSON format.`;
       }
     });
 
-    // Handle case where response.text might already be an object
-    const responseData = response.text || '{}';
+    // Get response text from Gemini API
+    const responseData = response.response.text() || '{}';
     const parseResult = parseJSON(responseData);
     
     if (!parseResult.valid) {
@@ -762,14 +762,19 @@ export const generateDoodle = async (node: CurriculumNode, aesthetic: AestheticS
       }
     }
     
-    // Alternative: check if response.text contains base64 image data
-    if (response.text) {
-      // Try to extract base64 image from response
-      const base64Match = response.text.match(/data:image\/[^;]+;base64,([A-Za-z0-9+/=]+)/);
-      if (base64Match) {
-        console.log('Doodle extracted from text response');
-        return base64Match[0];
+    // Alternative: check if response has text method containing base64 image data
+    try {
+      const responseText = response.response?.text();
+      if (responseText) {
+        // Try to extract base64 image from response text
+        const base64Match = responseText.match(/data:image\/[^;]+;base64,([A-Za-z0-9+/=]+)/);
+        if (base64Match) {
+          console.log('Doodle extracted from text response');
+          return base64Match[0];
+        }
       }
+    } catch (e) {
+      // Ignore if text() method doesn't exist or fails
     }
     
     console.warn('No image data found in doodle response');
