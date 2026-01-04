@@ -409,7 +409,15 @@ export const generateSuite = async (
                   type: { type: Type.STRING, enum: ['text', 'question', 'instruction', 'diagram_placeholder', 'matching'] },
                   content: { type: Type.STRING },
                   points: { type: Type.NUMBER },
-                  options: { type: Type.ARRAY, items: { type: Type.STRING } }
+                  options: { type: Type.ARRAY, items: { type: Type.STRING } },
+                  correctAnswer: { 
+                    type: Type.STRING, 
+                    description: "The correct answer for questions/matching. For multiple choice: use index (0,1,2...). For matching: use array like [0,1,2]. For short answer: use text."
+                  },
+                  explanation: { 
+                    type: Type.STRING,
+                    description: "Optional explanation for why this is the correct answer"
+                  }
                 },
                 required: ["id", "title", "type", "content"]
               }
@@ -460,6 +468,20 @@ export const generateSuite = async (
       console.warn('WARNING: No sections have correctAnswer fields. Teacher key will be empty.');
     }
     
+    // Build teacher key from sections with answers
+    const teacherKey = sections
+      .filter((s: any) => s.correctAnswer !== undefined)
+      .map((s: any) => ({
+        sectionId: s.id,
+        sectionTitle: s.title,
+        answer: s.correctAnswer,
+        explanation: s.explanation
+      }));
+    
+    if (teacherKey.length > 0) {
+      console.log(`Built teacher key with ${teacherKey.length} entries`);
+    }
+    
     const suite = {
       ...rawData,
       id: Math.random().toString(36).substr(2, 9),
@@ -472,6 +494,7 @@ export const generateSuite = async (
       aesthetic: aesthetic,
       doodleBase64: doodleBase64 || '',
       sections: sections,
+      teacherKey: teacherKey.length > 0 ? teacherKey : undefined,
       pageCount: pageCount,
       gradeLevel: gradeLevel,
       standards: standards,
