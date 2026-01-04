@@ -143,7 +143,8 @@ export const generateSuite = async (
   gradeLevel?: GradeLevel,
   standards?: EducationalStandard[],
   preferredProvider?: AIProvider,
-  doodleBase64?: string
+  doodleBase64?: string,
+  visualType?: 'doodles' | 'diagrams' | 'both'
 ): Promise<InstructionalSuite> => {
   const available = getAvailableProviders();
   if (available.length === 0) {
@@ -162,7 +163,7 @@ export const generateSuite = async (
       
       switch (provider) {
         case AIProvider.GEMINI:
-          return await generateSuiteGemini(node, outputType, bloomLevel, differentiation, aesthetic, branding, doodleBase64, pageCount, gradeLevel, standards);
+          return await generateSuiteGemini(node, outputType, bloomLevel, differentiation, aesthetic, branding, doodleBase64, pageCount, gradeLevel, standards, visualType);
         case AIProvider.OPENAI:
           return await generateSuiteOpenAI(node, outputType, bloomLevel, differentiation, aesthetic, branding, pageCount, gradeLevel, standards);
         case AIProvider.CLAUDE:

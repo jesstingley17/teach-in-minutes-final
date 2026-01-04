@@ -50,6 +50,7 @@ const App: React.FC = () => {
   }>>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationStatus, setGenerationStatus] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [branding, setBranding] = useState<BrandingConfig>({
@@ -324,12 +325,14 @@ const App: React.FC = () => {
     }
     console.log('Starting generation with node:', selectedNode.title);
     setIsGenerating(true);
+    setGenerationStatus('Preparing generation...');
     try {
       // Analyze inspiration if enabled
       let inspirationAnalysis = null;
       if (inspirationConfig.enabled && inspirationConfig.file) {
         try {
           console.log('Analyzing inspiration file...');
+          setGenerationStatus('Analyzing inspiration file...');
           const reader = new FileReader();
           const fileData = await new Promise<string>((resolve, reject) => {
             reader.onload = (e) => resolve(e.target?.result as string);
@@ -352,10 +355,27 @@ const App: React.FC = () => {
 
       // Generate doodle and suite in parallel for better performance
       console.log('Starting generation (suite + doodle in parallel)...');
+      
+      // Determine which visuals to generate based on config
+      const shouldGenerateDoodle = genConfig.includeVisuals && (genConfig.visualType === 'doodles' || genConfig.visualType === 'both');
+      const shouldGenerateDiagrams = genConfig.includeVisuals && (genConfig.visualType === 'diagrams' || genConfig.visualType === 'both');
+      
+      // Set status for what's being generated
+      if (shouldGenerateDoodle && shouldGenerateDiagrams) {
+        setGenerationStatus('Generating worksheet content with doodles and diagrams...');
+      } else if (shouldGenerateDoodle) {
+        setGenerationStatus('Generating worksheet content with doodles...');
+      } else if (shouldGenerateDiagrams) {
+        setGenerationStatus('Generating worksheet content with diagrams...');
+      } else {
+        setGenerationStatus('Generating worksheet content...');
+      }
+      
       const [doodleData, suite] = await Promise.all([
-        genConfig.includeVisuals && (genConfig.visualType === 'doodles' || genConfig.visualType === 'both')
+        shouldGenerateDoodle
           ? generateDoodle(selectedNode, genConfig.aesthetic).catch(err => {
               console.warn('Doodle generation failed, continuing without it:', err);
+              setGenerationStatus('Doodle generation failed, continuing with worksheet...');
               return undefined;
             })
           : Promise.resolve(undefined),
@@ -373,7 +393,8 @@ const App: React.FC = () => {
           parseConfig.gradeLevel,
           undefined as EducationalStandard[] | undefined, // standards - could be added later
           genConfig.provider, // preferredProvider
-          undefined as string | undefined // doodleBase64 - will be added after if generated
+          undefined, // doodleBase64 - will be added after if generated
+          genConfig.includeVisuals ? genConfig.visualType : undefined // visualType - pass when visuals are enabled
         )
       ]);
       
@@ -381,10 +402,21 @@ const App: React.FC = () => {
       if (doodleData && suite) {
         suite.doodleBase64 = doodleData;
         console.log('Doodle added to suite:', !!doodleData);
-      } else {
+      } else if (shouldGenerateDoodle) {
         console.warn('No doodle data generated. includeVisuals:', genConfig.includeVisuals, 'doodleData:', !!doodleData);
       }
+      
+      // Count diagram sections generated
+      const diagramCount = suite.sections.filter(s => s.type === 'diagram_placeholder').length;
+      if (shouldGenerateDiagrams && diagramCount === 0) {
+        console.warn('No diagram sections generated despite diagrams being requested');
+        setGenerationStatus('Warning: No diagram sections were generated');
+      } else if (shouldGenerateDiagrams) {
+        console.log(`Generated ${diagramCount} diagram sections`);
+      }
+      
       console.log('Suite generated successfully:', suite.title, suite.sections.length, 'sections');
+      setGenerationStatus('Generation complete!');
       setActiveSuite(suite);
     } catch (error: any) {
       console.error('Generation error:', error);
@@ -393,9 +425,11 @@ const App: React.FC = () => {
         status: error?.status,
         stack: error?.stack
       });
+      setGenerationStatus(`Error: ${error?.message || 'Unknown error'}`);
       alert(`Generation failed: ${error?.message || 'Unknown error'}. Check browser console for details.`);
     } finally {
       setIsGenerating(false);
+      setTimeout(() => setGenerationStatus(''), 3000); // Clear status after 3 seconds
     }
   };
 
@@ -450,7 +484,8 @@ const App: React.FC = () => {
         wizardData.gradeLevel,
         standards,
         genConfig.provider, // preferredProvider
-        doodleData // doodleBase64
+        doodleData, // doodleBase64
+        genConfig.includeVisuals ? genConfig.visualType : undefined // visualType
       );
       setActiveSuite(suite);
       // Update branding state
@@ -1179,12 +1214,15 @@ const App: React.FC = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span>Synthesizing...</span>
+                    <span>{generationStatus || 'Synthesizing...'}</span>
                   </>
                 ) : (
                   <span>Build Instruction Suite</span>
                 )}
               </button>
+              {generationStatus && !isGenerating && (
+                <p className="text-sm text-center text-slate-600 mt-2">{generationStatus}</p>
+              )}
               </div>
               )}
             </section>
