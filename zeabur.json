@@ -1,6 +1,9 @@
 {
   "build": {
     "builder": "nixpacks"
+  },
+  "deploy": {
+    "port": 8080
   }
 }
 
