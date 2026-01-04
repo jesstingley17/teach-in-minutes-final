@@ -409,7 +409,10 @@ export const generateSuite = async (
                   type: { type: Type.STRING, enum: ['text', 'question', 'instruction', 'diagram_placeholder', 'matching'] },
                   content: { type: Type.STRING },
                   points: { type: Type.NUMBER },
-                  options: { type: Type.ARRAY, items: { type: Type.STRING } }
+                  options: { type: Type.ARRAY, items: { type: Type.STRING } },
+                  correctAnswer: { 
+                    description: "The correct answer for questions/matching. For multiple choice: number (option index). For short answer: string. For matching: array of numbers mapping items to options."
+                  }
                 },
                 required: ["id", "title", "type", "content"]
               }
