@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { CurriculumNode, InstructionalSuite, OutputType, BloomLevel, Differentiation, AestheticStyle, EducationalStandard, GradeLevel, StandardsFramework, Rubric } from '../types';
+import { CurriculumNode, InstructionalSuite, OutputType, BloomLevel, Differentiation, AestheticStyle, EducationalStandard, GradeLevel, StandardsFramework, Rubric } from '../../src/types';
 
 /**
  * OpenAI Service - Provides AI capabilities using OpenAI models

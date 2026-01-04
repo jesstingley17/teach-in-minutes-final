@@ -12,10 +12,10 @@ import {
   AIProvider,
   EducationalStandard
 } from './types';
-import { analyzeCurriculum, analyzeDocument, generateSuite, getAvailableProviders, getDefaultProvider } from './services/aiService';
-import { generateDoodle, generateDiagrams } from './services/geminiService';
+import { analyzeCurriculum, analyzeDocument, generateSuite, getAvailableProviders, getDefaultProvider } from './services/ai/aiService';
+import { generateDoodle, generateDiagrams } from './services/ai/geminiService';
 import { SupabaseService } from './services/supabaseService';
-import { StandardsService } from './services/standardsService';
+import { StandardsService } from './services/analysis/standardsService';
 import { PDFService } from './services/pdfService';
 import { analyzeInspiration } from './services/inspirationService';
 import { useAuth } from './contexts/AuthContext';
@@ -25,8 +25,12 @@ import GuidedWizard from './components/GuidedWizard';
 import SettingsModal from './components/SettingsModal';
 import ChatBot from './components/ChatBot';
 
-const STORAGE_KEY = 'blueprint_pro_drafts_v1';
-const USE_SUPABASE = !!(import.meta.env.SUPABASE_URL && import.meta.env.SUPABASE_ANON_KEY);
+import { STORAGE_KEYS, FEATURE_FLAGS } from './src/constants';
+import { API_ROUTES } from './src/config';
+import { apiPost, sanitizeBase64, validateFileUpload } from './src/utils';
+
+const STORAGE_KEY = STORAGE_KEYS.DRAFTS;
+const USE_SUPABASE = FEATURE_FLAGS.USE_SUPABASE;
 
 /**
  * Call the parse-document API endpoint
@@ -39,26 +43,17 @@ const parseDocumentViaAPI = async (
   standardsFramework?: StandardsFramework
 ): Promise<CurriculumNode[]> => {
   try {
-    const apiUrl = '/api/parse-document';
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        base64Data,
+    const cleanBase64 = sanitizeBase64(base64Data);
+    const result = await apiPost<{ success: boolean; nodes?: CurriculumNode[]; error?: string }>(
+      API_ROUTES.DOCUMENTS.PARSE,
+      {
+        base64Data: cleanBase64,
         mimeType,
         gradeLevel,
         standardsFramework
-      })
-    });
+      }
+    );
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: response.statusText }));
-      throw new Error(errorData.error || `API request failed with status ${response.status}`);
-    }
-
-    const result = await response.json();
     if (result.success && result.nodes) {
       return result.nodes;
     } else {
@@ -67,7 +62,8 @@ const parseDocumentViaAPI = async (
   } catch (error: any) {
     console.warn('API endpoint failed, falling back to direct service call:', error.message);
     // Fallback to direct service call
-    return await analyzeDocument(base64Data, mimeType, gradeLevel, standardsFramework);
+    const cleanBase64 = sanitizeBase64(base64Data);
+    return await analyzeDocument(cleanBase64, mimeType, gradeLevel, standardsFramework);
   }
 };
 
@@ -280,12 +276,19 @@ const App: React.FC = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Validate file
+    const validation = validateFileUpload(file);
+    if (!validation.valid) {
+      alert(validation.error);
+      return;
+    }
+
     setIsAnalyzing(true);
     try {
       const reader = new FileReader();
       reader.onload = async (e) => {
         const result = e.target?.result as string;
-        const base64Data = result.split(',')[1];
+        const base64Data = sanitizeBase64(result);
         const mimeType = file.type;
         
         try {

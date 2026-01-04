@@ -1,11 +1,11 @@
 /**
- * Vercel Serverless Function for Document Parsing
- * This API endpoint parses documents (PDFs, images) into curriculum nodes using Gemini AI
+ * Vercel Serverless Function for Comprehensive Curriculum Analysis
+ * This API endpoint provides deep curriculum analysis including gaps, prerequisites, learning paths, etc.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { analyzeDocument } from '../services/geminiService';
-import { GradeLevel, StandardsFramework } from '../types';
+import { analyzeCurriculumComprehensive } from '../../services/curriculumAnalysisService';
+import { GradeLevel, StandardsFramework } from '../../src/types';
 
 export default async function handler(
   req: VercelRequest,
@@ -28,73 +28,49 @@ export default async function handler(
 
   try {
     const {
-      base64Data,
-      mimeType,
+      rawText,
       gradeLevel,
       standardsFramework
     } = req.body;
 
     // Validate required fields
-    if (!base64Data || !mimeType) {
+    if (!rawText || !gradeLevel || !standardsFramework) {
       return res.status(400).json({ 
-        error: 'base64Data and mimeType are required' 
+        error: 'rawText, gradeLevel, and standardsFramework are required' 
       });
     }
 
-    // Validate mimeType
-    const validMimeTypes = [
-      'application/pdf',
-      'image/png',
-      'image/jpeg',
-      'image/jpg',
-      'image/gif',
-      'image/webp'
-    ];
-    
-    if (!validMimeTypes.includes(mimeType)) {
-      return res.status(400).json({ 
-        error: `Invalid mimeType. Supported types: ${validMimeTypes.join(', ')}` 
-      });
-    }
-
-    // Validate gradeLevel if provided
-    if (gradeLevel && !Object.values(GradeLevel).includes(gradeLevel as GradeLevel)) {
+    // Validate gradeLevel
+    if (!Object.values(GradeLevel).includes(gradeLevel as GradeLevel)) {
       return res.status(400).json({ 
         error: 'Invalid gradeLevel' 
       });
     }
 
-    // Validate standardsFramework if provided
-    if (standardsFramework && !Object.values(StandardsFramework).includes(standardsFramework as StandardsFramework)) {
+    // Validate standardsFramework
+    if (!Object.values(StandardsFramework).includes(standardsFramework as StandardsFramework)) {
       return res.status(400).json({ 
         error: 'Invalid standardsFramework' 
       });
     }
 
-    // Remove data URL prefix if present (e.g., "data:image/png;base64,")
-    const cleanBase64 = base64Data.includes(',') 
-      ? base64Data.split(',')[1] 
-      : base64Data;
-
-    // Call the analyzeDocument function
-    const nodes = await analyzeDocument(
-      cleanBase64,
-      mimeType,
-      gradeLevel as GradeLevel | undefined,
-      standardsFramework as StandardsFramework | undefined
+    // Perform comprehensive analysis
+    const analysis = await analyzeCurriculumComprehensive(
+      rawText,
+      gradeLevel as GradeLevel,
+      standardsFramework as StandardsFramework
     );
 
     return res.status(200).json({
       success: true,
-      nodes: nodes,
-      count: nodes.length
+      analysis: analysis
     });
 
   } catch (error: any) {
-    console.error('Document parsing error:', error);
+    console.error('Curriculum analysis error:', error);
     
     // Provide more specific error messages
-    let errorMessage = 'Document parsing failed';
+    let errorMessage = 'Curriculum analysis failed';
     
     if (error.message?.includes('GEMINI_API_KEY')) {
       errorMessage = 'GEMINI_API_KEY is not configured on the server';
@@ -114,3 +90,4 @@ export default async function handler(
     });
   }
 }
+
