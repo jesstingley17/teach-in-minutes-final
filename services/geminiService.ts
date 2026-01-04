@@ -411,6 +411,8 @@ export const generateSuite = async (
                   points: { type: Type.NUMBER },
                   options: { type: Type.ARRAY, items: { type: Type.STRING } },
                   correctAnswer: { 
+                    // Note: No type specified to allow mixed types (number for MC, array for matching, string for short answer)
+                    // Gemini API doesn't support oneOf/anyOf, so we leave it flexible
                     description: "The correct answer for questions/matching. For multiple choice: use NUMBER index (0,1,2...). For matching: use ARRAY of numbers like [0,1,2]. For short answer: use STRING text."
                   },
                   explanation: { 
