@@ -1,0 +1,46 @@
+node_modules
+dist
+.git
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+coverage
+.nyc_output
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Build files
+build
+.next
+out
+
+# Test files
+__tests__
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Documentation
+*.md
+!README.md
+
+# Scripts (not needed in Docker)
+scripts/
+test-env-vars.mjs
+*.sh
+
+# InsForge files (not needed for deployment)
+insforge-functions/
+
+# Development files
+__previewjs__/
+webpack.config.*
+tsconfig.json
+vite-env.d.ts
+

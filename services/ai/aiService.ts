@@ -1,4 +1,4 @@
-import { AIProvider, CurriculumNode, InstructionalSuite, OutputType, BloomLevel, Differentiation, AestheticStyle, EducationalStandard, GradeLevel, StandardsFramework } from '../types';
+import { AIProvider, CurriculumNode, InstructionalSuite, OutputType, BloomLevel, Differentiation, AestheticStyle, EducationalStandard, GradeLevel, StandardsFramework } from '../../src/types';
 import { analyzeCurriculum as analyzeCurriculumGemini, analyzeDocument as analyzeDocumentGemini, generateSuite as generateSuiteGemini } from './geminiService';
 import { analyzeCurriculumOpenAI, analyzeDocumentOpenAI, generateSuiteOpenAI } from './openaiService';
 import { analyzeCurriculumClaude, analyzeDocumentClaude, generateSuiteClaude } from './claudeService';

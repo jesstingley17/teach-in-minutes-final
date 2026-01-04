@@ -1,9 +1,9 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { InstructionalSuite, AestheticStyle, Differentiation, DocumentSection, Page } from '../types';
-import { enhanceDesignWithGamma } from '../services/gammaService';
-import { StandardsService } from '../services/standardsService';
+import { enhanceDesignWithGamma } from '../services/integrations/gammaService';
+import { StandardsService } from '../services/analysis/standardsService';
 import { renderMarkdown, decodeHtmlEntities } from '../utils/markdownRenderer';
-import { generateAnswers } from '../services/geminiService';
+import { generateAnswers } from '../services/ai/geminiService';
 
 interface EnhancedSuiteEditorProps {
   suite: InstructionalSuite;

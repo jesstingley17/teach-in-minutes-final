@@ -12,10 +12,10 @@ import {
   AIProvider,
   EducationalStandard
 } from './types';
-import { analyzeCurriculum, analyzeDocument, generateSuite, getAvailableProviders, getDefaultProvider } from './services/aiService';
-import { generateDoodle, generateDiagrams } from './services/geminiService';
+import { analyzeCurriculum, analyzeDocument, generateSuite, getAvailableProviders, getDefaultProvider } from './services/ai/aiService';
+import { generateDoodle, generateDiagrams } from './services/ai/geminiService';
 import { SupabaseService } from './services/supabaseService';
-import { StandardsService } from './services/standardsService';
+import { StandardsService } from './services/analysis/standardsService';
 import { PDFService } from './services/pdfService';
 import { analyzeInspiration } from './services/inspirationService';
 import { useAuth } from './contexts/AuthContext';
@@ -24,9 +24,52 @@ import AuthModal from './components/AuthModal';
 import GuidedWizard from './components/GuidedWizard';
 import SettingsModal from './components/SettingsModal';
 import ChatBot from './components/ChatBot';
+import CurriculumAnalysisViewer from './components/CurriculumAnalysisViewer';
+import { useCurriculumAnalysis } from './hooks/useCurriculumAnalysis';
+import { analyzeCurriculumComprehensive } from './services/analysis/curriculumAnalysisService';
+import { exportAnalysisToJSON, exportAnalysisToMarkdown, downloadFile } from './services/exportService';
 
-const STORAGE_KEY = 'blueprint_pro_drafts_v1';
-const USE_SUPABASE = !!(import.meta.env.SUPABASE_URL && import.meta.env.SUPABASE_ANON_KEY);
+import { STORAGE_KEYS, FEATURE_FLAGS } from './src/constants';
+import { API_ROUTES } from './src/config';
+import { apiPost, sanitizeBase64, validateFileUpload } from './src/utils';
+
+const STORAGE_KEY = STORAGE_KEYS.DRAFTS;
+const USE_SUPABASE = FEATURE_FLAGS.USE_SUPABASE;
+
+/**
+ * Call the parse-document API endpoint
+ * Falls back to direct service call if API endpoint fails
+ */
+const parseDocumentViaAPI = async (
+  base64Data: string,
+  mimeType: string,
+  gradeLevel?: GradeLevel,
+  standardsFramework?: StandardsFramework
+): Promise<CurriculumNode[]> => {
+  try {
+    const cleanBase64 = sanitizeBase64(base64Data);
+    const result = await apiPost<{ success: boolean; nodes?: CurriculumNode[]; error?: string }>(
+      API_ROUTES.DOCUMENTS.PARSE,
+      {
+        base64Data: cleanBase64,
+        mimeType,
+        gradeLevel,
+        standardsFramework
+      }
+    );
+
+    if (result.success && result.nodes) {
+      return result.nodes;
+    } else {
+      throw new Error(result.error || 'Invalid response from API');
+    }
+  } catch (error: any) {
+    console.warn('API endpoint failed, falling back to direct service call:', error.message);
+    // Fallback to direct service call
+    const cleanBase64 = sanitizeBase64(base64Data);
+    return await analyzeDocument(cleanBase64, mimeType, gradeLevel, standardsFramework);
+  }
+};
 
 const App: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -52,6 +95,12 @@ const App: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationStatus, setGenerationStatus] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Comprehensive analysis state
+  const [comprehensiveAnalysis, setComprehensiveAnalysis] = useState<import('./src/types').CurriculumAnalysis | null>(null);
+  const [showAnalysisViewer, setShowAnalysisViewer] = useState(false);
+  const [isComprehensiveAnalyzing, setIsComprehensiveAnalyzing] = useState(false);
+  const { analysis: streamedAnalysis, isAnalyzing: isStreaming, progress, currentStep, startAnalysis: startStreamingAnalysis } = useCurriculumAnalysis();
   
   const [branding, setBranding] = useState<BrandingConfig>({
     institution: '',
@@ -189,7 +238,7 @@ const App: React.FC = () => {
     if (!rawCurriculum.trim()) return;
     setIsAnalyzing(true);
     try {
-      const parsedNodes = await analyzeCurriculum(rawCurriculum);
+      const parsedNodes = await analyzeCurriculum(rawCurriculum, parseConfig.gradeLevel, parseConfig.standardsFramework);
       setNodes(parsedNodes);
       if (parsedNodes.length > 0) setSelectedNode(parsedNodes[0]);
       
@@ -237,16 +286,23 @@ const App: React.FC = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Validate file
+    const validation = validateFileUpload(file);
+    if (!validation.valid) {
+      alert(validation.error);
+      return;
+    }
+
     setIsAnalyzing(true);
     try {
       const reader = new FileReader();
       reader.onload = async (e) => {
         const result = e.target?.result as string;
-        const base64Data = result.split(',')[1];
+        const base64Data = sanitizeBase64(result);
         const mimeType = file.type;
         
         try {
-          const parsedNodes = await analyzeDocument(base64Data, mimeType, parseConfig.gradeLevel, parseConfig.standardsFramework);
+          const parsedNodes = await parseDocumentViaAPI(base64Data, mimeType, parseConfig.gradeLevel, parseConfig.standardsFramework);
           setNodes(parsedNodes);
           if (parsedNodes.length > 0) setSelectedNode(parsedNodes[0]);
           
@@ -287,11 +343,76 @@ const App: React.FC = () => {
           }
         } catch (error: any) {
           console.error(error);
-          alert(`Failed to parse document: ${error?.message || 'Please ensure the file is a valid PDF or image and try again.'}`);
-        } finally {
-          setIsAnalyzing(false);
-        }
-      };
+      alert(`Failed to parse document: ${error?.message || 'Please ensure the file is a valid PDF or image and try again.'}`);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  // Comprehensive analysis handler
+  const handleComprehensiveAnalysis = async () => {
+    if (!rawCurriculum.trim()) {
+      alert('Please enter curriculum text first');
+      return;
+    }
+    
+    setIsComprehensiveAnalyzing(true);
+    setShowAnalysisViewer(true);
+    
+    try {
+      const analysis = await analyzeCurriculumComprehensive(
+        rawCurriculum,
+        parseConfig.gradeLevel,
+        parseConfig.standardsFramework
+      );
+      setComprehensiveAnalysis(analysis);
+      setNodes(analysis.nodes);
+      if (analysis.nodes.length > 0) setSelectedNode(analysis.nodes[0]);
+    } catch (error: any) {
+      console.error('Comprehensive analysis error:', error);
+      alert(`Comprehensive analysis failed: ${error?.message || 'Unknown error'}`);
+      setShowAnalysisViewer(false);
+    } finally {
+      setIsComprehensiveAnalyzing(false);
+    }
+  };
+
+  // Streaming analysis handler
+  const handleStreamingAnalysis = async () => {
+    if (!rawCurriculum.trim()) {
+      alert('Please enter curriculum text first');
+      return;
+    }
+    
+    setShowAnalysisViewer(true);
+    await startStreamingAnalysis(
+      rawCurriculum,
+      parseConfig.gradeLevel,
+      parseConfig.standardsFramework
+    );
+  };
+
+  // Export analysis handler
+  const handleExportAnalysis = (format: 'json' | 'markdown' = 'json') => {
+    const analysis = comprehensiveAnalysis || streamedAnalysis;
+    if (!analysis) {
+      alert('No analysis to export');
+      return;
+    }
+
+    try {
+      if (format === 'json') {
+        const json = exportAnalysisToJSON(analysis);
+        downloadFile(json, `curriculum-analysis-${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+      } else {
+        const markdown = exportAnalysisToMarkdown(analysis);
+        downloadFile(markdown, `curriculum-analysis-${new Date().toISOString().split('T')[0]}.md`, 'text/markdown');
+      }
+    } catch (error: any) {
+      console.error('Export error:', error);
+      alert(`Export failed: ${error?.message || 'Unknown error'}`);
+    }
+  };
       reader.readAsDataURL(file);
     } catch (error) {
       console.error(error);
@@ -978,6 +1099,33 @@ const App: React.FC = () => {
                   </span>
                 ) : 'Parse Text'}
               </button>
+              <div className="flex gap-2 mt-2">
+                <button
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleComprehensiveAnalysis}
+                  disabled={isComprehensiveAnalyzing || !rawCurriculum.trim()}
+                >
+                  {isComprehensiveAnalyzing ? 'Analyzing...' : 'Deep Analysis'}
+                </button>
+                <button
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleStreamingAnalysis}
+                  disabled={isStreaming || !rawCurriculum.trim()}
+                >
+                  {isStreaming ? `${Math.round(progress)}%` : 'Stream Analysis'}
+                </button>
+              </div>
+              {isStreaming && (
+                <div className="mt-2">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${progress}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">{currentStep}</p>
+                </div>
+              )}
             </div>
             </div>
               )}
@@ -1355,7 +1503,41 @@ const App: React.FC = () => {
 
         {/* Content View */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
-          {activeSuite ? (
+          {showAnalysisViewer && (comprehensiveAnalysis || streamedAnalysis) ? (
+            <div className="p-6">
+              <div className="mb-4 flex justify-between items-center">
+                <h2 className="text-2xl font-bold">Curriculum Analysis</h2>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleExportAnalysis('json')}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                  >
+                    Export JSON
+                  </button>
+                  <button
+                    onClick={() => handleExportAnalysis('markdown')}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                  >
+                    Export Markdown
+                  </button>
+                  <button
+                    onClick={() => setShowAnalysisViewer(false)}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+              <CurriculumAnalysisViewer
+                analysis={comprehensiveAnalysis || streamedAnalysis!}
+                onNodeSelect={(node) => {
+                  setSelectedNode(node);
+                  setShowAnalysisViewer(false);
+                }}
+                onExport={() => handleExportAnalysis('json')}
+              />
+            </div>
+          ) : activeSuite ? (
             <EnhancedSuiteEditor 
               suite={activeSuite} 
               onEditSection={handleEditSuiteContent}

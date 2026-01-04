@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { CurriculumNode, InstructionalSuite, OutputType, BloomLevel, Differentiation, AestheticStyle, EducationalStandard, GradeLevel, StandardsFramework } from '../types';
+import { CurriculumNode, InstructionalSuite, OutputType, BloomLevel, Differentiation, AestheticStyle, EducationalStandard, GradeLevel, StandardsFramework } from '../../src/types';
 
 /**
  * Anthropic Claude Service - Provides AI capabilities using Claude models
