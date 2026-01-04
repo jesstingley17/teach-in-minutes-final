@@ -3,7 +3,7 @@
     "builder": "nixpacks"
   },
   "deploy": {
-    "port": 8080
+    "port": 8888
   }
 }
 
