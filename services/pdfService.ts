@@ -216,8 +216,8 @@ export class PDFService {
           case 'diagram_placeholder':
             html += `<p><em>${section.content}</em></p>`;
             // Check if section has an image
-            if ((section as any).imageBase64) {
-              html += `<div class="diagram-box"><img src="data:image/png;base64,${(section as any).imageBase64}" class="diagram-image" alt="Diagram" /></div>`;
+            if (section.imageBase64) {
+              html += `<div class="diagram-box"><img src="data:image/png;base64,${section.imageBase64}" class="diagram-image" alt="Diagram" /></div>`;
             } else {
               html += '<div class="diagram-box">[Diagram Placeholder]</div>';
             }
