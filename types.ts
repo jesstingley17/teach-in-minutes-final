@@ -88,6 +88,7 @@ export interface DocumentSection {
   points?: number;
   options?: string[];
   correctAnswer?: string | number | string[];
+  explanation?: string;
   imageUrl?: string;
   imageBase64?: string;
   pageNumber?: number;
@@ -115,6 +116,13 @@ export interface Rubric {
   scale: string;
 }
 
+export interface TeacherKeyEntry {
+  sectionId: string;
+  sectionTitle: string;
+  answer: string | number | string[];
+  explanation?: string;
+}
+
 export interface InstructionalSuite {
   id: string;
   title: string;
@@ -129,6 +137,7 @@ export interface InstructionalSuite {
   pageCount?: number;
   standards?: EducationalStandard[];
   rubric?: Rubric;
+  teacherKey?: TeacherKeyEntry[];
   doodleBase64?: string;
   createdAt?: string;
   updatedAt?: string;

@@ -59,7 +59,11 @@ export class PDFService {
    * Export instructional suite to high-quality PDF using Adobe PDF Services (if available)
    * Falls back to jsPDF if Adobe services are not configured
    */
-  static async exportToPDFWithAdobe(suite: InstructionalSuite, useAdobe: boolean = true): Promise<void> {
+  static async exportToPDFWithAdobe(
+    suite: InstructionalSuite, 
+    useAdobe: boolean = true, 
+    includeTeacherKey: boolean = false
+  ): Promise<void> {
     // Check if Adobe credentials are configured
     const hasAdobeCredentials = isAdobeConfigured();
     
@@ -70,7 +74,7 @@ export class PDFService {
         console.log('Using Adobe PDF Services for export...');
         
         // Convert suite to HTML
-        const htmlContent = this.suiteToHTML(suite);
+        const htmlContent = this.suiteToHTML(suite, includeTeacherKey);
         
         // Create PDF using Adobe
         const result = await createPDFFromHTML(htmlContent, {
@@ -99,13 +103,13 @@ export class PDFService {
     }
 
     // Fallback to jsPDF
-    return this.exportToPDF(suite);
+    return this.exportToPDF(suite, includeTeacherKey);
   }
 
   /**
    * Convert suite to HTML for Adobe PDF generation
    */
-  private static suiteToHTML(suite: InstructionalSuite): string {
+  private static suiteToHTML(suite: InstructionalSuite, includeTeacherKey: boolean = false): string {
     const pages = suite.pages || this.sectionsToPages(suite.sections, suite.pageCount);
     
     let html = `
@@ -240,6 +244,66 @@ export class PDFService {
   </div>`;
     });
 
+    // Add teacher key if requested
+    if (includeTeacherKey && suite.teacherKey && suite.teacherKey.length > 0) {
+      html += `
+  <div class="page" style="page-break-before: always;">
+    <div class="header">
+      <div class="institution">Teacher Answer Key</div>
+      <div class="title">${suite.title}</div>
+    </div>
+    <div style="background: #eff6ff; padding: 15px; border-left: 4px solid #2563eb; margin-bottom: 20px;">
+      <p style="font-size: 10pt; font-style: italic; color: #1e40af;">
+        For instructor use only. This section provides correct answers and explanations for all questions and activities.
+      </p>
+    </div>
+`;
+      
+      suite.teacherKey.forEach((entry, index) => {
+        const section = suite.sections.find(s => s.id === entry.sectionId);
+        html += `
+    <div class="section" style="background: white; border: 1px solid #bfdbfe; padding: 12px; margin-bottom: 15px; border-radius: 4px;">
+      <div style="display: flex; align-items: flex-start; margin-bottom: 8px;">
+        <span style="background: #2563eb; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10pt; font-weight: bold; margin-right: 10px;">${index + 1}</span>
+        <strong style="font-size: 11pt;">${entry.sectionTitle}</strong>
+      </div>
+      <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 10px; margin-bottom: 8px;">
+        <p style="font-size: 9pt; color: #15803d; font-weight: bold; margin: 0 0 5px 0;">CORRECT ANSWER:</p>
+        <div style="font-size: 10pt; color: #111;">`;
+        
+        if (section?.type === 'question' && section?.options && typeof entry.answer === 'number' && entry.answer < section.options.length) {
+          html += `<strong>${String.fromCharCode(65 + entry.answer)}. ${section.options[entry.answer]}</strong>`;
+        } else if (section?.type === 'matching' && Array.isArray(entry.answer)) {
+          const items = section.content.split('\n').filter(l => l.trim());
+          entry.answer.forEach((answerIdx, i) => {
+            if (i < items.length && typeof answerIdx === 'number' && section.options && answerIdx < section.options.length) {
+              html += `<div style="font-size: 9pt; margin-bottom: 3px;"><strong>${items[i]}</strong> → ${String.fromCharCode(65 + answerIdx)}. ${section.options[answerIdx]}</div>`;
+            }
+          });
+        } else {
+          html += `<strong>${String(entry.answer)}</strong>`;
+        }
+        
+        html += `
+        </div>
+      </div>`;
+        
+        if (entry.explanation) {
+          html += `
+      <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 10px;">
+        <p style="font-size: 9pt; color: #1e40af; font-weight: bold; margin: 0 0 5px 0;">EXPLANATION:</p>
+        <p style="font-size: 10pt; color: #374151; margin: 0;">${entry.explanation}</p>
+      </div>`;
+        }
+        
+        html += `
+    </div>`;
+      });
+      
+      html += `
+  </div>`;
+    }
+
     html += `
 </body>
 </html>`;
@@ -366,7 +430,7 @@ export class PDFService {
   /**
    * Export instructional suite to high-quality PDF
    */
-  static async exportToPDF(suite: InstructionalSuite): Promise<void> {
+  static async exportToPDF(suite: InstructionalSuite, includeTeacherKey: boolean = false): Promise<void> {
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -447,6 +511,130 @@ export class PDFService {
 
       // Footer (always at bottom)
       this.renderFooter(pdf, suite, pageIndex + 1, pages.length, margin, pageHeight);
+    }
+
+    // Add teacher key if requested
+    if (includeTeacherKey && suite.teacherKey && suite.teacherKey.length > 0) {
+      pdf.addPage();
+      let yPosition = margin;
+      
+      // Teacher Key Header
+      pdf.setFontSize(18);
+      pdf.setFont(pdfFont, 'bold');
+      pdf.text('Teacher Answer Key', margin, yPosition);
+      yPosition += 10;
+      
+      pdf.setFontSize(14);
+      pdf.text(suite.title, margin, yPosition);
+      yPosition += 8;
+      
+      // Info box
+      pdf.setFillColor(239, 246, 255);
+      pdf.rect(margin, yPosition, contentWidth, 15, 'F');
+      pdf.setFontSize(9);
+      pdf.setFont(pdfFont, 'italic');
+      pdf.text('For instructor use only. This section provides correct answers and explanations.', margin + 5, yPosition + 5);
+      yPosition += 20;
+      
+      pdf.setFont(pdfFont, 'normal');
+      
+      // Render each answer
+      for (const [index, entry] of suite.teacherKey.entries()) {
+        const section = suite.sections.find(s => s.id === entry.sectionId);
+        
+        // Check if we need a new page
+        if (yPosition > maxContentHeight - 40) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+        
+        // Answer box background
+        pdf.setFillColor(255, 255, 255);
+        pdf.setDrawColor(191, 219, 254);
+        pdf.setLineWidth(0.5);
+        
+        const boxStartY = yPosition;
+        
+        // Number badge
+        pdf.setFillColor(37, 99, 235);
+        pdf.circle(margin + 5, yPosition + 4, 4, 'F');
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFontSize(10);
+        pdf.setFont(pdfFont, 'bold');
+        pdf.text(String(index + 1), margin + 5, yPosition + 5.5, { align: 'center' });
+        
+        // Question title
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFontSize(11);
+        const titleLines = pdf.splitTextToSize(entry.sectionTitle, contentWidth - 25);
+        pdf.text(titleLines, margin + 12, yPosition + 5);
+        yPosition += titleLines.length * 5 + 3;
+        
+        // Answer section
+        pdf.setFillColor(240, 253, 244);
+        pdf.rect(margin + 12, yPosition, contentWidth - 15, 15, 'F');
+        pdf.setDrawColor(22, 163, 74);
+        pdf.setLineWidth(1);
+        pdf.line(margin + 12, yPosition, margin + 12, yPosition + 15);
+        
+        pdf.setFontSize(8);
+        pdf.setTextColor(21, 128, 61);
+        pdf.setFont(pdfFont, 'bold');
+        pdf.text('CORRECT ANSWER:', margin + 15, yPosition + 4);
+        yPosition += 7;
+        
+        pdf.setFontSize(10);
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFont(pdfFont, 'normal');
+        
+        // Format answer based on type
+        if (section?.type === 'question' && section?.options && typeof entry.answer === 'number' && entry.answer < section.options.length) {
+          const answerText = `${String.fromCharCode(65 + entry.answer)}. ${section.options[entry.answer]}`;
+          const answerLines = pdf.splitTextToSize(answerText, contentWidth - 25);
+          pdf.text(answerLines, margin + 15, yPosition);
+          yPosition += answerLines.length * 5 + 3;
+        } else if (section?.type === 'matching' && Array.isArray(entry.answer)) {
+          const items = section.content.split('\n').filter(l => l.trim());
+          entry.answer.forEach((answerIdx, i) => {
+            if (i < items.length && typeof answerIdx === 'number' && section.options && answerIdx < section.options.length) {
+              const matchText = `${items[i]} → ${String.fromCharCode(65 + answerIdx)}. ${section.options[answerIdx]}`;
+              const matchLines = pdf.splitTextToSize(matchText, contentWidth - 25);
+              pdf.text(matchLines, margin + 15, yPosition);
+              yPosition += matchLines.length * 4 + 1;
+            }
+          });
+          yPosition += 3;
+        } else {
+          const answerText = String(entry.answer);
+          const answerLines = pdf.splitTextToSize(answerText, contentWidth - 25);
+          pdf.text(answerLines, margin + 15, yPosition);
+          yPosition += answerLines.length * 5 + 3;
+        }
+        
+        // Explanation if available
+        if (entry.explanation) {
+          pdf.setFillColor(239, 246, 255);
+          const explHeight = 20;
+          pdf.rect(margin + 12, yPosition, contentWidth - 15, explHeight, 'F');
+          pdf.setDrawColor(59, 130, 246);
+          pdf.setLineWidth(1);
+          pdf.line(margin + 12, yPosition, margin + 12, yPosition + explHeight);
+          
+          pdf.setFontSize(8);
+          pdf.setTextColor(30, 64, 175);
+          pdf.setFont(pdfFont, 'bold');
+          pdf.text('EXPLANATION:', margin + 15, yPosition + 4);
+          
+          pdf.setFontSize(9);
+          pdf.setTextColor(55, 65, 81);
+          pdf.setFont(pdfFont, 'normal');
+          const explLines = pdf.splitTextToSize(entry.explanation, contentWidth - 25);
+          pdf.text(explLines, margin + 15, yPosition + 8);
+          yPosition += Math.min(explLines.length * 4.5 + 8, explHeight);
+        }
+        
+        yPosition += 8;
+      }
     }
 
     // Save PDF

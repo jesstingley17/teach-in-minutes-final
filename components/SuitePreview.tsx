@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { InstructionalSuite, AestheticStyle, Differentiation } from '../types';
 
 interface SuitePreviewProps {
@@ -8,6 +8,8 @@ interface SuitePreviewProps {
 }
 
 const SuitePreview: React.FC<SuitePreviewProps> = ({ suite, onEditSection }) => {
+  const [showTeacherKey, setShowTeacherKey] = useState(false);
+  
   const getFontStyleClass = (style: AestheticStyle) => {
     switch (style) {
       case AestheticStyle.CLASSIC: return 'font-handwriting-classic';
@@ -35,6 +37,23 @@ const SuitePreview: React.FC<SuitePreviewProps> = ({ suite, onEditSection }) => 
 
   return (
     <div className={`preview-container bg-slate-200 p-8 min-h-screen overflow-y-auto ${isDyslexiaFriendly ? 'dyslexia-friendly' : ''}`}>
+      {/* Teacher Key Toggle - Hidden on Print */}
+      {suite.teacherKey && suite.teacherKey.length > 0 && (
+        <div className="no-print mb-4 flex justify-end">
+          <button
+            onClick={() => setShowTeacherKey(!showTeacherKey)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md flex items-center space-x-2 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            aria-label={showTeacherKey ? 'Hide Teacher Answer Key' : 'Show Teacher Answer Key'}
+            aria-pressed={showTeacherKey}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
+            <span>{showTeacherKey ? 'Hide' : 'Show'} Teacher Answer Key</span>
+          </button>
+        </div>
+      )}
+      
       <div className={`a4-page ${getFontStyleClass(suite.aesthetic)} ${getDifferentiationClass(suite.differentiation)} shadow-2xl relative`}>
         
         {/* Institutional Header */}
@@ -175,6 +194,96 @@ const SuitePreview: React.FC<SuitePreviewProps> = ({ suite, onEditSection }) => 
             </div>
           ))}
         </div>
+
+        {/* Teacher Answer Key Section */}
+        {showTeacherKey && suite.teacherKey && suite.teacherKey.length > 0 && (
+          <div className="mt-12 pt-8 border-t-4 border-blue-600 page-break-before">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-blue-900 flex items-center">
+                <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+                Teacher Answer Key
+              </h2>
+              <span className="text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-semibold">
+                {suite.teacherKey.length} Answer{suite.teacherKey.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+            
+            <div className="bg-blue-50 p-6 rounded-lg border-2 border-blue-200">
+              <p className="text-sm text-blue-900 mb-4 italic">
+                For instructor use only. This section provides correct answers and explanations for all questions and activities.
+              </p>
+              
+              <div className="space-y-4">
+                {suite.teacherKey.map((entry, index) => {
+                  const section = suite.sections.find(s => s.id === entry.sectionId);
+                  
+                  return (
+                    <div key={entry.sectionId} className="bg-white p-4 rounded-md border border-blue-200 shadow-sm">
+                      <div className="flex items-start space-x-3">
+                        <span className="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0">
+                          {index + 1}
+                        </span>
+                        <div className="flex-1">
+                          <h3 className="font-bold text-gray-900 mb-2">{entry.sectionTitle}</h3>
+                          
+                          <div className="bg-green-50 border-l-4 border-green-500 p-3 mb-2">
+                            <p className="text-xs text-green-800 font-semibold mb-1">CORRECT ANSWER:</p>
+                            <div className="text-sm text-gray-900">
+                              {section?.type === 'question' && section?.options ? (
+                                // Multiple choice - show the option
+                                <div>
+                                  <span className="font-bold">
+                                    {typeof entry.answer === 'number' && entry.answer < section.options.length
+                                      ? `${String.fromCharCode(65 + entry.answer)}. ${section.options[entry.answer]}`
+                                      : entry.answer}
+                                  </span>
+                                </div>
+                              ) : section?.type === 'matching' ? (
+                                // Matching - show the mappings
+                                <div className="space-y-1">
+                                  {Array.isArray(entry.answer) ? (
+                                    entry.answer.map((answerIdx, i) => {
+                                      const items = section.content.split('\n').filter(l => l.trim());
+                                      if (i >= items.length) return null;
+                                      return (
+                                        <div key={i} className="text-xs">
+                                          <span className="font-semibold">{items[i]}</span> → 
+                                          <span className="ml-1">
+                                            {typeof answerIdx === 'number' && answerIdx < (section.options?.length || 0)
+                                              ? `${String.fromCharCode(65 + answerIdx)}. ${section.options![answerIdx]}`
+                                              : answerIdx}
+                                          </span>
+                                        </div>
+                                      );
+                                    })
+                                  ) : (
+                                    <span className="font-bold">{String(entry.answer)}</span>
+                                  )}
+                                </div>
+                              ) : (
+                                // Short answer or other types
+                                <span className="font-bold">{String(entry.answer)}</span>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {entry.explanation && (
+                            <div className="bg-blue-50 border-l-4 border-blue-400 p-3 mt-2">
+                              <p className="text-xs text-blue-800 font-semibold mb-1">EXPLANATION:</p>
+                              <p className="text-sm text-gray-700">{entry.explanation}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
         <div className="mt-auto pt-8 border-t-2 border-slate-900 flex justify-between items-end text-[10px] font-bold text-slate-500 uppercase tracking-widest">
